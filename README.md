@@ -8,6 +8,23 @@ Developed in-house by FRC Team 2638 Rebel Robotics, by students for students, wi
 
 ![Robot Demo](docs/cone-demo.gif)
 
+## Table of Contents
+
+- [Core Concepts](#core-concepts)
+- [Tracking Algorithm](#tracking-algorithm)
+  - [Path Constraints](#path-constraints)
+  - [Path Elements](#path-elements)
+  - [Key Parameters](#key-parameters)
+- [Performance](#performance)
+- [Recommended Usage Modes](#recommended-usage-modes)
+  - [Usage Tips](#usage-tips)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Path Construction with JSON](#path-construction-with-json)
+- [API Reference](#api-reference)
+- [Building from Source](#building-from-source)
+- [License](#license)
+
 ## Core Concepts
 
 Before diving into usage, it's important to understand how BLine represents paths.
@@ -58,15 +75,13 @@ This means a `Waypoint` (which contains both translation and rotation) increment
 
 **Example ordinal assignment:**
 
-```
-Path Elements:                    Translation Ordinal    Rotation Ordinal
-─────────────────────────────────────────────────────────────────────────
-Waypoint (start)                        0                      0
-TranslationTarget                       1                      -
-RotationTarget (t_ratio=0.5)            -                      1
-TranslationTarget                       2                      -
-Waypoint (end)                          3                      2
-```
+| Path Element | Translation Ordinal | Rotation Ordinal |
+|--------------|:-------------------:|:----------------:|
+| Waypoint (start) | 0 | 0 |
+| TranslationTarget | 1 | — |
+| RotationTarget (t_ratio=0.5) | — | 1 |
+| TranslationTarget | 2 | — |
+| Waypoint (end) | 3 | 2 |
 
 When the path follower processes each element, it checks if any ranged constraint applies by testing:
 ```
