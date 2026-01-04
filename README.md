@@ -1,6 +1,6 @@
 # BLine-Lib
 
-BLine-Lib is a path following library designed for the FIRST Robotics Competition (FRC). It is built around the concept of offering simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
+BLine-Lib is a path generation and tracking library designed for the FIRST Robotics Competition (FRC). It is built around the concept of offering simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
 
 Developed in-house by FRC Team 2638 Rebel Robotics, by students for students, with development beginning in late June of 2025, BLine plays into the recent emergence of the FRC polyline path planning meta, with renowned teams such as 2056 and 2910 (among others) running their own solutions during the 2025 Reefscape game.
 
@@ -9,6 +9,113 @@ Developed in-house by FRC Team 2638 Rebel Robotics, by students for students, wi
 ## Core Concepts
 
 Before diving into usage, it's important to understand how BLine represents paths.
+
+## Tracking Algorithm
+
+The path tracking algorithm works by:
+
+1. Calculating command robot speed via a PID controller minimizing total path distance remaining
+2. Determining velocity direction by pointing toward the current translation target
+3. Advancing to the next translation target when within the handoff radius of the current one
+4. Applying cross-track correction to stay on the line between waypoints
+5. Interpolating rotation based on progress between rotation targets
+6. Applying rate limiting via `ChassisRateLimiter` to respect constraints
+
+![BLine Algorithm Demo](docs/algorithm-demo.gif)
+
+### Path Constraints
+
+Path constraints are critical for ensuring proper robot motion and preventing overshooting during element handoff. When the robot approaches a translation target at high speed without appropriate velocity limits, it may overshoot the handoff radius and exhibit erratic behavior. Properly configured constraints ensure smooth transitions between path elements.
+
+#### Constraint Types
+
+BLine supports six constraint types that can be applied to paths:
+
+| Constraint | Description |
+|------------|-------------|
+| **Max Translational Velocity** | Maximum speed the robot can travel |
+| **Max Translational Acceleration** | Maximum acceleration for translation |
+| **Max Rotational Velocity** | Maximum angular speed for holonomic rotation |
+| **Max Rotational Acceleration** | Maximum angular acceleration for rotation |
+| **End Translation Tolerance** | How close the robot must be to the final position to finish |
+| **End Rotation Tolerance** | How close the robot must be to the final rotation to finish |
+
+#### Ranged Constraints and Ordinal Indexing
+
+BLine uses **ranged constraints** to allow different limits for different sections of a path. Each ranged constraint is defined by:
+- **`value`**: The constraint value (velocity, acceleration, etc.)
+- **`start_ordinal`**: The first element index this constraint applies to (inclusive)
+- **`end_ordinal`**: The last element index this constraint applies to (inclusive)
+
+**Important:** Translation and rotation ordinals are tracked **separately**:
+
+- **Translation ordinal** increments for each `TranslationTarget` and each `Waypoint`
+- **Rotation ordinal** increments for each `RotationTarget` and each `Waypoint`
+
+This means a `Waypoint` (which contains both translation and rotation) increments **both** counters, while standalone `TranslationTarget` and `RotationTarget` elements only increment their respective counter.
+
+**Example ordinal assignment:**
+
+```
+Path Elements:                    Translation Ordinal    Rotation Ordinal
+─────────────────────────────────────────────────────────────────────────
+Waypoint (start)                        0                      0
+TranslationTarget                       1                      -
+RotationTarget (t_ratio=0.5)            -                      1
+TranslationTarget                       2                      -
+Waypoint (end)                          3                      2
+```
+
+When the path follower processes each element, it checks if any ranged constraint applies by testing:
+```
+startOrdinal <= currentOrdinal && endOrdinal >= currentOrdinal
+```
+
+If a constraint matches, that value is used; otherwise, the global default is applied.
+
+#### Multiple Ranged Constraints
+
+Paths can have **multiple ranged constraints of the same type**, allowing fine-grained control over different path sections. The first matching constraint (in array order) is used for each element.
+
+**JSON Example:**
+```json
+{
+    "path_elements": [...],
+    "constraints": {
+        "max_velocity_meters_per_sec": [
+            { "value": 4.0, "start_ordinal": 0, "end_ordinal": 1 },
+            { "value": 1.5, "start_ordinal": 2, "end_ordinal": 3 }
+        ],
+        "max_velocity_deg_per_sec": [
+            { "value": 360.0, "start_ordinal": 0, "end_ordinal": 3 }
+        ],
+        "end_translation_tolerance_meters": 0.05,
+        "end_rotation_tolerance_deg": 2.0
+    }
+}
+```
+
+**Code Example:**
+```java
+Path.PathConstraints constraints = new Path.PathConstraints()
+    .setMaxVelocityMetersPerSec(
+        new Path.RangedConstraint(4.0, 0, 1),   // Fast approach (ordinals 0-1)
+        new Path.RangedConstraint(1.5, 2, 3)    // Slow precision (ordinals 2-3)
+    )
+    .setMaxVelocityDegPerSec(
+        new Path.RangedConstraint(360.0, 0, Integer.MAX_VALUE)  // Apply to all
+    );
+```
+
+#### How Constraints Affect Path Following
+
+During path execution, `FollowPath` retrieves constraints for each element via `getPathElementsWithConstraints()`. The `ChassisRateLimiter` then enforces these limits by:
+
+1. Capping the commanded velocity to the current element's max velocity
+2. Limiting acceleration between cycles based on the current element's max acceleration
+3. Applying these limits separately to translational and rotational motion
+
+This ensures the robot respects velocity limits when approaching handoff radii, preventing overshoot and enabling precise element transitions.
 
 ### Path Elements
 
@@ -28,18 +135,18 @@ A **Path** is a sequence of **path elements** that define where the robot should
 
 - **`profiled_rotation`**: When `true`, rotation is smoothly interpolated based on position. When `false`, the robot immediately targets the rotation.
 
-## Core Algorithm
+## Performance
 
-The path following algorithm works by:
+**Validation Pipeline:** Validated the architecture by building a WPILib physics simulation; utilized Theta* for initial pathfinding and an Artificial Bee Colony (ABC) optimizer to benchmark the system against PathPlanner.
 
-1. Calculating command robot speed via a PID controller minimizing total path distance remaining
-2. Determining velocity direction by pointing toward the current translation target
-3. Advancing to the next translation target when within the handoff radius of the current one
-4. Applying cross-track correction to stay on the line between waypoints
-5. Interpolating rotation based on progress between rotation targets
-6. Applying rate limiting via `ChassisRateLimiter` to respect constraints
+**Quantitative Results:** Data from randomized Monte Carlo trials demonstrated:
+- **97% reduction** in path computation time
+- **66% reduction** in cross-track error at waypoints
+- Negligible **2.6% decrease** in total path tracking time compared to PathPlanner
 
-![BLine Algorithm Demo](docs/algorithm-demo.gif)
+A **15.5% increase** in total path cross-track error (CTE) was found across cases. However, this is an artifact of the ABC optimization process which prioritized total path time and collision avoidance with obstacles. CTE was not of critical importance to the optimizer and the deviation is negligible for the majority of FRC use cases. Users can easily reduce cross-track error through tuning of the cross-track-error feedback loop and handoff radii.
+
+**[Full White Paper](https://docs.google.com/document/d/1Tc87YKWHtsEMEvmVDBD1Ww4e7vIUO2FyK3lwwuf-ZL4/edit?usp=sharing)**
 
 ## Recommended Usage Modes
 
@@ -57,16 +164,21 @@ Define paths directly in JSON files without using the GUI.
 
 Define all paths and constraints programmatically in Java—no external files needed.
 
-## Performance
+### Usage Tips
 
-**Validation Pipeline:** Validated the architecture by building a WPILib physics simulation; utilized Theta* for initial pathfinding and an Artificial Bee Colony (ABC) optimizer to benchmark the system against PathPlanner.
+#### Recommended Constraint: Max Translational Velocity
 
-**Quantitative Results:** Data from randomized Monte Carlo trials demonstrated:
-- **97% reduction** in path computation time
-- **66% reduction** in cross-track error at waypoints
-- Negligible **2.6% decrease** in total path following time compared to PathPlanner
+The **max translational velocity constraint** is the primary ranged constraint recommended for most use cases. It is the most effective method for counteracting overshoot at sharp turns—other than increasing the handoff radius, which reduces path precision. By limiting velocity before tight corners, the robot can decelerate in time and follow the intended path more accurately.
 
-A **15.5% increase** in total path cross-track error (CTE) was found across cases. However, this is an artifact of the ABC optimization process which prioritized total path time and collision avoidance with obstacles. CTE was not of critical importance to the optimizer and the deviation is negligible for the majority of FRC use cases. Users can easily reduce cross-track error through tuning of the cross-track-error feedback loop and handoff radii.
+#### PID Tuning at Maximum Velocities
+
+When tuning the translation and rotation PID controllers, **stress-test your controller gains at maximum robot velocity and acceleration** for both translation and rotation. 
+
+⚠️ **Warning:** If you limit max acceleration *after* tuning your controllers, or increase max allowable velocity beyond what was used during tuning, you will likely experience:
+- Overshoot when reaching the path endpoint
+- Unexpected behavior during path following
+
+Always tune your controllers within the full operating range of velocities and accelerations that your path constraints allow.
 
 ## Installation
 
