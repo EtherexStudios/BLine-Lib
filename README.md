@@ -6,6 +6,8 @@ Developed in-house by FRC Team 2638 Rebel Robotics, by students for students, wi
 
 📚 **[Full Javadoc Documentation](https://javadoc.jitpack.io/com/github/edanliahovetsky/BLine-Lib/latest/javadoc/)** | 🔧 **[BLine-GUI](https://github.com/edanliahovetsky/BLine-GUI)**
 
+![Robot Demo](docs/cone-demo.gif)
+
 ## Core Concepts
 
 Before diving into usage, it's important to understand how BLine represents paths.
