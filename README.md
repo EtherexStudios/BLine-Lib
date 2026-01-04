@@ -53,7 +53,7 @@ Add the dependency:
 
 ```gradle
 dependencies {
-    implementation 'com.github.edanliahovetsky:BLine-Lib:0.3.0'
+    implementation 'com.github.edanliahovetsky:BLine-Lib:0.4.0'
 }
 ```
 

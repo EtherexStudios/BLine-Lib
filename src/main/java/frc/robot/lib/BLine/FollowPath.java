@@ -993,5 +993,28 @@ public class FollowPath extends Command {
         return finished;
     }
 
+    /**
+     * Gets the current rotation element index in the path.
+     * 
+     * <p>This index represents the current rotation target being tracked, where both
+     * waypoint rotations and standalone rotation targets are counted together.
+     * 
+     * @return The current rotation element index (0-based)
+     */
+    public int getCurrentRotationElementIndex() {
+        return rotationElementIndex;
+    }
+
+    /**
+     * Gets the current translation element index in the path.
+     * 
+     * <p>This index represents the current translation target being tracked, where both
+     * waypoint translations and standalone translation targets are counted together.
+     * 
+     * @return The current translation element index (0-based)
+     */
+    public int getCurrentTranslationElementIndex() {
+        return translationElementIndex;
+    }
 
 }
