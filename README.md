@@ -14,6 +14,7 @@ Developed in-house by FRC Team 2638 Rebel Robotics, by students for students, wi
 - [Tracking Algorithm](#tracking-algorithm)
   - [Path Constraints](#path-constraints)
   - [Path Elements](#path-elements)
+    - [When to Use Each Element](#when-to-use-each-element)
   - [Key Parameters](#key-parameters)
 - [Performance](#performance)
 - [Recommended Usage Modes](#recommended-usage-modes)
@@ -144,13 +145,28 @@ A **Path** is a sequence of **path elements** that define where the robot should
 | **TranslationTarget** | A position-only target—the robot drives through this point |
 | **RotationTarget** | A rotation-only target that interpolates based on progress along a segment |
 
+#### When to Use Each Element
+
+- Use **Waypoints** when the robot needs to face a specific direction at a location (e.g., scoring positions, intake stations)
+- Use **TranslationTargets** for intermediate points where heading doesn't matter (e.g., avoiding obstacles, path shaping)
+- Use **RotationTargets** when you need the robot to rotate mid-segment without adding a translation point
+
 ### Key Parameters
 
-- **`intermediate_handoff_radius_meters`**: How close the robot must get to a translation target before advancing to the next one. Smaller values = robot waits longer before switching to the next target, great for lower speeds and were waypoint precision is needed, larger values = robot will switch to the next target sooner, great for smoother and more reliable transitions at higher speeds.
+- **`intermediate_handoff_radius_meters`**: How close the robot must get to a translation target before advancing to the next one.
+  - **Smaller radius** → Robot waits longer before switching targets. Better precision at waypoints, but can cause hesitation.
+  - **Larger radius** → Robot switches sooner. Smoother transitions at speed, but may cut corners.
+  
+  ⚠️ **Warning:** If the radius is too small, the robot may overshoot and miss the handoff zone entirely at high velocities—this causes erratic path behavior and is the worst-case scenario.
 
-- **`t_ratio`**: For rotation targets, this defines *where* along the path segment (0.0 to 1.0) the rotation should be achieved. A value of 0.5 means the robot reaches that holonomic rotation at the midpoint of the segment.
+- **`t_ratio`**: For rotation targets, this defines *where* along the path segment (0.0 to 1.0) the rotation should be achieved:
+  - `t_ratio = 0.0` → Rotation at the start of the segment
+  - `t_ratio = 0.5` → Rotation at the midpoint
+  - `t_ratio = 1.0` → Rotation at the end of the segment
 
-- **`profiled_rotation`**: When `true`, rotation is smoothly interpolated based on position. When `false`, the robot immediately targets the rotation.
+- **`profiled_rotation`**: Controls how the robot transitions to the target rotation:
+  - **`true` (profiled)**: The robot smoothly interpolates its heading based on t-ratio progression along the path. As the robot travels, its rotation setpoint gradually transitions toward the target heading proportional to segment progress.
+  - **`false` (non-profiled)**: The robot immediately snaps to the target rotation when it enters the segment—no interpolation based on position.
 
 ## Performance
 
