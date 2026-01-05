@@ -70,6 +70,18 @@ javadoc {
     failOnError = false
 }
 
+// Auto-copy javadoc to docs/ for GitHub Pages hosting
+task copyJavadocToDocs(type: Copy) {
+    dependsOn javadoc
+    from "${buildDir}/docs/javadoc"
+    into "${projectDir}/docs"
+    // Preserve existing files like GIFs
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Run copyJavadocToDocs after javadoc generation
+javadoc.finalizedBy copyJavadocToDocs
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }

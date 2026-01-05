@@ -4,7 +4,7 @@
 
 Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with development beginning in late June of 2025, BLine plays into the recent emergence of the FRC polyline path planning meta, with renowned teams such as 2056 and 2910 (among others) running their own solutions during the 2025 Reefscape game.
 
-📚 **[Full Javadoc Documentation](https://javadoc.jitpack.io/com/github/edanliahovetsky/BLine-Lib/0.3.0/javadoc/)** | 🔧 **[BLine-GUI](https://github.com/edanliahovetsky/BLine-GUI)**
+📚 **[Full Javadoc Documentation](https://edanliahovetsky.github.io/BLine-Lib/)** | 🔧 **[BLine-GUI](https://github.com/edanliahovetsky/BLine-GUI)**
 
 ![Robot Demo](docs/cone-demo.gif)
 
@@ -432,7 +432,7 @@ Paths are stored as JSON files in `deploy/autos/paths/`. Example:
 
 ## API Reference
 
-For complete API documentation, see the **[Javadoc](https://javadoc.jitpack.io/com/github/edanliahovetsky/BLine-Lib/0.3.0/javadoc/)**.
+For complete API documentation, see the **[Javadoc](https://edanliahovetsky.github.io/BLine-Lib/)**.
 
 ### Path Class
 
