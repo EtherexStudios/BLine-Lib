@@ -2,7 +2,7 @@
 
 BLine is a path generation and tracking suite designed for the FIRST Robotics Competition (FRC). It is built around the concept of offering simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
 
-Developed in-house by FRC Team 2638 Rebel Robotics, by students for students, with development beginning in late June of 2025, BLine plays into the recent emergence of the FRC polyline path planning meta, with renowned teams such as 2056 and 2910 (among others) running their own solutions during the 2025 Reefscape game.
+Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with development beginning in late June of 2025, BLine plays into the recent emergence of the FRC polyline path planning meta, with renowned teams such as 2056 and 2910 (among others) running their own solutions during the 2025 Reefscape game.
 
 📚 **[Full Javadoc Documentation](https://javadoc.jitpack.io/com/github/edanliahovetsky/BLine-Lib/latest/javadoc/)** | 🔧 **[BLine-GUI](https://github.com/edanliahovetsky/BLine-GUI)**
 
@@ -212,6 +212,10 @@ When tuning the translation and rotation PID controllers, **stress-test your con
 - Unexpected behavior during path following
 
 Always tune your controllers within the full operating range of velocities and accelerations that your path constraints allow.
+
+#### Single-Element Paths
+
+Paths can consist of just **one Waypoint or TranslationTarget**—useful for simple point-to-point moves where you just need to drive to a single location. Note that a path with only a RotationTarget is invalid (you need at least one translation element).
 
 ## Installation
 
