@@ -10,27 +10,196 @@ Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with d
 
 ## Table of Contents
 
+- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Core Concepts](#core-concepts)
-- [Tracking Algorithm](#tracking-algorithm)
+  - [Tracking Algorithm](#tracking-algorithm)
   - [Path Constraints](#path-constraints)
   - [Path Elements](#path-elements)
-    - [When to Use Each Element](#when-to-use-each-element)
   - [Key Parameters](#key-parameters)
 - [Performance](#performance)
 - [Recommended Usage Modes](#recommended-usage-modes)
   - [Usage Tips](#usage-tips)
-- [Installation](#installation)
 - [Path Construction with JSON](#path-construction-with-json)
 - [API Reference](#api-reference)
 - [Building from Source](#building-from-source)
 - [License](#license)
 
+## Installation
+
+### Using Vendor JSON (Recommended)
+
+1. Open VS Code with your FRC project
+2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
+3. Type **"WPILib: Manage Vendor Libraries"**
+4. Select **"Install new libraries (online)"**
+5. Paste this URL:
+
+```
+https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/main/BLine-Lib.json
+```
+
+### Using Gradle (Alternative)
+
+Add JitPack repository to your `build.gradle`:
+
+```gradle
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+```
+
+Add the dependency:
+
+```gradle
+dependencies {
+    implementation 'com.github.edanliahovetsky:BLine-Lib:0.3.0'
+}
+```
+
+## Quick Start
+
+### 1. Set Global Constraints
+
+Global constraints define default velocity/acceleration limits and tolerances for all paths. Choose one approach:
+
+**Option A: Using `config.json`** (for JSON-based workflows)
+
+Create a `config.json` file in `src/main/deploy/autos/`:
+
+```json
+{
+    "default_max_velocity_meters_per_sec": 4.0,
+    "default_max_acceleration_meters_per_sec2": 3.0,
+    "default_max_velocity_deg_per_sec": 360.0,
+    "default_max_acceleration_deg_per_sec2": 720.0,
+    "default_end_translation_tolerance_meters": 0.05,
+    "default_end_rotation_tolerance_deg": 2.0,
+    "default_intermediate_handoff_radius_meters": 0.3
+}
+```
+
+**Option B: Setting in Code** (for code-only workflows)
+
+Set global constraints programmatically in your robot initialization:
+
+```java
+// Set global constraints before creating any paths
+Path.setDefaultGlobalConstraints(new Path.DefaultGlobalConstraints(
+    4.0,    // maxVelocityMetersPerSec
+    3.0,    // maxAccelerationMetersPerSec2
+    360.0,  // maxVelocityDegPerSec
+    720.0,  // maxAccelerationDegPerSec2
+    0.05,   // endTranslationToleranceMeters
+    2.0,    // endRotationToleranceDeg
+    0.3     // intermediateHandoffRadiusMeters
+));
+```
+
+### 2. Create a FollowPath Builder
+
+Create a reusable `FollowPath.Builder` in your drive subsystem or `RobotContainer`:
+
+```java
+import frc.robot.lib.BLine.*;
+import edu.wpi.first.math.controller.PIDController;
+
+// Create a reusable builder with your robot's configuration
+FollowPath.Builder pathBuilder = new FollowPath.Builder(
+    driveSubsystem,
+    driveSubsystem::getPose,
+    driveSubsystem::getChassisSpeeds,
+    driveSubsystem::drive,
+    new PIDController(5.0, 0.0, 0.0),  // translation
+    new PIDController(3.0, 0.0, 0.0),  // rotation
+    new PIDController(2.0, 0.0, 0.0)   // cross-track
+).withDefaultShouldFlip()
+ .withPoseReset(driveSubsystem::resetPose);
+```
+
+### 3. Create and Follow Paths
+
+**From JSON file:**
+
+```java
+// Loads deploy/autos/paths/myPathFile.json
+// Note: .json extension is added automatically
+Path myPath = new Path("myPathFile");
+
+Command followCommand = pathBuilder.build(myPath);
+```
+
+**Programmatically (using path elements from Core Concepts):**
+
+```java
+Path myPath = new Path(
+    new Path.Waypoint(new Translation2d(1.0, 1.0), new Rotation2d(0)),
+    new Path.TranslationTarget(new Translation2d(2.0, 2.0)),
+    new Path.Waypoint(new Translation2d(3.0, 1.0), new Rotation2d(Math.PI))
+);
+
+Command followCommand = pathBuilder.build(myPath);
+```
+
+### 4. Path-Specific Constraints (Optional)
+
+Override global constraints for individual paths using `PathConstraints`:
+
+```java
+Path.PathConstraints slowConstraints = new Path.PathConstraints()
+    .setMaxVelocityMetersPerSec(2.0)
+    .setMaxAccelerationMetersPerSec2(1.5)
+    .setMaxVelocityDegPerSec(180.0)
+    .setMaxAccelerationDegPerSec2(360.0)
+    .setEndTranslationToleranceMeters(0.02)
+    .setEndRotationToleranceDeg(1.0);
+
+// Create path with custom constraints
+Path slowPath = new Path(
+    slowConstraints,
+    new Path.Waypoint(new Translation2d(1.0, 1.0), new Rotation2d(0)),
+    new Path.TranslationTarget(new Translation2d(2.0, 2.0)),
+    new Path.Waypoint(new Translation2d(3.0, 1.0), new Rotation2d(Math.PI))
+);
+```
+
+You can also use **ranged constraints** to vary limits across different path segments:
+
+```java
+Path.PathConstraints rangedConstraints = new Path.PathConstraints()
+    .setMaxVelocityMetersPerSec(
+        new Path.RangedConstraint(4.0, 0, 2),  // Fast for elements 0-2
+        new Path.RangedConstraint(1.5, 3, 5)   // Slow for elements 3-5
+    );
+```
+
+### 5. Pre-Orient Modules (Recommended)
+
+For optimal autonomous performance, it is highly recommended to pre-orient your swerve modules toward the initial path direction before the match begins. This prevents micro-deviations at the start of the autonomous routine caused by modules needing to rotate during driving.
+
+Use `Path.getInitialModuleDirection()` to get the direction modules should face:
+
+**Option 1: Set modules via a command before auto starts**
+
+```java
+// In your autonomous initialization or pre-match routine
+Path autoPath = new Path("myAutoPath");
+Rotation2d initialDirection = autoPath.getInitialModuleDirection();
+
+driveSubsystem.setModuleOrientations(initialDirection);
+```
+
+**Option 2: Physically orient modules during robot setup**
+
+Manually rotate the swerve modules to face the initial path direction before the match starts.
+
+> **Note:** This optimization is primarily for the autonomous phase where precise initial movement matters most.
+
 ## Core Concepts
 
 Before diving into usage, it's important to understand how BLine represents paths.
 
-## Tracking Algorithm
+### Tracking Algorithm
 
 The path tracking algorithm works by:
 
@@ -216,176 +385,6 @@ Always tune your controllers within the full operating range of velocities and a
 #### Single-Element Paths
 
 Paths can consist of just **one Waypoint or TranslationTarget**—useful for simple point-to-point moves where you just need to drive to a single location. Note that a path with only a RotationTarget is invalid (you need at least one translation element).
-
-## Installation
-
-### Using Vendor JSON (Recommended)
-
-1. Open VS Code with your FRC project
-2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
-3. Type **"WPILib: Manage Vendor Libraries"**
-4. Select **"Install new libraries (online)"**
-5. Paste this URL:
-
-```
-https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/main/BLine-Lib.json
-```
-
-### Using Gradle (Alternative)
-
-Add JitPack repository to your `build.gradle`:
-
-```gradle
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-```
-
-Add the dependency:
-
-```gradle
-dependencies {
-    implementation 'com.github.edanliahovetsky:BLine-Lib:0.3.0'
-}
-```
-
-## Quick Start
-
-### 1. Set Global Constraints
-
-Global constraints define default velocity/acceleration limits and tolerances for all paths. Choose one approach:
-
-**Option A: Using `config.json`** (for JSON-based workflows)
-
-Create a `config.json` file in `src/main/deploy/autos/`:
-
-```json
-{
-    "default_max_velocity_meters_per_sec": 4.0,
-    "default_max_acceleration_meters_per_sec2": 3.0,
-    "default_max_velocity_deg_per_sec": 360.0,
-    "default_max_acceleration_deg_per_sec2": 720.0,
-    "default_end_translation_tolerance_meters": 0.05,
-    "default_end_rotation_tolerance_deg": 2.0,
-    "default_intermediate_handoff_radius_meters": 0.3
-}
-```
-
-**Option B: Setting in Code** (for code-only workflows)
-
-Set global constraints programmatically in your robot initialization:
-
-```java
-// Set global constraints before creating any paths
-Path.setDefaultGlobalConstraints(new Path.DefaultGlobalConstraints(
-    4.0,    // maxVelocityMetersPerSec
-    3.0,    // maxAccelerationMetersPerSec2
-    360.0,  // maxVelocityDegPerSec
-    720.0,  // maxAccelerationDegPerSec2
-    0.05,   // endTranslationToleranceMeters
-    2.0,    // endRotationToleranceDeg
-    0.3     // intermediateHandoffRadiusMeters
-));
-```
-
-### 2. Create a FollowPath Builder
-
-Create a reusable `FollowPath.Builder` in your drive subsystem or `RobotContainer`:
-
-```java
-import frc.robot.lib.BLine.*;
-import edu.wpi.first.math.controller.PIDController;
-
-// Create a reusable builder with your robot's configuration
-FollowPath.Builder pathBuilder = new FollowPath.Builder(
-    driveSubsystem,
-    driveSubsystem::getPose,
-    driveSubsystem::getChassisSpeeds,
-    driveSubsystem::drive,
-    new PIDController(5.0, 0.0, 0.0),  // translation
-    new PIDController(3.0, 0.0, 0.0),  // rotation
-    new PIDController(2.0, 0.0, 0.0)   // cross-track
-).withDefaultShouldFlip()
- .withPoseReset(driveSubsystem::resetPose);
-```
-
-### 3. Create and Follow Paths
-
-**From JSON file:**
-
-```java
-// Loads deploy/autos/paths/myPathFile.json
-// Note: .json extension is added automatically
-Path myPath = new Path("myPathFile");
-
-Command followCommand = pathBuilder.build(myPath);
-```
-
-**Programmatically (using path elements from Core Concepts):**
-
-```java
-Path myPath = new Path(
-    new Path.Waypoint(new Translation2d(1.0, 1.0), new Rotation2d(0)),
-    new Path.TranslationTarget(new Translation2d(2.0, 2.0)),
-    new Path.Waypoint(new Translation2d(3.0, 1.0), new Rotation2d(Math.PI))
-);
-
-Command followCommand = pathBuilder.build(myPath);
-```
-
-### 4. Path-Specific Constraints (Optional)
-
-Override global constraints for individual paths using `PathConstraints`:
-
-```java
-Path.PathConstraints slowConstraints = new Path.PathConstraints()
-    .setMaxVelocityMetersPerSec(2.0)
-    .setMaxAccelerationMetersPerSec2(1.5)
-    .setMaxVelocityDegPerSec(180.0)
-    .setMaxAccelerationDegPerSec2(360.0)
-    .setEndTranslationToleranceMeters(0.02)
-    .setEndRotationToleranceDeg(1.0);
-
-// Create path with custom constraints
-Path slowPath = new Path(
-    slowConstraints,
-    new Path.Waypoint(new Translation2d(1.0, 1.0), new Rotation2d(0)),
-    new Path.TranslationTarget(new Translation2d(2.0, 2.0)),
-    new Path.Waypoint(new Translation2d(3.0, 1.0), new Rotation2d(Math.PI))
-);
-```
-
-You can also use **ranged constraints** to vary limits across different path segments:
-
-```java
-Path.PathConstraints rangedConstraints = new Path.PathConstraints()
-    .setMaxVelocityMetersPerSec(
-        new Path.RangedConstraint(4.0, 0, 2),  // Fast for elements 0-2
-        new Path.RangedConstraint(1.5, 3, 5)   // Slow for elements 3-5
-    );
-```
-
-### 5. Pre-Orient Modules (Recommended)
-
-For optimal autonomous performance, it is highly recommended to pre-orient your swerve modules toward the initial path direction before the match begins. This prevents micro-deviations at the start of the autonomous routine caused by modules needing to rotate during driving.
-
-Use `Path.getInitialModuleDirection()` to get the direction modules should face:
-
-**Option 1: Set modules via a command before auto starts**
-
-```java
-// In your autonomous initialization or pre-match routine
-Path autoPath = new Path("myAutoPath");
-Rotation2d initialDirection = autoPath.getInitialModuleDirection();
-
-driveSubsystem.setModuleOrientations(initialDirection);
-```
-
-**Option 2: Physically orient modules during robot setup**
-
-Manually rotate the swerve modules to face the initial path direction before the match starts.
-
-> **Note:** This optimization is primarily for the autonomous phase where precise initial movement matters most.
 
 ## Path Construction with JSON
 
