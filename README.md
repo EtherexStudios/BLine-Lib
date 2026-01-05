@@ -1,6 +1,6 @@
 # BLine-Lib
 
-BLine is a path generation and tracking suite designed for the FIRST Robotics Competition (FRC). It is built around the concept of offering simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
+**BLine** is an open-source path generation and tracking suite designed for **holonomic drivetrains** (swerve, mecanum, etc.). It's built around simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
 
 Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with development beginning in late June of 2025, BLine plays into the recent emergence of the FRC polyline path planning meta, with renowned teams such as 2056 and 2910 (among others) running their own solutions during the 2025 Reefscape game.
 
@@ -10,6 +10,7 @@ Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with d
 
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [Core Concepts](#core-concepts)
 - [Tracking Algorithm](#tracking-algorithm)
   - [Path Constraints](#path-constraints)
@@ -20,7 +21,6 @@ Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with d
 - [Recommended Usage Modes](#recommended-usage-modes)
   - [Usage Tips](#usage-tips)
 - [Installation](#installation)
-- [Quick Start](#quick-start)
 - [Path Construction with JSON](#path-construction-with-json)
 - [API Reference](#api-reference)
 - [Building from Source](#building-from-source)
