@@ -519,7 +519,9 @@ public class FollowPath extends Command {
             targetTranslation.getX() - currentPose.getTranslation().getX()
         );
         double translationControllerOutput = -translationController.calculate(remainingDistance, 0);
-
+        logDouble("FollowPath/translationControllerOutput", translationControllerOutput);
+        System.out.println("ASDASDASD");
+        
         // Cache the remaining distance for logging
         cachedRemainingDistance = remainingDistance;
         double vx = translationControllerOutput * Math.cos(angleToTarget);
