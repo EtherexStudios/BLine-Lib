@@ -536,8 +536,8 @@ public class FollowPath extends Command {
 
         double crossTrackError = calculateCrossTrackError();
 
-        // clamp cross track controller for the same reason
-        double crossTrackControllerOutput = MathUtil.clamp(-crossTrackController.calculate(crossTrackError, 0), -translationConstraint.maxVelocityMetersPerSec(), translationConstraint.maxVelocityMetersPerSec());
+        // dont clamp cross track controller as users may prefer to tune their controller to be hyper response to cross track
+        double crossTrackControllerOutput = -crossTrackController.calculate(crossTrackError, 0);
         logDouble("FollowPath/crossTrackControllerOutput", crossTrackControllerOutput);
 
         vx += crossTrackControllerOutput * Math.cos(angleToTarget - Math.PI / 2);
