@@ -518,15 +518,28 @@ public class FollowPath extends Command {
             targetTranslation.getY() - currentPose.getTranslation().getY(),
             targetTranslation.getX() - currentPose.getTranslation().getX()
         );
-        double translationControllerOutput = -translationController.calculate(remainingDistance, 0);
 
+        if (!(pathElementsWithConstraints.get(translationElementIndex).getSecond() instanceof TranslationTargetConstraint)) {
+            logger.warning("FollowPath: Expected TranslationTargetConstraint at index " + translationElementIndex);
+            return;
+        }
+        TranslationTargetConstraint translationConstraint = (TranslationTargetConstraint) pathElementsWithConstraints.get(translationElementIndex).getSecond();
+
+        // Clamp translation controller output as to not overpower the crossTrackController output during the velo accel limiting phase
+        double translationControllerOutput = MathUtil.clamp(-translationController.calculate(remainingDistance, 0), -translationConstraint.maxVelocityMetersPerSec(), translationConstraint.maxVelocityMetersPerSec());
+        logDouble("FollowPath/translationControllerOutput", translationControllerOutput);
+        
         // Cache the remaining distance for logging
         cachedRemainingDistance = remainingDistance;
         double vx = translationControllerOutput * Math.cos(angleToTarget);
         double vy = translationControllerOutput * Math.sin(angleToTarget);
 
         double crossTrackError = calculateCrossTrackError();
+
+        // dont clamp cross track controller as users may prefer to tune their controller to be hyper response to cross track
         double crossTrackControllerOutput = -crossTrackController.calculate(crossTrackError, 0);
+        logDouble("FollowPath/crossTrackControllerOutput", crossTrackControllerOutput);
+
         vx += crossTrackControllerOutput * Math.cos(angleToTarget - Math.PI / 2);
         vy += crossTrackControllerOutput * Math.sin(angleToTarget - Math.PI / 2);
 
@@ -593,12 +606,6 @@ public class FollowPath extends Command {
                 );
         }
         double omega = rotationController.calculate(currentPose.getRotation().getRadians(), targetRotation);
-
-        if (!(pathElementsWithConstraints.get(translationElementIndex).getSecond() instanceof TranslationTargetConstraint)) {
-            logger.warning("FollowPath: Expected TranslationTargetConstraint at index " + translationElementIndex);
-            return;
-        }
-        TranslationTargetConstraint translationConstraint = (TranslationTargetConstraint) pathElementsWithConstraints.get(translationElementIndex).getSecond();
 
         ChassisSpeeds targetSpeeds = new ChassisSpeeds(vx, vy, omega);
         targetSpeeds = ChassisRateLimiter.limit(
