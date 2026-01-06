@@ -6,6 +6,8 @@ Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with d
 
 📚 **[Full Javadoc Documentation](https://edanliahovetsky.github.io/BLine-Lib/)** | 🔧 **[BLine-GUI](https://github.com/edanliahovetsky/BLine-GUI)**
 
+💬 **[Chief Delphi Thread](https://www.chiefdelphi.com/t/introducing-bline-a-new-rapid-polyline-autonomous-path-planning-suite/509778)** — discussion, feedback, and announcements.
+
 ![Robot Demo](docs/cone-demo.gif)
 
 ## Table of Contents
