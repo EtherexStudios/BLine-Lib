@@ -2,7 +2,7 @@
 
 **BLine** is an open-source path generation and tracking suite designed for **holonomic drivetrains** (swerve, mecanum, etc.). It's built around simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
 
-Built in-house by FRC Team 2638 Rebel Robotics, by students for students, with development beginning in late June of 2025, BLine plays into the recent emergence of the FRC polyline path planning meta, with renowned teams such as 2056 and 2910 (among others) running their own solutions during the 2025 Reefscape game.
+Built in-house by FRC Team 2638 Rebel Robotics, by students for students. BLine offers the advantages of simplicity, easy tunability, and excellent real time performance while performing at a the same (or potentially better) level as other autonomous solutions.
 
 📚 **[Full Javadoc Documentation](https://edanliahovetsky.github.io/BLine-Lib/)** | 🔧 **[BLine-GUI](https://github.com/edanliahovetsky/BLine-GUI)**
 
