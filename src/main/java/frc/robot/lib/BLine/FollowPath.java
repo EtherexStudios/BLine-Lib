@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.BLine.Path.PathElement;
 import frc.robot.lib.BLine.Path.PathElementConstraint;
@@ -227,7 +228,7 @@ public class FollowPath extends Command {
      * }</pre>
      */
     public static class Builder {
-        private final SubsystemBase driveSubsystem;
+        private final Subsystem driveSubsystem;
         private final Supplier<Pose2d> poseSupplier;
         private final Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier;
         private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
@@ -250,7 +251,7 @@ public class FollowPath extends Command {
          * @param crossTrackController PID controller for staying on the line between waypoints
          */
         public Builder(
-            SubsystemBase driveSubsystem, 
+            Subsystem driveSubsystem, 
             Supplier<Pose2d> poseSupplier,
             Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier,
             Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer,
@@ -350,7 +351,7 @@ public class FollowPath extends Command {
 
     private FollowPath(
         Path path, 
-        SubsystemBase driveSubsystem, 
+        Subsystem driveSubsystem, 
         Supplier<Pose2d> poseSupplier, 
         Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier,
         Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer,

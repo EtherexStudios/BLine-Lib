@@ -40,7 +40,7 @@ Add the dependency:
 
 ```gradle
 dependencies {
-    implementation 'com.github.edanliahovetsky:BLine-Lib:1.0.0'
+    implementation 'com.github.edanliahovetsky:BLine-Lib:v0.4.1'
 }
 ```
 
