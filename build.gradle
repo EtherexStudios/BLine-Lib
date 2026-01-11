@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.edanliahovetsky'
-version = '0.4.1'
+version = '0.4.2'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -23,7 +23,7 @@ repositories {
 }
 
 ext {
-    wpiVersion = "2025.3.2"
+    wpiVersion = "2026.1.1"
 }
 
 dependencies {
