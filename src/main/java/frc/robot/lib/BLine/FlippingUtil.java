@@ -4,20 +4,20 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 
 /*
 * Utility class for flipping positions/rotations to the other side of the field 
  * This is a copy of the FlippingUtil class from Pathplanner.
  * The file can be found at: https://github.com/mjansen4857/pathplanner/blob/main/pathplannerlib/src/main/java/com/pathplanner/lib/util/FlippingUtil.java
 */
+
 public class FlippingUtil {
   /** The type of symmetry for the current field */
   public static FieldSymmetry symmetryType = FieldSymmetry.kRotational;
   /** The X size or length of the current field in meters */
-  public static double fieldSizeX = Units.feetToMeters(57.573);
+  public static double fieldSizeX = 16.54;
   /** The Y size or width of the current field in meters */
-  public static double fieldSizeY = Units.feetToMeters(26.417);
+  public static double fieldSizeY = 8.07;
 
   /** Enum representing the different types of field symmetry */
   public enum FieldSymmetry {
