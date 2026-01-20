@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.lib.BLine.Path.PathElement;
+import frc.robot.lib.BLine.Path.EventTrigger;
 import frc.robot.lib.BLine.Path.RotationTarget;
 import frc.robot.lib.BLine.Path.TranslationTarget;
 import frc.robot.lib.BLine.Path.Waypoint;
@@ -277,6 +278,14 @@ public class JsonUtils {
                     tRatio,
                     profiled
                 ));
+            } else if ("event_trigger".equals(type)) {
+                Object tRatioObj = elementJson.get("t_ratio");
+                double tRatio = tRatioObj != null ? ((Number) tRatioObj).doubleValue() : 0.5;
+                String libKey = (String) elementJson.get("lib_key");
+                if (libKey == null) {
+                    continue;
+                }
+                elements.add(new EventTrigger(tRatio, libKey));
             } else if ("waypoint".equals(type)) {
                 JSONObject translationJson = (JSONObject) elementJson.get("translation_target");
                 if (translationJson == null) {

@@ -9,17 +9,22 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.BLine.Path.PathElement;
 import frc.robot.lib.BLine.Path.PathElementConstraint;
+import frc.robot.lib.BLine.Path.EventTrigger;
 import frc.robot.lib.BLine.Path.RotationTarget;
 import frc.robot.lib.BLine.Path.RotationTargetConstraint;
 import frc.robot.lib.BLine.Path.TranslationTarget;
 import frc.robot.lib.BLine.Path.TranslationTargetConstraint;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -81,6 +86,7 @@ public class FollowPath extends Command {
     private static Consumer<Pair<String, Translation2d[]>> translationListLoggingConsumer = value -> {};
     private static Consumer<Pair<String, Double>> doubleLoggingConsumer = value -> {};
     private static Consumer<Pair<String, Boolean>> booleanLoggingConsumer = value -> {};
+    private static final Map<String, Runnable> eventTriggerRegistry = new HashMap<>();
 
     private static void logDouble(String key, double value) {
         doubleLoggingConsumer.accept(new Pair<>(key, value));
@@ -92,6 +98,34 @@ public class FollowPath extends Command {
 
     private static void logPose(String key, Pose2d value) {
         poseLoggingConsumer.accept(new Pair<>(key, value));
+    }
+
+    /**
+     * Registers an event trigger action by key.
+     *
+     * @param key The event trigger key referenced in JSON
+     * @param action The action to execute when the trigger is reached
+     */
+    public static void registerEventTrigger(String key, Runnable action) {
+        if (key == null || key.isEmpty() || action == null) {
+            logger.warning("FollowPath: Ignoring invalid event trigger registration");
+            return;
+        }
+        eventTriggerRegistry.put(key, action);
+    }
+
+    /**
+     * Registers an event trigger action by key using a WPILib Command.
+     *
+     * @param key The event trigger key referenced in JSON
+     * @param command The command to schedule when the trigger is reached
+     */
+    public static void registerEventTrigger(String key, Command command) {
+        if (command == null) {
+            logger.warning("FollowPath: Ignoring null command registration for key: " + key);
+            return;
+        }
+        registerEventTrigger(key, () -> CommandScheduler.getInstance().schedule(command));
     }
 
     private final PIDController translationController;
@@ -174,6 +208,7 @@ public class FollowPath extends Command {
     private int rotationElementIndex = 0;
     private int translationElementIndex = 0;
     private int prevTranslationElementIndex = 0;
+    private int eventTriggerElementIndex = 0;
 
     private ChassisSpeeds lastSpeeds = new ChassisSpeeds();
     private double lastTimestamp = 0;
@@ -187,6 +222,7 @@ public class FollowPath extends Command {
     private int logCounter = 0;
     private ArrayList<Translation2d> robotTranslations = new ArrayList<>();
     private double cachedRemainingDistance = 0.0;
+    private final Set<Integer> firedEventTriggerIndices = new HashSet<>();
 
     /**
      * Builder class for constructing {@link FollowPath} commands with a fluent API.
@@ -409,6 +445,8 @@ public class FollowPath extends Command {
         rotationElementIndex = 0;
         translationElementIndex = 0;
         prevTranslationElementIndex = 0;
+        eventTriggerElementIndex = 0;
+        firedEventTriggerIndices.clear();
         lastTimestamp = Timer.getTimestamp();
         pathInitStartPose = poseSupplier.get();
         lastSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeedsSupplier.get(), pathInitStartPose.getRotation());
@@ -505,6 +543,8 @@ public class FollowPath extends Command {
             previousRotationElementIndex = lastRotationElementIndex;
             currentRotationTargetInitRad = currentPose.getRotation().getRadians();
         }
+
+        processEventTriggers(currentPose);
 
         Translation2d targetTranslation = null;
         if (translationElementIndex < pathElementsWithConstraints.size() &&
@@ -967,6 +1007,86 @@ public class FollowPath extends Command {
      */
     private boolean isRotationNextSegment() {
         return rotationElementIndex > translationElementIndex;
+    }
+
+    private void processEventTriggers(Pose2d currentPose) {
+        while (eventTriggerElementIndex < pathElementsWithConstraints.size()) {
+            PathElement element = pathElementsWithConstraints.get(eventTriggerElementIndex).getFirst();
+            if (!(element instanceof EventTrigger)) {
+                eventTriggerElementIndex++;
+                continue;
+            }
+            if (firedEventTriggerIndices.contains(eventTriggerElementIndex)) {
+                eventTriggerElementIndex++;
+                continue;
+            }
+            if (!isEventTriggerTRatioReached(eventTriggerElementIndex, currentPose)) {
+                break;
+            }
+            EventTrigger trigger = (EventTrigger) element;
+            Runnable action = eventTriggerRegistry.get(trigger.libKey());
+            if (action != null) {
+                action.run();
+            } else {
+                logger.warning("FollowPath: Unregistered event trigger key: " + trigger.libKey());
+            }
+            firedEventTriggerIndices.add(eventTriggerElementIndex);
+            eventTriggerElementIndex++;
+        }
+    }
+
+    private boolean isEventTriggerTRatioReached(int eventIndex, Pose2d currentPose) {
+        if (eventIndex >= pathElementsWithConstraints.size() ||
+            !(pathElementsWithConstraints.get(eventIndex).getFirst() instanceof EventTrigger)) {
+            return false;
+        }
+        if (isEventTriggerNextSegment(eventIndex)) { return false; }
+        if (isEventTriggerPreviousSegment(eventIndex)) { return true; }
+
+        Translation2d translationA = null;
+        Translation2d translationB = null;
+        for (int i = eventIndex - 1; i >= 0; i--) {
+            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
+                translationA = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
+                break;
+            }
+        }
+        for (int i = eventIndex + 1; i < pathElementsWithConstraints.size(); i++) {
+            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
+                translationB = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
+                break;
+            }
+        }
+        if (translationA == null || translationB == null) {
+            logger.warning("FollowPath: Missing translation bounds for event trigger at index " + eventIndex);
+            return false;
+        }
+
+        double segmentLength = translationA.getDistance(translationB);
+        if (segmentLength < 1e-6) {
+            return true;
+        }
+
+        double distanceFromA = currentPose.getTranslation().getDistance(translationA);
+        double segmentProgress = distanceFromA / segmentLength;
+        segmentProgress = Math.max(0, Math.min(1, segmentProgress));
+
+        double targetTRatio = ((EventTrigger) pathElementsWithConstraints.get(eventIndex).getFirst()).t_ratio();
+        return segmentProgress >= targetTRatio;
+    }
+
+    private boolean isEventTriggerPreviousSegment(int eventIndex) {
+        if (eventIndex > translationElementIndex) { return false; }
+        for (int i = eventIndex; i < translationElementIndex; i++) {
+            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isEventTriggerNextSegment(int eventIndex) {
+        return eventIndex > translationElementIndex;
     }
 
     @Override
