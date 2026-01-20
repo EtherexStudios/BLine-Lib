@@ -69,7 +69,7 @@ public class Path {
      *   <li>{@link RotationTarget} - Holonomic rotation target only</li>
      * </ul>
      */
-    public sealed interface PathElement permits Waypoint, TranslationTarget, RotationTarget {
+    public sealed interface PathElement permits Waypoint, TranslationTarget, RotationTarget, EventTrigger {
         /**
          * Creates a deep copy of this path element.
          * 
@@ -84,7 +84,7 @@ public class Path {
      * <p>Each path element type has a corresponding constraint type that defines
      * the velocity and acceleration limits for that element.
      */
-    public sealed interface PathElementConstraint permits WaypointConstraint, TranslationTargetConstraint, RotationTargetConstraint {}
+    public sealed interface PathElementConstraint permits WaypointConstraint, TranslationTargetConstraint, RotationTargetConstraint, EventTriggerConstraint {}
 
     /**
      * Constraints for a {@link Waypoint}, including both translation and rotation limits.
@@ -122,6 +122,14 @@ public class Path {
         double maxVelocityDegPerSec,
         double maxAccelerationDegPerSec2
     ) implements PathElementConstraint {}
+
+    /**
+     * Constraints for an {@link EventTrigger}.
+     *
+     * <p>Event triggers do not impose kinematic constraints, but still participate in
+     * the element/constraint pairing required by the path follower.
+     */
+    public static record EventTriggerConstraint() implements PathElementConstraint {}
 
     /**
      * A waypoint that combines both a translation target and a rotation target.
@@ -361,6 +369,29 @@ public class Path {
          */
         public RotationTarget(Rotation2d rotation, double t_ratio) {
             this(rotation, t_ratio, true);
+        }
+    }
+
+    /**
+     * An event trigger that fires a user-registered action at a t_ratio along a segment.
+     *
+     * <p>Event triggers are placed between translation targets and use their t_ratio to
+     * determine when the action should fire along the segment.
+     *
+     * @param t_ratio The position along the segment (0-1) where this event should trigger
+     * @param libKey The key used to look up the registered action
+     */
+    public static record EventTrigger(
+        double t_ratio,
+        String libKey
+    ) implements PathElement {
+        /**
+         * Creates a copy of this event trigger.
+         *
+         * @return A new EventTrigger with the same values
+         */
+        public EventTrigger copy() {
+            return new EventTrigger(t_ratio, libKey);
         }
     }
 
@@ -1101,6 +1132,8 @@ public class Path {
                 elementsWithConstraints.add(new Pair<>(element, new RotationTargetConstraint(maxVelocityDegPerSec, maxAccelerationDegPerSec2)));
 
                 rotationOrdinal++;
+            } else if (element instanceof EventTrigger) {
+                elementsWithConstraints.add(new Pair<>(element, new EventTriggerConstraint()));
             }
         }
 
@@ -1211,6 +1244,11 @@ public class Path {
                         ((Waypoint) element).rotationTarget().t_ratio(),
                         ((Waypoint) element).rotationTarget().profiledRotation()
                     )
+                ));
+            } else if (element instanceof EventTrigger) {
+                pathElements.set(i, new EventTrigger(
+                    ((EventTrigger) element).t_ratio(),
+                    ((EventTrigger) element).libKey()
                 ));
             }
         }
