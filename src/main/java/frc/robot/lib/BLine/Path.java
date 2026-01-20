@@ -84,7 +84,7 @@ public class Path {
      * <p>Each path element type has a corresponding constraint type that defines
      * the velocity and acceleration limits for that element.
      */
-    public sealed interface PathElementConstraint permits WaypointConstraint, TranslationTargetConstraint, RotationTargetConstraint, EventTriggerConstraint {}
+    public sealed interface PathElementConstraint permits WaypointConstraint, TranslationTargetConstraint, RotationTargetConstraint {}
 
     /**
      * Constraints for a {@link Waypoint}, including both translation and rotation limits.
@@ -122,14 +122,6 @@ public class Path {
         double maxVelocityDegPerSec,
         double maxAccelerationDegPerSec2
     ) implements PathElementConstraint {}
-
-    /**
-     * Constraints for an {@link EventTrigger}.
-     *
-     * <p>Event triggers do not impose kinematic constraints, but still participate in
-     * the element/constraint pairing required by the path follower.
-     */
-    public static record EventTriggerConstraint() implements PathElementConstraint {}
 
     /**
      * A waypoint that combines both a translation target and a rotation target.
@@ -1133,7 +1125,7 @@ public class Path {
 
                 rotationOrdinal++;
             } else if (element instanceof EventTrigger) {
-                elementsWithConstraints.add(new Pair<>(element, new EventTriggerConstraint()));
+                elementsWithConstraints.add(new Pair<>(element, null));
             }
         }
 
