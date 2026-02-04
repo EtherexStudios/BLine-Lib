@@ -204,6 +204,7 @@ public class FollowPath extends Command {
     private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
     private final Supplier<Boolean> shouldFlipPathSupplier;
     private final Consumer<Pose2d> poseResetConsumer;
+    private final boolean useTRatioBasedTranslationHandoffs;
     
     private int rotationElementIndex = 0;
     private int translationElementIndex = 0;
@@ -274,6 +275,7 @@ public class FollowPath extends Command {
         
         private Supplier<Boolean> shouldFlipPathSupplier = () -> false;
         private Consumer<Pose2d> poseResetConsumer = (pose) -> {};
+        private boolean useTRatioBasedTranslationHandoffs = false;
         
         /**
          * Creates a new FollowPath Builder with the required configuration.
@@ -347,6 +349,21 @@ public class FollowPath extends Command {
         }
 
         /**
+         * Enables or disables t_ratio-based translation handoffs.
+         *
+         * <p>When enabled, translation target handoffs occur based on projected
+         * segment progress rather than raw distance, which can be more robust at
+         * higher speeds on riskier paths. Defaults to false.
+         *
+         * @param enabled true to use t_ratio-based handoffs, false for radius-based
+         * @return This builder for chaining
+         */
+        public Builder withTRatioBasedTranslationHandoffs(boolean enabled) {
+            this.useTRatioBasedTranslationHandoffs = enabled;
+            return this;
+        }
+
+        /**
          * Builds a FollowPath command for the specified path.
          * 
          * <p>The built command will use all the configuration from this builder. Each call
@@ -365,6 +382,7 @@ public class FollowPath extends Command {
                 robotRelativeSpeedsConsumer,
                 shouldFlipPathSupplier,
                 poseResetConsumer,
+                useTRatioBasedTranslationHandoffs,
                 translationController,
                 rotationController,
                 crossTrackController
@@ -393,6 +411,7 @@ public class FollowPath extends Command {
         Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer,
         Supplier<Boolean> shouldFlipPathSupplier,
         Consumer<Pose2d> poseResetConsumer,
+        boolean useTRatioBasedTranslationHandoffs,
         PIDController translationController, 
         PIDController rotationController,
         PIDController crossTrackController
@@ -407,6 +426,7 @@ public class FollowPath extends Command {
         this.robotRelativeSpeedsConsumer = robotRelativeSpeedsConsumer;
         this.shouldFlipPathSupplier = shouldFlipPathSupplier;
         this.poseResetConsumer = poseResetConsumer;
+        this.useTRatioBasedTranslationHandoffs = useTRatioBasedTranslationHandoffs;
         this.translationController = translationController;
         this.rotationController = rotationController;
         this.crossTrackController = crossTrackController;
@@ -470,7 +490,7 @@ public class FollowPath extends Command {
 
     @Override
     public void execute() {
-        System.out.println("FollowPath: 123");
+        System.out.println("FollowPath: 99999");
         
         if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - skipping execution");
@@ -493,11 +513,37 @@ public class FollowPath extends Command {
         }
 
         TranslationTarget currentTranslationTarget = (TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst();
-        // check to see if we are in the intermediate handoff radius of the current target translation
-        if (currentPose.getTranslation().getDistance(currentTranslationTarget.translation()) <= 
-            currentTranslationTarget.intermediateHandoffRadiusMeters().orElse(path.getDefaultGlobalConstraints().getIntermediateHandoffRadiusMeters())) {
-            // if we are in the intermediate handoff radius of the current target translation,
-            // switch to the next translation element
+        double handoffRadius = currentTranslationTarget.intermediateHandoffRadiusMeters()
+            .orElse(path.getDefaultGlobalConstraints().getIntermediateHandoffRadiusMeters());
+        boolean shouldHandoff = false;
+
+        if (!useTRatioBasedTranslationHandoffs) {
+            // Distance-based handoff (default behavior).
+            shouldHandoff = currentPose.getTranslation().getDistance(currentTranslationTarget.translation()) <= handoffRadius;
+        } else {
+            // t_ratio-based handoff using projected segment progress for better robustness at speed.
+            Translation2d segmentEnd = currentTranslationTarget.translation();
+            Translation2d segmentStart = getCurrentTranslationSegmentStart();
+
+            double segmentLength = segmentStart.getDistance(segmentEnd);
+            if (segmentLength < 1e-6) {
+                // Avoid divide-by-zero behavior on tiny segments.
+                shouldHandoff = currentPose.getTranslation().getDistance(segmentEnd) <= handoffRadius;
+            } else {
+                double segmentProgress = calculateSegmentProgressProjected(
+                    segmentStart,
+                    segmentEnd,
+                    currentPose.getTranslation()
+                );
+                double handoffThreshold = 1.0 - (handoffRadius / segmentLength);
+                handoffThreshold = Math.max(0.0, Math.min(1.0, handoffThreshold));
+                shouldHandoff = segmentProgress > handoffThreshold;
+            }
+        }
+
+        if (shouldHandoff) {
+            // If we are in the handoff region of the current target translation,
+            // switch to the next translation element.
 
             for (int i = translationElementIndex + 1; i < pathElementsWithConstraints.size(); i++) {
                 if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
@@ -788,13 +834,7 @@ public class FollowPath extends Command {
      */
     private double calculateCrossTrackError() {
         Translation2d targetTranslation = ((TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst()).translation();
-        Translation2d prevTranslation;
-        if (translationElementIndex > 0) {
-            prevTranslation = ((TranslationTarget) pathElementsWithConstraints.get(prevTranslationElementIndex).getFirst()).translation();
-        }
-        else {
-            prevTranslation = pathInitStartPose.getTranslation();
-        }
+        Translation2d prevTranslation = getCurrentTranslationSegmentStart();
 
         Pose2d currentPose = poseSupplier.get();
         Translation2d robotPosition = currentPose.getTranslation();
@@ -809,6 +849,7 @@ public class FollowPath extends Command {
 
         // Length squared of the line segment
         double segmentLengthSquared = dx * dx + dy * dy;
+        logDouble("FollowPath/segmentLengthSquared", segmentLengthSquared);
 
         if (segmentLengthSquared < 1e-6) {
             // Points are essentially the same, return distance to target
@@ -910,15 +951,31 @@ public class FollowPath extends Command {
         }
 
         Translation2d segmentEnd = ((TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst()).translation();
-        Translation2d segmentStart;
-        if (translationElementIndex > 0 &&
-            pathElementsWithConstraints.get(prevTranslationElementIndex).getFirst() instanceof TranslationTarget) {
-            segmentStart = ((TranslationTarget) pathElementsWithConstraints.get(prevTranslationElementIndex).getFirst()).translation();
-        } else {
-            segmentStart = pathInitStartPose.getTranslation();
-        }
+        Translation2d segmentStart = getCurrentTranslationSegmentStart();
 
         return calculateProjectedPointOnSegment(segmentStart, segmentEnd, robotPosition);
+    }
+
+    /**
+     * Gets the start point for the current translation segment.
+     *
+     * <p>This walks backward from the current translation element to find the
+     * previous translation target. If none exists, it falls back to the path
+     * initialization pose. This keeps cross-track calculations stable when
+     * translation targets switch.
+     *
+     * @return The start translation for the current segment
+     */
+    private Translation2d getCurrentTranslationSegmentStart() {
+        if (translationElementIndex <= 0) {
+            return pathInitStartPose.getTranslation();
+        }
+        for (int i = translationElementIndex - 1; i >= 0; i--) {
+            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
+                return ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
+            }
+        }
+        return pathInitStartPose.getTranslation();
     }
 
     /**
