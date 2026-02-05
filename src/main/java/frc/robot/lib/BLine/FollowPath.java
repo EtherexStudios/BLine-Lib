@@ -489,9 +489,7 @@ public class FollowPath extends Command {
     }
 
     @Override
-    public void execute() {
-        System.out.println("FollowPath: 99999");
-        
+    public void execute() {        
         if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - skipping execution");
             return;
