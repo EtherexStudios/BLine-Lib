@@ -497,7 +497,6 @@ public class FollowPath extends Command {
         double dt = Timer.getTimestamp() - lastTimestamp;
         lastTimestamp = Timer.getTimestamp();
 
-
         Pose2d currentPose = poseSupplier.get();
 
         // Ensure we have valid indices
@@ -525,10 +524,10 @@ public class FollowPath extends Command {
 
             double segmentLength = segmentStart.getDistance(segmentEnd);
             if (segmentLength < 1e-6) {
-                // Avoid divide-by-zero behavior on tiny segments.
+                // Tiny segment: fall back to distance check for safety.
                 shouldHandoff = currentPose.getTranslation().getDistance(segmentEnd) <= handoffRadius;
             } else {
-                double segmentProgress = calculateSegmentProgressProjected(
+                double segmentProgress = calculateSegmentProjectionT(
                     segmentStart,
                     segmentEnd,
                     currentPose.getTranslation()
@@ -645,32 +644,28 @@ public class FollowPath extends Command {
             currentRotationTargetRad = currentRotationTarget.rotation();
 
             if (currentRotationTarget.profiledRotation()) {
-                double remainingRotationDistance = calculateRemainingDistanceToRotationTarget();
-                double rotationSegmentDistance = calculateRotationTargetSegmentDistance();
+                // Calculate rotation progress using t-ratio projection between rotation target positions.
+                Translation2d rotationStart = previousRotationElementIndex == 0
+                    ? pathInitStartPose.getTranslation()
+                    : calculateRotationTargetTranslation(previousRotationElementIndex);
+                Translation2d rotationEnd = calculateRotationTargetTranslation(rotationElementIndex);
 
-                logDouble("FollowPath/remainingRotationDistance", remainingRotationDistance);
-                logDouble("FollowPath/rotationSegmentDistance", rotationSegmentDistance);
+                double segmentProgress = calculateSegmentProjectionT(
+                    rotationStart, rotationEnd, currentPose.getTranslation()
+                );
 
-                // Avoid divide by zero and handle edge cases
-                double segmentProgress = 0.0;
-                if (rotationSegmentDistance > 1e-6) { // Use small epsilon instead of just > 0
-                    segmentProgress = 1 - remainingRotationDistance / rotationSegmentDistance;
-                    // Clamp to valid range
-                    segmentProgress = Math.max(0.0, Math.min(1.0, segmentProgress));
-
-                    double endTranslationTolerance = path.getEndTranslationToleranceMeters();
-                    if (endTranslationTolerance > 0) {
-                        // Treat the rotation as complete once we are within the linear tolerance of the target.
-                        // This prevents us from undershooting the final rotation when translation stops early.
-                        double effectiveTolerance = Math.min(endTranslationTolerance, rotationSegmentDistance);
-                        if (remainingRotationDistance <= effectiveTolerance) {
-                            segmentProgress = 1.0;
-                        }
+                // Snap rotation to complete when within end-translation tolerance of the target.
+                // This prevents undershooting the final rotation when translation stops early.
+                double rotationSegmentLength = rotationStart.getDistance(rotationEnd);
+                double endTranslationTolerance = path.getEndTranslationToleranceMeters();
+                if (rotationSegmentLength > 1e-6 && endTranslationTolerance > 0) {
+                    double effectiveTolerance = Math.min(endTranslationTolerance, rotationSegmentLength);
+                    double toleranceThreshold = 1.0 - (effectiveTolerance / rotationSegmentLength);
+                    if (segmentProgress >= toleranceThreshold) {
+                        segmentProgress = 1.0;
                     }
-                } else if (rotationSegmentDistance < 0) {
-                    logger.warning("FollowPath: Negative rotation segment distance: " + rotationSegmentDistance);
-                    segmentProgress = 0.0;
                 }
+
                 logDouble("FollowPath/segmentProgress", segmentProgress);
 
                 // Calculate the shortest angular path from current robot rotation to target
@@ -723,15 +718,12 @@ public class FollowPath extends Command {
             translationListLoggingConsumer.accept(new Pair<>("FollowPath/robotTranslations", robotTranslations.toArray(Translation2d[]::new)));
         }
         
-
         logDouble("FollowPath/calculateRemainingPathDistance", cachedRemainingDistance);
         logDouble("FollowPath/translationElementIndex", (double) translationElementIndex);
         logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
         logDouble("FollowPath/targetRotationDeg", Math.toDegrees(targetRotationRad));
         logDouble("FollowPath/rotationControllerOutput", omega);
-
         logDouble("FollowPath/currentRotationTargetInitRad", currentRotationTargetInitRad);
-
     }
     
     /**
@@ -757,72 +749,6 @@ public class FollowPath extends Command {
     }
 
     /**
-     * Calculates the remaining distance to the current rotation target position.
-     * 
-     * <p>Used for interpolating rotation based on progress between rotation targets.
-     * 
-     * @return The remaining distance in meters to where the current rotation should be achieved
-     */
-    private double calculateRemainingDistanceToRotationTarget() {
-        Translation2d previousTranslation = calculateProjectedPositionOnCurrentSegment();
-        double remainingDistance = 0;
-        if (isRotationNextSegment()) {
-            for (int i = translationElementIndex; i <= rotationElementIndex; i++) {
-                if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                    remainingDistance += previousTranslation.getDistance(
-                        ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation()
-                    );
-                    previousTranslation = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
-                } else if (pathElementsWithConstraints.get(i).getFirst() instanceof RotationTarget) {
-                    remainingDistance += previousTranslation.getDistance(
-                        calculateRotationTargetTranslation(i)
-                    );
-                    previousTranslation = calculateRotationTargetTranslation(i);
-                }
-            }
-        } else {
-            remainingDistance = previousTranslation.getDistance(
-                calculateRotationTargetTranslation(rotationElementIndex)
-            );
-        }
-        
-        return remainingDistance;
-    }
-
-    /**
-     * Calculates the total distance of the segment between the previous and current rotation targets.
-     * 
-     * <p>Used for interpolating rotation based on progress between rotation targets.
-     * If there is no previous rotation target, returns the distance from the path start.
-     * 
-     * @return The segment distance in meters
-     */
-    private double calculateRotationTargetSegmentDistance() {
-        // Find the previous rotation target (immediately before current rotation)
-
-        Translation2d startPoint = previousRotationElementIndex == 0
-            ? pathInitStartPose.getTranslation()
-            : calculateRotationTargetTranslation(previousRotationElementIndex);
-        Translation2d endPoint = calculateRotationTargetTranslation(rotationElementIndex);
-
-        double distance = 0.0;
-        Translation2d prev = startPoint;
-        int startIdx = previousRotationElementIndex == 0 ? 0 : previousRotationElementIndex + 1;
-        for (int i = startIdx; i <= rotationElementIndex; i++) {
-            if (i == rotationElementIndex) {
-                distance += prev.getDistance(endPoint);
-                break;
-            }
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                Translation2d next = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
-                distance += prev.getDistance(next);
-                prev = next;
-            }
-        }
-        return distance;
-    }
-
-    /**
      * Calculates the signed cross-track error from the robot to the line between waypoints.
      * 
      * <p>Positive values indicate the robot is to the right of the path, negative values
@@ -837,33 +763,8 @@ public class FollowPath extends Command {
         Pose2d currentPose = poseSupplier.get();
         Translation2d robotPosition = currentPose.getTranslation();
 
-        // Vector from previous point to target point
-        double dx = targetTranslation.getX() - prevTranslation.getX();
-        double dy = targetTranslation.getY() - prevTranslation.getY();
-
-        // Vector from previous point to robot
-        double dxRobot = robotPosition.getX() - prevTranslation.getX();
-        double dyRobot = robotPosition.getY() - prevTranslation.getY();
-
-        // Length squared of the line segment
-        double segmentLengthSquared = dx * dx + dy * dy;
-        logDouble("FollowPath/segmentLengthSquared", segmentLengthSquared);
-
-        if (segmentLengthSquared < 1e-6) {
-            // Points are essentially the same, return distance to target
-            return robotPosition.getDistance(targetTranslation);
-        }
-
-        // Project robot position onto the line (dot product)
-        double t = (dxRobot * dx + dyRobot * dy) / segmentLengthSquared;
-
-        // Clamp t to [0, 1] to stay within the segment
-        t = Math.max(0.0, Math.min(1.0, t));
-
-        // Find the closest point on the line segment
-        double closestX = prevTranslation.getX() + t * dx;
-        double closestY = prevTranslation.getY() + t * dy;
-        Translation2d closestPoint = new Translation2d(closestX, closestY);
+        // Find closest point on the segment using shared projection utility
+        Translation2d closestPoint = calculateProjectedPointOnSegment(prevTranslation, targetTranslation, robotPosition);
 
         // Calculate signed cross-track error
         // Positive = right of path, Negative = left of path
@@ -937,24 +838,6 @@ public class FollowPath extends Command {
     }
 
     /**
-     * Calculates the robot's projected position on the current translation segment.
-     *
-     * @return Projected position on the current segment, or the robot position if unknown
-     */
-    private Translation2d calculateProjectedPositionOnCurrentSegment() {
-        Translation2d robotPosition = poseSupplier.get().getTranslation();
-        if (translationElementIndex >= pathElementsWithConstraints.size() ||
-            !(pathElementsWithConstraints.get(translationElementIndex).getFirst() instanceof TranslationTarget)) {
-            return robotPosition;
-        }
-
-        Translation2d segmentEnd = ((TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst()).translation();
-        Translation2d segmentStart = getCurrentTranslationSegmentStart();
-
-        return calculateProjectedPointOnSegment(segmentStart, segmentEnd, robotPosition);
-    }
-
-    /**
      * Gets the start point for the current translation segment.
      *
      * <p>This walks backward from the current translation element to find the
@@ -974,22 +857,6 @@ public class FollowPath extends Command {
             }
         }
         return pathInitStartPose.getTranslation();
-    }
-
-    /**
-     * Calculates the robot's progress along the given segment using projection.
-     *
-     * @param segmentStart The start of the segment
-     * @param segmentEnd The end of the segment
-     * @param robotPosition The current robot position
-     * @return Progress along the segment in [0, 1]
-     */
-    private double calculateSegmentProgressProjected(
-        Translation2d segmentStart,
-        Translation2d segmentEnd,
-        Translation2d robotPosition
-    ) {
-        return calculateSegmentProjectionT(segmentStart, segmentEnd, robotPosition);
     }
 
     /**
@@ -1113,7 +980,7 @@ public class FollowPath extends Command {
         }
 
         // Calculate progress along the segment using projection (0 = at translationA, 1 = at translationB)
-        double segmentProgress = calculateSegmentProgressProjected(
+        double segmentProgress = calculateSegmentProjectionT(
             translationA,
             translationB,
             currentPose.getTranslation()
@@ -1214,7 +1081,7 @@ public class FollowPath extends Command {
             return true;
         }
 
-        double segmentProgress = calculateSegmentProgressProjected(
+        double segmentProgress = calculateSegmentProjectionT(
             translationA,
             translationB,
             currentPose.getTranslation()
