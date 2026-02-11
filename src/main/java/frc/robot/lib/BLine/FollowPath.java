@@ -489,7 +489,7 @@ public class FollowPath extends Command {
     }
 
     @Override
-    public void execute() {        
+    public void execute() {  
         if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - skipping execution");
             return;
@@ -1268,6 +1268,11 @@ public class FollowPath extends Command {
 
         logBoolean("FollowPath/finished", finished);
         return finished;
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        robotRelativeSpeedsConsumer.accept(new ChassisSpeeds(0, 0, 0));
     }
 
     /**
