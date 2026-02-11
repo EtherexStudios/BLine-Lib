@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.edanliahovetsky'
-version = '0.7.0'
+version = 'v0.7.1'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
