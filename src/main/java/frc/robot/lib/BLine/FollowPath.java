@@ -968,15 +968,18 @@ public class FollowPath extends Command {
             }
         }
 
-        // If we can't find bounding translation targets, default behavior
+        // If we can't find bounding translation targets, advance to the next rotation target.
+        // This avoids deadlocks for degenerate paths (for example, in-place rotation paths
+        // where multiple waypoints share the same translation and no valid segment exists).
         if (translationA == null || translationB == null) {
-            return true; // Stay at current rotation target
+            return false;
         }
 
-        // TODO: ADD HANDELING FOR VERY SMALL SEGMENTS
+        // If the segment is effectively zero-length, treat the target as reached and advance.
+        // Staying here can stall the command forever because segment progress is undefined.
         double segmentLength = translationA.getDistance(translationB);
         if (segmentLength < 1e-6) {
-            return true; // Avoid division by zero or very small segments
+            return false;
         }
 
         // Calculate progress along the segment using projection (0 = at translationA, 1 = at translationB)
