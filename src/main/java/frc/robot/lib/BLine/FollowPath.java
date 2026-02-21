@@ -234,6 +234,7 @@ public class FollowPath extends Command {
     private ArrayList<Translation2d> robotTranslations = new ArrayList<>();
     private double cachedRemainingDistance = 0.0;
     private final Set<Integer> firedEventTriggerIndices = new HashSet<>();
+    private int firedEventTriggerCount = 0;
 
     // Snapshot of the currently tracked translation segment and robot progress on it.
     private record TranslationSegmentState(
@@ -505,6 +506,7 @@ public class FollowPath extends Command {
         translationElementIndex = 0;
         eventTriggerElementIndex = 0;
         firedEventTriggerIndices.clear();
+        firedEventTriggerCount = 0;
         lastTimestamp = timestampSupplier.get();
         pathInitStartPose = poseSupplier.get();
         lastSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeedsSupplier.get(), pathInitStartPose.getRotation());
@@ -523,11 +525,12 @@ public class FollowPath extends Command {
                 pathTranslations.add(((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation());
             }
         }
+        logBoolean("FollowPath/useTRatioBasedTranslationHandoffs", useTRatioBasedTranslationHandoffs);
         translationListLoggingConsumer.accept(new Pair<>("FollowPath/pathTranslations", pathTranslations.toArray(Translation2d[]::new)));
     }
 
     @Override
-    public void execute() {  
+    public void execute() {
         if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - skipping execution");
             stopCommandedMotion();
@@ -536,6 +539,7 @@ public class FollowPath extends Command {
         double now = timestampSupplier.get();
         double dt = now - lastTimestamp;
         lastTimestamp = now;
+        logDouble("FollowPath/dtSeconds", dt);
 
         Pose2d currentPose = poseSupplier.get();
 
@@ -552,7 +556,14 @@ public class FollowPath extends Command {
         }
 
         // Phase 2: advance translation target(s). This may skip multiple targets in one cycle.
+        int previousTranslationIndex = translationElementIndex;
         advanceTranslationTargets(currentPose);
+        boolean translationHandoffOccurred = translationElementIndex != previousTranslationIndex;
+        logBoolean("FollowPath/translationHandoffOccurred", translationHandoffOccurred);
+        if (translationHandoffOccurred) {
+            logDouble("FollowPath/translationHandoffFromIndex", (double) previousTranslationIndex);
+            logDouble("FollowPath/translationHandoffToIndex", (double) translationElementIndex);
+        }
         if (translationElementIndex >= pathElementsWithConstraints.size() || !isTranslationTargetAt(translationElementIndex)) {
             logger.warning("FollowPath: Invalid translation target after handoff at index " + translationElementIndex);
             stopCommandedMotion();
@@ -560,6 +571,9 @@ public class FollowPath extends Command {
         }
 
         TranslationSegmentState currentSegment = getCurrentTranslationSegmentState(currentPose);
+        logDouble("FollowPath/currentSegmentLengthMeters", currentSegment.segmentLength());
+        logDouble("FollowPath/currentSegmentProgress", currentSegment.segmentProgress());
+        logBoolean("FollowPath/currentSegmentDegenerate", currentSegment.isDegenerate());
 
         // Phase 3: choose rotation target for this cycle.
         // If no target exists on this segment, selection intentionally looks ahead to future segments.
@@ -580,6 +594,8 @@ public class FollowPath extends Command {
         if (lastRotationElementIndex != rotationElementIndex) {
             logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
         }
+        logBoolean("FollowPath/rotationHasActiveTarget", rotationSelection.activeRotationIndex() >= 0);
+        logDouble("FollowPath/rotationPreviousElementIndex", (double) rotationSelection.previousRotationIndex());
 
         // Event triggers use the same segment/t-ratio semantics as rotation targets.
         processEventTriggers(currentPose);
@@ -717,7 +733,10 @@ public class FollowPath extends Command {
         logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
         logDouble("FollowPath/targetRotationDeg", Math.toDegrees(targetRotationRad));
         logDouble("FollowPath/rotationControllerOutput", omega);
+        logDouble("FollowPath/rotationErrorDeg", Math.toDegrees(currentRotationTargetRad.minus(currentPose.getRotation()).getRadians()));
         logDouble("FollowPath/currentRotationTargetInitRad", currentRotationTargetInitRad);
+        logDouble("FollowPath/eventTriggerElementIndex", (double) eventTriggerElementIndex);
+        logDouble("FollowPath/eventTriggersFiredCount", (double) firedEventTriggerCount);
     }
 
     /**
@@ -1172,6 +1191,7 @@ public class FollowPath extends Command {
                 logger.warning("FollowPath: Unregistered event trigger key: " + trigger.libKey());
             }
             firedEventTriggerIndices.add(eventTriggerElementIndex);
+            firedEventTriggerCount++;
             eventTriggerElementIndex++;
         }
     }
@@ -1262,12 +1282,18 @@ public class FollowPath extends Command {
                 break;
             }
         }
+        boolean translationAtSetpoint = translationController.atSetpoint();
+        boolean rotationAtSetpoint = Math.abs(currentRotationTargetRad.minus(poseSupplier.get().getRotation()).getRadians()) < Math.toRadians(path.getEndRotationToleranceDeg());
         boolean finished = 
             isLastRotationElement && isLastTranslationElement && 
-            translationController.atSetpoint() && 
-            Math.abs(currentRotationTargetRad.minus(poseSupplier.get().getRotation()).getRadians()) < Math.toRadians(path.getEndRotationToleranceDeg());
+            translationAtSetpoint &&
+            rotationAtSetpoint;
 
         logBoolean("FollowPath/finished", finished);
+        logBoolean("FollowPath/finishedIsLastRotationElement", isLastRotationElement);
+        logBoolean("FollowPath/finishedIsLastTranslationElement", isLastTranslationElement);
+        logBoolean("FollowPath/finishedTranslationAtSetpoint", translationAtSetpoint);
+        logBoolean("FollowPath/finishedRotationAtSetpoint", rotationAtSetpoint);
         return finished;
     }
 

@@ -107,6 +107,16 @@ Generate Javadoc locally:
 # Open build/docs/javadoc/index.html
 ```
 
+## Troubleshooting
+
+If another robot repo consumes your local `BLine-Lib` checkout (for example via `includeBuild`) and you run `./gradlew clean` in this repo, you may need to rebuild the jar before the robot repo can package/sim successfully.
+
+```bash
+./gradlew jar
+```
+
+This regenerates `build/libs/BLine-Lib-<version>.jar` that some downstream fat-jar tasks expect.
+
 ## License
 
 BSD 3-Clause License — See [LICENSE](LICENSE) file.
