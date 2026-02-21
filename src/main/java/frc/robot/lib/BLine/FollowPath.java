@@ -82,6 +82,14 @@ import java.util.function.Supplier;
  */
 public class FollowPath extends Command {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FollowPath.class.getName());
+    // Shared epsilon for all segment-length degeneracy checks.
+    private static final double SEGMENT_EPSILON = 1e-6;
+    // Epsilon for t-ratio comparisons to avoid floating-point edge jitter.
+    private static final double T_RATIO_EPSILON = 1e-9;
+    // Explicit sentinel for "no active rotation target selected".
+    private static final int NO_ACTIVE_ROTATION_INDEX = -1;
+    // Defaults to FPGA-backed time but is overrideable in tests for deterministic simulation.
+    private static Supplier<Double> timestampSupplier = Timer::getTimestamp;
     private static Consumer<Pair<String, Pose2d>> poseLoggingConsumer = value -> {};
     private static Consumer<Pair<String, Translation2d[]>> translationListLoggingConsumer = value -> {};
     private static Consumer<Pair<String, Double>> doubleLoggingConsumer = value -> {};
@@ -131,13 +139,6 @@ public class FollowPath extends Command {
     private final PIDController translationController;
     private final PIDController rotationController;
     private final PIDController crossTrackController;
-
-    private static PIDController createPIDControllerCopy(PIDController source) {
-        if (source == null) {
-            throw new IllegalArgumentException("Cannot create copy of null PIDController");
-        }
-        return new PIDController(source.getP(), source.getI(), source.getD());
-    }
 
     private void configureControllers() {
         translationController.setTolerance(path.getEndTranslationToleranceMeters());
@@ -196,6 +197,16 @@ public class FollowPath extends Command {
         if (doubleLoggingConsumer == null) { return; }
         FollowPath.doubleLoggingConsumer = doubleLoggingConsumer;
     }
+
+    /**
+     * Overrides the time source used to compute loop dt.
+     *
+     * <p>Passing null restores the default WPILib {@link Timer#getTimestamp()} source.
+     * This exists primarily to allow deterministic unit tests without HAL timing dependencies.
+     */
+    static void setTimestampSupplier(Supplier<Double> supplier) {
+        timestampSupplier = supplier == null ? Timer::getTimestamp : supplier;
+    }
     
     
     private final Path path;
@@ -206,9 +217,8 @@ public class FollowPath extends Command {
     private final Consumer<Pose2d> poseResetConsumer;
     private final boolean useTRatioBasedTranslationHandoffs;
     
-    private int rotationElementIndex = 0;
+    private int rotationElementIndex = NO_ACTIVE_ROTATION_INDEX;
     private int translationElementIndex = 0;
-    private int prevTranslationElementIndex = 0;
     private int eventTriggerElementIndex = 0;
 
     private ChassisSpeeds lastSpeeds = new ChassisSpeeds();
@@ -224,6 +234,35 @@ public class FollowPath extends Command {
     private ArrayList<Translation2d> robotTranslations = new ArrayList<>();
     private double cachedRemainingDistance = 0.0;
     private final Set<Integer> firedEventTriggerIndices = new HashSet<>();
+
+    // Snapshot of the currently tracked translation segment and robot progress on it.
+    private record TranslationSegmentState(
+        int startTranslationIndex,
+        int endTranslationIndex,
+        Translation2d startTranslation,
+        Translation2d endTranslation,
+        double segmentLength,
+        double segmentProgress
+    ) {
+        /** @return true when this segment is effectively zero-length. */
+        private boolean isDegenerate() {
+            return segmentLength < SEGMENT_EPSILON;
+        }
+    }
+
+    // Bounds for the translation segment that a rotation target belongs to.
+    private record RotationSegmentBounds(
+        int startTranslationIndex,
+        int endTranslationIndex,
+        Translation2d startTranslation,
+        Translation2d endTranslation
+    ) {}
+
+    // Selected rotation target for this cycle plus the most recently completed target.
+    private record RotationSelection(
+        int activeRotationIndex,
+        int previousRotationIndex
+    ) {}
 
     /**
      * Builder class for constructing {@link FollowPath} commands with a fluent API.
@@ -453,8 +492,7 @@ public class FollowPath extends Command {
         }
         pathElementsWithConstraints = path.getPathElementsWithConstraintsNoWaypoints();
 
-        // find the reset start pose. find the first translation target and use its translation as the start translation and the first rotation target as the start rotation.
-        // if no rotation target, use the current robot rotation as the start rotation
+        // Resolve and apply start pose once so all segment-relative calculations share a stable origin.
         if (pathElementsWithConstraints.isEmpty()) {
             throw new IllegalStateException("Path must contain at least one element");
         }
@@ -462,16 +500,16 @@ public class FollowPath extends Command {
         Pose2d startPose = path.getStartPose(poseSupplier.get().getRotation());
         poseResetConsumer.accept(startPose);
 
-        rotationElementIndex = 0;
+        // Reset traversal state for a fresh command run.
+        rotationElementIndex = NO_ACTIVE_ROTATION_INDEX;
         translationElementIndex = 0;
-        prevTranslationElementIndex = 0;
         eventTriggerElementIndex = 0;
         firedEventTriggerIndices.clear();
-        lastTimestamp = Timer.getTimestamp();
+        lastTimestamp = timestampSupplier.get();
         pathInitStartPose = poseSupplier.get();
         lastSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeedsSupplier.get(), pathInitStartPose.getRotation());
         previousRotationElementTargetRad = pathInitStartPose.getRotation().getRadians();
-        previousRotationElementIndex = rotationElementIndex;
+        previousRotationElementIndex = -1;
         currentRotationTargetInitRad = pathInitStartPose.getRotation().getRadians();
         rotationController.reset();
         translationController.reset();
@@ -492,113 +530,64 @@ public class FollowPath extends Command {
     public void execute() {  
         if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - skipping execution");
+            stopCommandedMotion();
             return;
         }
-        double dt = Timer.getTimestamp() - lastTimestamp;
-        lastTimestamp = Timer.getTimestamp();
+        double now = timestampSupplier.get();
+        double dt = now - lastTimestamp;
+        lastTimestamp = now;
 
         Pose2d currentPose = poseSupplier.get();
 
-        // Ensure we have valid indices
+        // Phase 1: verify translation cursor integrity before doing any control math.
         if (translationElementIndex >= pathElementsWithConstraints.size()) {
             logger.warning("FollowPath: Translation element index out of bounds");
+            stopCommandedMotion();
             return;
         }
-        if (!(pathElementsWithConstraints.get(translationElementIndex).getFirst() instanceof TranslationTarget)) {
+        if (!isTranslationTargetAt(translationElementIndex)) {
             logger.warning("FollowPath: Expected TranslationTarget at index " + translationElementIndex);
+            stopCommandedMotion();
             return;
         }
 
-        TranslationTarget currentTranslationTarget = (TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst();
-        double handoffRadius = currentTranslationTarget.intermediateHandoffRadiusMeters()
-            .orElse(path.getDefaultGlobalConstraints().getIntermediateHandoffRadiusMeters());
-        boolean shouldHandoff = false;
-
-        if (!useTRatioBasedTranslationHandoffs) {
-            // Distance-based handoff (default behavior).
-            shouldHandoff = currentPose.getTranslation().getDistance(currentTranslationTarget.translation()) <= handoffRadius;
-        } else {
-            // t_ratio-based handoff using projected segment progress for better robustness at speed.
-            Translation2d segmentEnd = currentTranslationTarget.translation();
-            Translation2d segmentStart = getCurrentTranslationSegmentStart();
-
-            double segmentLength = segmentStart.getDistance(segmentEnd);
-            if (segmentLength < 1e-6) {
-                // Tiny segment: fall back to distance check for safety.
-                shouldHandoff = currentPose.getTranslation().getDistance(segmentEnd) <= handoffRadius;
-            } else {
-                double segmentProgress = calculateSegmentProjectionT(
-                    segmentStart,
-                    segmentEnd,
-                    currentPose.getTranslation()
-                );
-                double handoffThreshold = 1.0 - (handoffRadius / segmentLength);
-                handoffThreshold = Math.max(0.0, Math.min(1.0, handoffThreshold));
-                shouldHandoff = segmentProgress > handoffThreshold;
-            }
+        // Phase 2: advance translation target(s). This may skip multiple targets in one cycle.
+        advanceTranslationTargets(currentPose);
+        if (translationElementIndex >= pathElementsWithConstraints.size() || !isTranslationTargetAt(translationElementIndex)) {
+            logger.warning("FollowPath: Invalid translation target after handoff at index " + translationElementIndex);
+            stopCommandedMotion();
+            return;
         }
 
-        if (shouldHandoff) {
-            // If we are in the handoff region of the current target translation,
-            // switch to the next translation element.
+        TranslationSegmentState currentSegment = getCurrentTranslationSegmentState(currentPose);
 
-            for (int i = translationElementIndex + 1; i < pathElementsWithConstraints.size(); i++) {
-                if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                    prevTranslationElementIndex = translationElementIndex;
-                    translationElementIndex = i;
-                    break;
-                }
-            }
-            currentTranslationTarget = (TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst();
-        }
-
-        // Switch rotation targets based on progress along the path
-        // Find the next rotation target that we haven't reached yet
-
+        // Phase 3: choose rotation target for this cycle.
+        // If no target exists on this segment, selection intentionally looks ahead to future segments.
         int lastRotationElementIndex = rotationElementIndex;
-        while (rotationElementIndex < pathElementsWithConstraints.size()) {
-            PathElement currentElement = pathElementsWithConstraints.get(rotationElementIndex).getFirst();
+        RotationSelection rotationSelection = selectRotationTarget(currentSegment);
+        rotationElementIndex = rotationSelection.activeRotationIndex() >= 0
+            ? rotationSelection.activeRotationIndex()
+            : NO_ACTIVE_ROTATION_INDEX;
 
-            // Skip non-rotation targets
-            if (!(currentElement instanceof RotationTarget)) {
-                rotationElementIndex++;
-                continue;
-            }
-
-            // Check if we should stay at this rotation target or move to the next
-            if (isRotationTRatioGreater()) {
-                // We haven't reached this target's t_ratio yet, so stay here
-                break;
-            } else {
-                // We've passed this target's t_ratio, log and move to next
-                logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
-                rotationElementIndex++;
-
-                // If we've reached the end, stop
-                if (rotationElementIndex >= pathElementsWithConstraints.size()) {
-                    break;
-                }
-                // Continue searching for the next valid rotation target
-            }
-        }
-
-        if (lastRotationElementIndex != rotationElementIndex &&
-            pathElementsWithConstraints.get(lastRotationElementIndex).getFirst() instanceof RotationTarget) {
-            previousRotationElementTargetRad = ((RotationTarget) pathElementsWithConstraints.get(lastRotationElementIndex).getFirst()).rotation().getRadians();
-            previousRotationElementIndex = lastRotationElementIndex;
+        // Keep interpolation anchor synced to the most recently completed rotation target.
+        if (rotationSelection.previousRotationIndex() >= 0 &&
+            rotationSelection.previousRotationIndex() != previousRotationElementIndex &&
+            pathElementsWithConstraints.get(rotationSelection.previousRotationIndex()).getFirst() instanceof RotationTarget) {
+            previousRotationElementTargetRad = ((RotationTarget) pathElementsWithConstraints.get(rotationSelection.previousRotationIndex()).getFirst()).rotation().getRadians();
+            previousRotationElementIndex = rotationSelection.previousRotationIndex();
             currentRotationTargetInitRad = currentPose.getRotation().getRadians();
         }
+        if (lastRotationElementIndex != rotationElementIndex) {
+            logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
+        }
 
+        // Event triggers use the same segment/t-ratio semantics as rotation targets.
         processEventTriggers(currentPose);
 
-        Translation2d targetTranslation = null;
-        if (translationElementIndex < pathElementsWithConstraints.size() &&
-            pathElementsWithConstraints.get(translationElementIndex).getFirst() instanceof TranslationTarget) {
-            targetTranslation = ((TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst()).translation();
-        } else {
-            // Fallback to current pose if no valid translation target
-            targetTranslation = currentPose.getTranslation();
-        }
+        // Phase 4: compute translational command vector.
+        Translation2d targetTranslation = isTranslationTargetAt(translationElementIndex)
+            ? ((TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst()).translation()
+            : currentPose.getTranslation();
         double remainingDistance = calculateRemainingPathDistance();
         double angleToTarget = Math.atan2(
             targetTranslation.getY() - currentPose.getTranslation().getY(),
@@ -607,6 +596,7 @@ public class FollowPath extends Command {
 
         if (!(pathElementsWithConstraints.get(translationElementIndex).getSecond() instanceof TranslationTargetConstraint)) {
             logger.warning("FollowPath: Expected TranslationTargetConstraint at index " + translationElementIndex);
+            stopCommandedMotion();
             return;
         }
         TranslationTargetConstraint translationConstraint = (TranslationTargetConstraint) pathElementsWithConstraints.get(translationElementIndex).getSecond();
@@ -626,39 +616,41 @@ public class FollowPath extends Command {
         double crossTrackControllerOutput = -crossTrackController.calculate(crossTrackError, 0);
         logDouble("FollowPath/crossTrackControllerOutput", crossTrackControllerOutput);
 
+        // Rotate the cross-track correction into field frame and add it to translation command.
         vx += crossTrackControllerOutput * Math.cos(angleToTarget - Math.PI / 2);
         vy += crossTrackControllerOutput * Math.sin(angleToTarget - Math.PI / 2);
 
         double targetRotationRad;
         RotationTargetConstraint rotationConstraint;
 
-        if (rotationElementIndex < pathElementsWithConstraints.size() &&
-            pathElementsWithConstraints.get(rotationElementIndex).getFirst() instanceof RotationTarget) {
+        // Phase 5: compute rotational command setpoint.
+        if (rotationSelection.activeRotationIndex() >= 0 && isRotationTargetAt(rotationSelection.activeRotationIndex())) {
 
-            RotationTarget currentRotationTarget = (RotationTarget) pathElementsWithConstraints.get(rotationElementIndex).getFirst();
-            if (!(pathElementsWithConstraints.get(rotationElementIndex).getSecond() instanceof RotationTargetConstraint)) {
+            RotationTarget currentRotationTarget = (RotationTarget) pathElementsWithConstraints.get(rotationSelection.activeRotationIndex()).getFirst();
+            if (!(pathElementsWithConstraints.get(rotationSelection.activeRotationIndex()).getSecond() instanceof RotationTargetConstraint)) {
                 logger.warning("FollowPath: Expected RotationTargetConstraint at index " + rotationElementIndex);
+                stopCommandedMotion();
                 return;
             }
-            rotationConstraint = (RotationTargetConstraint) pathElementsWithConstraints.get(rotationElementIndex).getSecond();
+            rotationConstraint = (RotationTargetConstraint) pathElementsWithConstraints.get(rotationSelection.activeRotationIndex()).getSecond();
             currentRotationTargetRad = currentRotationTarget.rotation();
 
             if (currentRotationTarget.profiledRotation()) {
                 // Calculate rotation progress using t-ratio projection between rotation target positions.
-                Translation2d rotationStart = previousRotationElementIndex == 0
+                Translation2d rotationStart = rotationSelection.previousRotationIndex() < 0
                     ? pathInitStartPose.getTranslation()
-                    : calculateRotationTargetTranslation(previousRotationElementIndex);
-                Translation2d rotationEnd = calculateRotationTargetTranslation(rotationElementIndex);
-
-                double segmentProgress = calculateSegmentProjectionT(
-                    rotationStart, rotationEnd, currentPose.getTranslation()
-                );
+                    : calculateRotationTargetTranslation(rotationSelection.previousRotationIndex());
+                Translation2d rotationEnd = calculateRotationTargetTranslation(rotationSelection.activeRotationIndex());
+                double rotationSegmentLength = rotationStart.getDistance(rotationEnd);
+                // Degenerate rotation segment means interpolation is complete immediately.
+                double segmentProgress = rotationSegmentLength < SEGMENT_EPSILON
+                    ? 1.0
+                    : calculateSegmentProjectionT(rotationStart, rotationEnd, currentPose.getTranslation());
 
                 // Snap rotation to complete when within end-translation tolerance of the target.
                 // This prevents undershooting the final rotation when translation stops early.
-                double rotationSegmentLength = rotationStart.getDistance(rotationEnd);
                 double endTranslationTolerance = path.getEndTranslationToleranceMeters();
-                if (rotationSegmentLength > 1e-6 && endTranslationTolerance > 0) {
+                if (rotationSegmentLength > SEGMENT_EPSILON && endTranslationTolerance > 0) {
                     double effectiveTolerance = Math.min(endTranslationTolerance, rotationSegmentLength);
                     double toleranceThreshold = 1.0 - (effectiveTolerance / rotationSegmentLength);
                     if (segmentProgress >= toleranceThreshold) {
@@ -680,6 +672,7 @@ public class FollowPath extends Command {
             }
 
         } else {
+            // No remaining rotation targets: hold the most recently completed target heading.
             targetRotationRad = previousRotationElementTargetRad;
             currentRotationTargetRad = new Rotation2d(targetRotationRad);
             rotationConstraint = new RotationTargetConstraint(
@@ -691,6 +684,7 @@ public class FollowPath extends Command {
         targetRotationRad = MathUtil.angleModulus(targetRotationRad);
         double omega = rotationController.calculate(currentPose.getRotation().getRadians(), targetRotationRad);
 
+        // Phase 6: apply acceleration/velocity limiting and output final command.
         ChassisSpeeds targetSpeeds = new ChassisSpeeds(vx, vy, omega);
         targetSpeeds = ChassisRateLimiter.limit(
             targetSpeeds, 
@@ -724,6 +718,244 @@ public class FollowPath extends Command {
         logDouble("FollowPath/targetRotationDeg", Math.toDegrees(targetRotationRad));
         logDouble("FollowPath/rotationControllerOutput", omega);
         logDouble("FollowPath/currentRotationTargetInitRad", currentRotationTargetInitRad);
+    }
+
+    /**
+     * Forces commanded chassis motion to zero and resets internal speed history.
+     *
+     * <p>Used on defensive early exits to avoid leaving stale nonzero velocity commands latched.
+     */
+    private void stopCommandedMotion() {
+        ChassisSpeeds zeroSpeeds = new ChassisSpeeds();
+        robotRelativeSpeedsConsumer.accept(zeroSpeeds);
+        lastSpeeds = zeroSpeeds;
+    }
+
+    private boolean isTranslationTargetAt(int index) {
+        return index >= 0 &&
+            index < pathElementsWithConstraints.size() &&
+            pathElementsWithConstraints.get(index).getFirst() instanceof TranslationTarget;
+    }
+
+    private boolean isRotationTargetAt(int index) {
+        return index >= 0 &&
+            index < pathElementsWithConstraints.size() &&
+            pathElementsWithConstraints.get(index).getFirst() instanceof RotationTarget;
+    }
+
+    /**
+     * Advances translation targets until the current target is no longer handoff-eligible.
+     *
+     * <p>This intentionally supports "draining" through multiple targets in one cycle,
+     * which avoids one-cycle stalls on chains of tiny/degenerate segments.
+     */
+    private void advanceTranslationTargets(Pose2d currentPose) {
+        while (true) {
+            if (translationElementIndex >= pathElementsWithConstraints.size() ||
+                !(pathElementsWithConstraints.get(translationElementIndex).getFirst() instanceof TranslationTarget)) {
+                return;
+            }
+
+            int nextTranslationIndex = findNextTranslationTargetIndex(translationElementIndex + 1);
+            if (nextTranslationIndex < 0) {
+                return;
+            }
+
+            TranslationTarget currentTranslationTarget = (TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst();
+            double handoffRadius = currentTranslationTarget.intermediateHandoffRadiusMeters()
+                .orElse(path.getDefaultGlobalConstraints().getIntermediateHandoffRadiusMeters());
+
+            TranslationSegmentState currentSegment = getCurrentTranslationSegmentState(currentPose);
+            if (!shouldHandoffTranslationTarget(currentPose, currentTranslationTarget, currentSegment, handoffRadius)) {
+                return;
+            }
+
+            translationElementIndex = nextTranslationIndex;
+        }
+    }
+
+    /**
+     * Determines whether the current translation target should hand off to the next target.
+     *
+     * <p>Degenerate segments always hand off immediately to avoid zero-length deadlocks.
+     */
+    private boolean shouldHandoffTranslationTarget(
+        Pose2d currentPose,
+        TranslationTarget currentTranslationTarget,
+        TranslationSegmentState currentSegment,
+        double handoffRadius
+    ) {
+        if (currentSegment.isDegenerate()) {
+            return true;
+        }
+
+        if (!useTRatioBasedTranslationHandoffs) {
+            return currentPose.getTranslation().getDistance(currentTranslationTarget.translation()) <= handoffRadius;
+        }
+
+        double handoffThreshold = 1.0 - (handoffRadius / currentSegment.segmentLength());
+        handoffThreshold = Math.max(0.0, Math.min(1.0, handoffThreshold));
+        return currentSegment.segmentProgress() > handoffThreshold;
+    }
+
+    /**
+     * Computes segment start/end geometry for the current translation cursor.
+     *
+     * <p>If the cursor is invalid, returns a degenerate segment at the robot position
+     * so callers can handle the error path uniformly.
+     */
+    private TranslationSegmentState getCurrentTranslationSegmentState(Pose2d currentPose) {
+        if (translationElementIndex < 0 || translationElementIndex >= pathElementsWithConstraints.size() ||
+            !(pathElementsWithConstraints.get(translationElementIndex).getFirst() instanceof TranslationTarget)) {
+            Translation2d currentTranslation = currentPose.getTranslation();
+            return new TranslationSegmentState(
+                -1,
+                translationElementIndex,
+                currentTranslation,
+                currentTranslation,
+                0.0,
+                1.0
+            );
+        }
+
+        int startTranslationIndex = findPreviousTranslationTargetIndex(translationElementIndex - 1);
+        Translation2d startTranslation = startTranslationIndex >= 0
+            ? getTranslationAtIndex(startTranslationIndex)
+            : pathInitStartPose.getTranslation();
+        Translation2d endTranslation = getTranslationAtIndex(translationElementIndex);
+        double segmentLength = startTranslation.getDistance(endTranslation);
+        double segmentProgress = segmentLength < SEGMENT_EPSILON
+            ? 1.0
+            : calculateSegmentProjectionT(startTranslation, endTranslation, currentPose.getTranslation());
+
+        return new TranslationSegmentState(
+            startTranslationIndex,
+            translationElementIndex,
+            startTranslation,
+            endTranslation,
+            segmentLength,
+            segmentProgress
+        );
+    }
+
+    /**
+     * Selects the active rotation target for this cycle.
+     *
+     * <p>Selection rule:
+     * 1) If current segment has candidates, choose by segment progress.
+     * 2) If current segment is degenerate, choose highest t_ratio candidate.
+     * 3) If no current-segment candidate exists, look ahead to the next segment with a target.
+     */
+    private RotationSelection selectRotationTarget(TranslationSegmentState currentSegment) {
+        int previousRotationIndex = -1;
+        int activeRotationIndex = -1;
+        double maxTRatioOnCurrentSegment = getMaxTRatioOnSegment(currentSegment.endTranslationIndex());
+
+        for (int i = 0; i < pathElementsWithConstraints.size(); i++) {
+            if (!(pathElementsWithConstraints.get(i).getFirst() instanceof RotationTarget)) {
+                continue;
+            }
+
+            RotationSegmentBounds bounds = getRotationSegmentBounds(i);
+            if (bounds == null) {
+                previousRotationIndex = i;
+                continue;
+            }
+
+            if (bounds.endTranslationIndex() < currentSegment.endTranslationIndex()) {
+                previousRotationIndex = i;
+                continue;
+            }
+
+            if (bounds.endTranslationIndex() > currentSegment.endTranslationIndex()) {
+                activeRotationIndex = i;
+                break;
+            }
+
+            RotationTarget rotationTarget = (RotationTarget) pathElementsWithConstraints.get(i).getFirst();
+            double targetTRatio = clampTRatio(rotationTarget.t_ratio());
+            if (currentSegment.isDegenerate()) {
+                if (targetTRatio + T_RATIO_EPSILON < maxTRatioOnCurrentSegment) {
+                    previousRotationIndex = i;
+                    continue;
+                }
+                activeRotationIndex = i;
+                break;
+            }
+
+            if (targetTRatio <= currentSegment.segmentProgress() + T_RATIO_EPSILON) {
+                previousRotationIndex = i;
+                continue;
+            }
+
+            activeRotationIndex = i;
+            break;
+        }
+
+        return new RotationSelection(activeRotationIndex, previousRotationIndex);
+    }
+
+    /**
+     * Finds the largest clamped t_ratio among rotation targets on a given segment endpoint.
+     */
+    private double getMaxTRatioOnSegment(int segmentEndTranslationIndex) {
+        double maxTRatio = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < pathElementsWithConstraints.size(); i++) {
+            if (!(pathElementsWithConstraints.get(i).getFirst() instanceof RotationTarget)) {
+                continue;
+            }
+            RotationSegmentBounds bounds = getRotationSegmentBounds(i);
+            if (bounds == null || bounds.endTranslationIndex() != segmentEndTranslationIndex) {
+                continue;
+            }
+            double clampedTRatio = clampTRatio(((RotationTarget) pathElementsWithConstraints.get(i).getFirst()).t_ratio());
+            maxTRatio = Math.max(maxTRatio, clampedTRatio);
+        }
+        return maxTRatio;
+    }
+
+    /** Clamps t_ratio into [0, 1]. */
+    private double clampTRatio(double tRatio) {
+        return Math.max(0.0, Math.min(1.0, tRatio));
+    }
+
+    /**
+     * Finds the next translation target index at or after {@code startIndex}.
+     *
+     * @return translation index or -1 if none exists
+     */
+    private int findNextTranslationTargetIndex(int startIndex) {
+        for (int i = Math.max(startIndex, 0); i < pathElementsWithConstraints.size(); i++) {
+            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Finds the previous translation target index at or before {@code startIndex}.
+     *
+     * @return translation index or -1 if none exists
+     */
+    private int findPreviousTranslationTargetIndex(int startIndex) {
+        for (int i = Math.min(startIndex, pathElementsWithConstraints.size() - 1); i >= 0; i--) {
+            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns translation at a known translation target index, or start pose translation if invalid.
+     */
+    private Translation2d getTranslationAtIndex(int translationIndex) {
+        if (translationIndex >= 0 && translationIndex < pathElementsWithConstraints.size() &&
+            pathElementsWithConstraints.get(translationIndex).getFirst() instanceof TranslationTarget) {
+            return ((TranslationTarget) pathElementsWithConstraints.get(translationIndex).getFirst()).translation();
+        }
+        return pathInitStartPose.getTranslation();
     }
     
     /**
@@ -805,7 +1037,7 @@ public class FollowPath extends Command {
         double dx = segmentEnd.getX() - segmentStart.getX();
         double dy = segmentEnd.getY() - segmentStart.getY();
         double segmentLengthSquared = dx * dx + dy * dy;
-        if (segmentLengthSquared < 1e-6) {
+        if (segmentLengthSquared < SEGMENT_EPSILON) {
             return 0.0;
         }
 
@@ -848,15 +1080,10 @@ public class FollowPath extends Command {
      * @return The start translation for the current segment
      */
     private Translation2d getCurrentTranslationSegmentStart() {
-        if (translationElementIndex <= 0) {
-            return pathInitStartPose.getTranslation();
-        }
-        for (int i = translationElementIndex - 1; i >= 0; i--) {
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                return ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
-            }
-        }
-        return pathInitStartPose.getTranslation();
+        int previousTranslationIndex = findPreviousTranslationTargetIndex(translationElementIndex - 1);
+        return previousTranslationIndex >= 0
+            ? getTranslationAtIndex(previousTranslationIndex)
+            : pathInitStartPose.getTranslation();
     }
 
     /**
@@ -868,164 +1095,61 @@ public class FollowPath extends Command {
      * @return The translation where this rotation should be achieved
      */
     private Translation2d calculateRotationTargetTranslation(int index) {
-        // Validate index
-        if (index < 0 || index >= pathElementsWithConstraints.size()) {
-            logger.warning("FollowPath: Invalid index for calculateRotationTargetTranslation: " + index);
+        if (index < 0 || index >= pathElementsWithConstraints.size() ||
+            !(pathElementsWithConstraints.get(index).getFirst() instanceof RotationTarget)) {
+            logger.warning("FollowPath: Invalid rotation target index: " + index);
             return new Translation2d();
         }
 
-        // find the two encompassing translation targets
-        Translation2d translationA = null, translationB = null;
-        for (int i = index; i >= 0; i--) {
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                translationA = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
-                break;
-            }
-        }
-        for (int i = index; i < pathElementsWithConstraints.size(); i++) {
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                translationB = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
-                break;
-            }
-        }
-        if (translationA == null && translationB == null) {
-            logger.warning("FollowPath: No translation targets found around rotation target at index " + index);
-            return new Translation2d(); // Return default if no translation targets found
-        }
-        if (translationA == null) {
-            return translationB;
-        }
-        if (translationB == null) {
-            return translationA;
+        RotationSegmentBounds bounds = getRotationSegmentBounds(index);
+        if (bounds == null) {
+            logger.warning("FollowPath: Missing translation bounds for rotation target at index " + index);
+            return new Translation2d();
         }
 
-        // If the two translation points are at the same location, return that location
-        double segmentLength = translationA.getDistance(translationB);
-        if (segmentLength == 0) {
-            logPose("FollowPath/calculateRotationTargetTranslation", new Pose2d(translationA, new Rotation2d()));
-            
-            return translationA;
-        }
-
-        double angle = Math.atan2(
-            translationB.getY() - translationA.getY(),
-            translationB.getX() - translationA.getX()
-        );
-
-        if (index >= pathElementsWithConstraints.size() ||
-            !(pathElementsWithConstraints.get(index).getFirst() instanceof RotationTarget)) {
-            logger.warning("FollowPath: Invalid rotation target index: " + index);
-            return new Translation2d(); // Return a default value
-        }
-
-        double tRatio = ((RotationTarget) pathElementsWithConstraints.get(index).getFirst()).t_ratio();
-        // Ensure tRatio is in valid range
-        tRatio = Math.max(0.0, Math.min(1.0, tRatio));
-
-        // Calculate the interpolated point along the segment
-        double interpolatedDistance = segmentLength * tRatio;
+        RotationTarget rotationTarget = (RotationTarget) pathElementsWithConstraints.get(index).getFirst();
+        double tRatio = clampTRatio(rotationTarget.t_ratio());
         Translation2d pointOnSegment = new Translation2d(
-            translationA.getX() + Math.cos(angle) * interpolatedDistance,
-            translationA.getY() + Math.sin(angle) * interpolatedDistance
+            bounds.startTranslation().getX() + (bounds.endTranslation().getX() - bounds.startTranslation().getX()) * tRatio,
+            bounds.startTranslation().getY() + (bounds.endTranslation().getY() - bounds.startTranslation().getY()) * tRatio
         );
-
         logPose("FollowPath/calculateRotationTargetTranslation", new Pose2d(pointOnSegment, new Rotation2d()));
-        
         return pointOnSegment;
     }
 
-
     /**
-     * Checks if the robot hasn't yet reached the current rotation target's t_ratio position.
-     * 
-     * @return true if the robot should stay at the current rotation target, false if it should advance
+     * Resolves the translation-segment bounds that contain a rotation target.
+     *
+     * <p>The "end translation index" identifies which translation segment the target belongs to,
+     * which is used by selection logic to compare against current translation progress.
      */
-    private boolean isRotationTRatioGreater() {
-        if (isRotationNextSegment()) { return true; }
-        if (isRotationPreviousSegment()) { return false; }
-        if (rotationElementIndex >= pathElementsWithConstraints.size() ||
-            !(pathElementsWithConstraints.get(rotationElementIndex).getFirst() instanceof RotationTarget)) { return false; }
-
-        Pose2d currentPose = poseSupplier.get();
-
-        // Find the segment that contains this rotation target
-        Translation2d translationA = null;
-        Translation2d translationB = null;
-
-        // Find the translation target before the rotation target
-        for (int i = rotationElementIndex - 1; i >= 0; i--) {
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                translationA = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
-                break;
-            }
+    private RotationSegmentBounds getRotationSegmentBounds(int rotationIndex) {
+        if (rotationIndex < 0 || rotationIndex >= pathElementsWithConstraints.size() ||
+            !(pathElementsWithConstraints.get(rotationIndex).getFirst() instanceof RotationTarget)) {
+            return null;
         }
 
-        // Find the translation target after the rotation target
-        for (int i = rotationElementIndex + 1; i < pathElementsWithConstraints.size(); i++) {
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                translationB = ((TranslationTarget) pathElementsWithConstraints.get(i).getFirst()).translation();
-                break;
-            }
+        int startTranslationIndex = findPreviousTranslationTargetIndex(rotationIndex - 1);
+        int endTranslationIndex = findNextTranslationTargetIndex(rotationIndex + 1);
+        if (endTranslationIndex < 0) {
+            return null;
         }
 
-        // If we can't find bounding translation targets, advance to the next rotation target.
-        // This avoids deadlocks for degenerate paths (for example, in-place rotation paths
-        // where multiple waypoints share the same translation and no valid segment exists).
-        if (translationA == null || translationB == null) {
-            return false;
-        }
-
-        // If the segment is effectively zero-length, treat the target as reached and advance.
-        // Staying here can stall the command forever because segment progress is undefined.
-        double segmentLength = translationA.getDistance(translationB);
-        if (segmentLength < 1e-6) {
-            return false;
-        }
-
-        // Calculate progress along the segment using projection (0 = at translationA, 1 = at translationB)
-        double segmentProgress = calculateSegmentProjectionT(
-            translationA,
-            translationB,
-            currentPose.getTranslation()
+        Translation2d startTranslation = startTranslationIndex >= 0
+            ? getTranslationAtIndex(startTranslationIndex)
+            : pathInitStartPose.getTranslation();
+        Translation2d endTranslation = getTranslationAtIndex(endTranslationIndex);
+        return new RotationSegmentBounds(
+            startTranslationIndex,
+            endTranslationIndex,
+            startTranslation,
+            endTranslation
         );
-
-        double targetTRatio = ((RotationTarget) pathElementsWithConstraints.get(rotationElementIndex).getFirst()).t_ratio();
-
-        // Return true if we haven't reached the target t_ratio yet (should stay at current target)
-        boolean shouldStayAtCurrentTarget = segmentProgress < targetTRatio;
-
-        logBoolean("FollowPath/isRotationTRatioGreater", shouldStayAtCurrentTarget);
-        logDouble("FollowPath/segmentProgress", segmentProgress);
-        logDouble("FollowPath/targetTRatio", targetTRatio);
-
-        return shouldStayAtCurrentTarget;
-    }
-    
-    /**
-     * Checks if the current rotation target is on a previous path segment (already passed).
-     * 
-     * @return true if the rotation target is on a segment before the current translation segment
-     */
-    private boolean isRotationPreviousSegment() {
-        if (rotationElementIndex > translationElementIndex) { return false; }
-        
-        for (int i = rotationElementIndex; i < translationElementIndex; i++) {
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
-     * Checks if the current rotation target is on a future path segment.
-     * 
-     * @return true if the rotation target is on a segment after the current translation segment
+     * Processes event triggers in path order until the next trigger is not yet reached.
      */
-    private boolean isRotationNextSegment() {
-        return rotationElementIndex > translationElementIndex;
-    }
-
     private void processEventTriggers(Pose2d currentPose) {
         while (eventTriggerElementIndex < pathElementsWithConstraints.size()) {
             PathElement element = pathElementsWithConstraints.get(eventTriggerElementIndex).getFirst();
@@ -1052,6 +1176,11 @@ public class FollowPath extends Command {
         }
     }
 
+    /**
+     * Returns true when the trigger's t_ratio has been reached on its owning segment.
+     *
+     * <p>Degenerate event segments are treated as immediately reached.
+     */
     private boolean isEventTriggerTRatioReached(int eventIndex, Pose2d currentPose) {
         if (eventIndex >= pathElementsWithConstraints.size() ||
             !(pathElementsWithConstraints.get(eventIndex).getFirst() instanceof EventTrigger)) {
@@ -1080,7 +1209,7 @@ public class FollowPath extends Command {
         }
 
         double segmentLength = translationA.getDistance(translationB);
-        if (segmentLength < 1e-6) {
+        if (segmentLength < SEGMENT_EPSILON) {
             return true;
         }
 
@@ -1115,15 +1244,17 @@ public class FollowPath extends Command {
             return true;
         }
 
-        // check if this is the last rotation element
-        boolean isLastRotationElement = true;
-        for (int i = rotationElementIndex+1; i < pathElementsWithConstraints.size(); i++) {
-            if (pathElementsWithConstraints.get(i).getFirst() instanceof RotationTarget) {
-                isLastRotationElement = false;
-                break;
+        // Completion requires both translation and rotation traversal to be on their final targets.
+        boolean isLastRotationElement = rotationElementIndex == NO_ACTIVE_ROTATION_INDEX;
+        if (!isLastRotationElement) {
+            isLastRotationElement = true;
+            for (int i = rotationElementIndex + 1; i < pathElementsWithConstraints.size(); i++) {
+                if (pathElementsWithConstraints.get(i).getFirst() instanceof RotationTarget) {
+                    isLastRotationElement = false;
+                    break;
+                }
             }
         }
-        // check if this is the last translation element (same pattern as rotation)
         boolean isLastTranslationElement = true;
         for (int i = translationElementIndex+1; i < pathElementsWithConstraints.size(); i++) {
             if (pathElementsWithConstraints.get(i).getFirst() instanceof TranslationTarget) {
@@ -1142,7 +1273,7 @@ public class FollowPath extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        robotRelativeSpeedsConsumer.accept(new ChassisSpeeds(0, 0, 0));
+        stopCommandedMotion();
     }
 
     /**
@@ -1151,7 +1282,7 @@ public class FollowPath extends Command {
      * <p>This index represents the current rotation target being tracked, where both
      * waypoint rotations and standalone rotation targets are counted together.
      * 
-     * @return The current rotation element index (0-based)
+     * @return The current rotation element index (0-based), or -1 when no active rotation target remains
      */
     public int getCurrentRotationElementIndex() {
         return rotationElementIndex;
