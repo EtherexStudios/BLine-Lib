@@ -745,7 +745,7 @@ public class FollowPath extends Command {
             translationListLoggingConsumer.accept(new Pair<>("FollowPath/robotTranslations", robotTranslations.toArray(Translation2d[]::new)));
         }
         
-        logDouble("FollowPath/calculateRemainingPathDistance", cachedRemainingDistance);
+        logDouble("FollowPath/remainingPathDistanceMeters", cachedRemainingDistance);
         logDouble("FollowPath/translationElementIndex", (double) translationElementIndex);
         logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
         logDouble("FollowPath/targetRotationDeg", Math.toDegrees(targetRotationRad));
@@ -1149,7 +1149,7 @@ public class FollowPath extends Command {
             bounds.startTranslation().getX() + (bounds.endTranslation().getX() - bounds.startTranslation().getX()) * tRatio,
             bounds.startTranslation().getY() + (bounds.endTranslation().getY() - bounds.startTranslation().getY()) * tRatio
         );
-        logPose("FollowPath/calculateRotationTargetTranslation", new Pose2d(pointOnSegment, new Rotation2d()));
+        logPose("FollowPath/rotationTargetPose", new Pose2d(pointOnSegment, rotationTarget.rotation()));
         return pointOnSegment;
     }
 
@@ -1341,6 +1341,27 @@ public class FollowPath extends Command {
      */
     public int getCurrentTranslationElementIndex() {
         return translationElementIndex;
+    }
+
+    /**
+     * Gets the estimated remaining path distance from the robot's current position.
+     *
+     * <p>This value is computed live from the command's current traversal cursor and
+     * translation targets. It mirrors the distance basis used by the translation controller
+     * during execution.
+     *
+     * <p>Returns {@code 0.0} when the command is not in a valid traversal state
+     * (for example, invalid path or uninitialized/invalid translation cursor).
+     *
+     * @return Remaining path distance in meters
+     */
+    public double getRemainingPathDistanceMeters() {
+        if (!path.isValid() ||
+            pathElementsWithConstraints.isEmpty() ||
+            !isTranslationTargetAt(translationElementIndex)) {
+            return 0.0;
+        }
+        return calculateRemainingPathDistance();
     }
 
 }

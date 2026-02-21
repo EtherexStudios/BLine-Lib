@@ -2,8 +2,10 @@ package frc.robot.lib.BLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -11,7 +13,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,11 +37,19 @@ class FollowPathTest {
     @BeforeEach
     void setUp() {
         Path.setDefaultGlobalConstraints(TEST_GLOBAL_CONSTRAINTS);
+        FollowPath.setPoseLoggingConsumer(value -> {});
+        FollowPath.setDoubleLoggingConsumer(value -> {});
+        FollowPath.setBooleanLoggingConsumer(value -> {});
+        FollowPath.setTranslationListLoggingConsumer(value -> {});
     }
 
     @AfterEach
     void tearDown() {
         FollowPath.setTimestampSupplier(null);
+        FollowPath.setPoseLoggingConsumer(value -> {});
+        FollowPath.setDoubleLoggingConsumer(value -> {});
+        FollowPath.setBooleanLoggingConsumer(value -> {});
+        FollowPath.setTranslationListLoggingConsumer(value -> {});
     }
 
     @Test
@@ -157,6 +169,102 @@ class FollowPathTest {
 
         assertEquals(0, command.getCurrentTranslationElementIndex(), "Single waypoint path should remain on only translation target");
         assertTrue(command.isFinished(), "Single waypoint path should finish when translation and rotation are at setpoint");
+    }
+
+    @Test
+    void remainingPathDistanceIsZeroBeforeInitialization() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        Path path = new Path(
+            new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
+            new Path.TranslationTarget(new Translation2d(1.0, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot);
+
+        assertEquals(
+            0.0,
+            command.getRemainingPathDistanceMeters(),
+            1e-9,
+            "Distance getter should return 0.0 before command initialization"
+        );
+    }
+
+    @Test
+    void remainingPathDistanceDecreasesAsRobotProgresses() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Path path = new Path(
+            new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
+            new Path.TranslationTarget(new Translation2d(1.0, 0.0)),
+            new Path.TranslationTarget(new Translation2d(2.0, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot);
+        command.initialize();
+
+        runExecute(command, robot);
+        double firstDistance = command.getRemainingPathDistanceMeters();
+
+        robot.setPose(new Pose2d(1.0, 0.0, new Rotation2d()));
+        runExecute(command, robot);
+        double secondDistance = command.getRemainingPathDistanceMeters();
+
+        robot.setPose(new Pose2d(2.0, 0.0, new Rotation2d()));
+        runExecute(command, robot);
+        double finalDistance = command.getRemainingPathDistanceMeters();
+
+        assertTrue(firstDistance > secondDistance, "Remaining distance should shrink as robot advances");
+        assertTrue(secondDistance > finalDistance, "Remaining distance should continue shrinking near path end");
+        assertEquals(0.0, finalDistance, 1e-6, "Remaining distance should be ~0 at final target");
+    }
+
+    @Test
+    void remainingPathDistanceIsZeroForInvalidPath() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        Path invalidPath = new Path(
+            new Path.RotationTarget(Rotation2d.fromDegrees(45.0), 0.5)
+        );
+
+        FollowPath command = createCommand(invalidPath, robot);
+        command.initialize();
+
+        assertEquals(
+            0.0,
+            command.getRemainingPathDistanceMeters(),
+            1e-9,
+            "Distance getter should return 0.0 when path is invalid"
+        );
+    }
+
+    @Test
+    void rotationTargetPoseLoggingUsesTargetRotationAndNewKey() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Pose2d> poseLogs = new HashMap<>();
+        FollowPath.setPoseLoggingConsumer((Pair<String, Pose2d> pair) -> poseLogs.put(pair.getFirst(), pair.getSecond()));
+
+        Path path = new Path(
+            new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
+            new Path.RotationTarget(Rotation2d.fromDegrees(90.0), 0.5),
+            new Path.TranslationTarget(new Translation2d(2.0, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        Pose2d rotationTargetPoseLog = poseLogs.get("FollowPath/rotationTargetPose");
+        assertNotNull(rotationTargetPoseLog, "Expected FollowPath/rotationTargetPose log to be emitted");
+        assertEquals(
+            90.0,
+            rotationTargetPoseLog.getRotation().getDegrees(),
+            1e-9,
+            "rotationTargetPose log should carry the rotation target's heading"
+        );
+        assertFalse(
+            poseLogs.containsKey("FollowPath/calculateRotationTargetTranslation"),
+            "Old rotation target translation log key should no longer be emitted"
+        );
     }
 
     @Test
