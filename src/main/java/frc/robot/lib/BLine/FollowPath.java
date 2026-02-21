@@ -271,6 +271,12 @@ public class FollowPath extends Command {
      * <p>The Builder allows you to configure a path follower once with all the robot-specific
      * parameters, then build multiple commands for different paths. This avoids repeating
      * the same configuration for each path.
+     *
+     * <p><b>Important:</b> This builder is mutable and stateful. Optional settings configured
+     * through {@code with...} methods persist for all subsequent {@link #build(Path)} calls
+     * until you change them again. For example, once {@link #withPoseReset(Consumer)} is set,
+     * later built commands will continue resetting pose unless you override it (for example,
+     * with a no-op consumer).
      * 
      * <h2>Required Parameters</h2>
      * <p>The constructor requires:
@@ -351,6 +357,8 @@ public class FollowPath extends Command {
          * 
          * <p>When the supplier returns true, the path will be flipped to the opposite alliance
          * side using {@link FlippingUtil} during command initialization.
+         *
+         * <p>This setting persists for future {@link #build(Path)} calls until changed.
          * 
          * @param shouldFlipPathSupplier Supplier returning true if the path should be flipped
          * @return This builder for chaining
@@ -365,6 +373,8 @@ public class FollowPath extends Command {
          * 
          * <p>When enabled, paths will automatically be flipped when the robot is on the
          * red alliance, based on {@link edu.wpi.first.wpilibj.DriverStation#getAlliance()}.
+         *
+         * <p>This setting persists for future {@link #build(Path)} calls until changed.
          * 
          * @return This builder for chaining
          */
@@ -379,6 +389,10 @@ public class FollowPath extends Command {
          * <p>When set, the command will call this consumer with the path's starting pose
          * during initialization. This is useful for resetting odometry when starting autonomous
          * routines or when the robot is placed at a known location.
+         *
+         * <p>This setting persists for future {@link #build(Path)} calls until changed.
+         * To disable pose reset on later commands when reusing the same builder, set a no-op
+         * consumer such as {@code withPoseReset(pose -> {})}.
          * 
          * @param poseResetConsumer Consumer that resets the robot's pose estimate
          * @return This builder for chaining
@@ -395,6 +409,8 @@ public class FollowPath extends Command {
          * segment progress rather than raw distance, which can be more robust at
          * higher speeds on riskier paths. Defaults to false.
          *
+         * <p>This setting persists for future {@link #build(Path)} calls until changed.
+         *
          * @param enabled true to use t_ratio-based handoffs, false for radius-based
          * @return This builder for chaining
          */
@@ -407,7 +423,8 @@ public class FollowPath extends Command {
          * Builds a FollowPath command for the specified path.
          * 
          * <p>The built command will use all the configuration from this builder. Each call
-         * to build() creates an independent command that can be scheduled.
+         * to build() creates an independent command that can be scheduled, using the builder's
+         * current optional settings at the time of the call.
          * 
          * @param path The path to follow
          * @return A new FollowPath command configured for the given path
