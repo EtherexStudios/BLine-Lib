@@ -33,9 +33,14 @@ dependencies {
     implementation "edu.wpi.first.wpimath:wpimath-java:${wpiVersion}"
     implementation "edu.wpi.first.wpiutil:wpiutil-java:${wpiVersion}"
     implementation "edu.wpi.first.wpiunits:wpiunits-java:${wpiVersion}"
+    compileOnly "com.fasterxml.jackson.core:jackson-annotations:2.18.3"
     
     // JSON Simple for path loading
     implementation "com.googlecode.json-simple:json-simple:1.1.1"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
+    testRuntimeOnly "us.hebi.quickbuf:quickbuf-runtime:1.4"
 }
 
 // Configuration for JitPack
@@ -86,3 +91,6 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+test {
+    useJUnitPlatform()
+}
