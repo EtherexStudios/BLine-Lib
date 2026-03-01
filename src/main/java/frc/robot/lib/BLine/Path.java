@@ -1212,40 +1212,90 @@ public class Path {
         
         if (flipped) return;
 
-        for (int i = 0; i < pathElements.size(); i++) {
-            PathElement element = pathElements.get(i);
-            if (element instanceof TranslationTarget) {
-                pathElements.set(i, new TranslationTarget(
-                    FlippingUtil.flipFieldPosition(((TranslationTarget) element).translation()),
-                    ((TranslationTarget) element).intermediateHandoffRadiusMeters()
-                ));
-            } else if (element instanceof RotationTarget) {
-                pathElements.set(i, new RotationTarget(
-                    FlippingUtil.flipFieldRotation(((RotationTarget) element).rotation()),
-                    ((RotationTarget) element).t_ratio(),
-                    ((RotationTarget) element).profiledRotation()
-                ));
-            } else if (element instanceof Waypoint) {
-                pathElements.set(i, new Waypoint(
-                    new TranslationTarget(
-                        FlippingUtil.flipFieldPosition(((Waypoint) element).translationTarget().translation()),
-                        ((Waypoint) element).translationTarget().intermediateHandoffRadiusMeters()
-                    ),
-                    new RotationTarget(
-                        FlippingUtil.flipFieldRotation(((Waypoint) element).rotationTarget().rotation()),
-                        ((Waypoint) element).rotationTarget().t_ratio(),
-                        ((Waypoint) element).rotationTarget().profiledRotation()
-                    )
-                ));
-            } else if (element instanceof EventTrigger) {
-                pathElements.set(i, new EventTrigger(
-                    ((EventTrigger) element).t_ratio(),
-                    ((EventTrigger) element).libKey()
-                ));
+        FlippingUtil.FieldSymmetry previousSymmetryType = FlippingUtil.symmetryType;
+        FlippingUtil.symmetryType = FlippingUtil.FieldSymmetry.kRotational;
+        try {
+            for (int i = 0; i < pathElements.size(); i++) {
+                PathElement element = pathElements.get(i);
+                if (element instanceof TranslationTarget) {
+                    pathElements.set(i, new TranslationTarget(
+                        FlippingUtil.flipFieldPosition(((TranslationTarget) element).translation()),
+                        ((TranslationTarget) element).intermediateHandoffRadiusMeters()
+                    ));
+                } else if (element instanceof RotationTarget) {
+                    pathElements.set(i, new RotationTarget(
+                        FlippingUtil.flipFieldRotation(((RotationTarget) element).rotation()),
+                        ((RotationTarget) element).t_ratio(),
+                        ((RotationTarget) element).profiledRotation()
+                    ));
+                } else if (element instanceof Waypoint) {
+                    pathElements.set(i, new Waypoint(
+                        new TranslationTarget(
+                            FlippingUtil.flipFieldPosition(((Waypoint) element).translationTarget().translation()),
+                            ((Waypoint) element).translationTarget().intermediateHandoffRadiusMeters()
+                        ),
+                        new RotationTarget(
+                            FlippingUtil.flipFieldRotation(((Waypoint) element).rotationTarget().rotation()),
+                            ((Waypoint) element).rotationTarget().t_ratio(),
+                            ((Waypoint) element).rotationTarget().profiledRotation()
+                        )
+                    ));
+                } else if (element instanceof EventTrigger) {
+                    pathElements.set(i, new EventTrigger(
+                        ((EventTrigger) element).t_ratio(),
+                        ((EventTrigger) element).libKey()
+                    ));
+                }
             }
+            flipped = true;
+        } finally {
+            FlippingUtil.symmetryType = previousSymmetryType;
+        }
+    }
+
+    /**
+     * Mirrors this path vertically across the field centerline.
+     *
+     * <p>This mirrors across the field width (horizontal centerline), where
+     * {@code y -> fieldSizeY - y} and {@code x} is unchanged, via {@link FlippingUtil}.
+     */
+    public void mirror() {
+        if (!isValid()) {
+            return;
         }
 
-        flipped = true;
+        List<PathElement> mirroredPathElements = new ArrayList<>(pathElements.size());
+        for (PathElement element : pathElements) {
+            if (element instanceof TranslationTarget translationTarget) {
+                mirroredPathElements.add(new TranslationTarget(
+                    FlippingUtil.mirrorFieldPosition(translationTarget.translation()),
+                    translationTarget.intermediateHandoffRadiusMeters()
+                ));
+            } else if (element instanceof RotationTarget rotationTarget) {
+                mirroredPathElements.add(new RotationTarget(
+                    FlippingUtil.mirrorFieldRotation(rotationTarget.rotation()),
+                    rotationTarget.t_ratio(),
+                    rotationTarget.profiledRotation()
+                ));
+            } else if (element instanceof Waypoint waypoint) {
+                mirroredPathElements.add(new Waypoint(
+                    new TranslationTarget(
+                        FlippingUtil.mirrorFieldPosition(waypoint.translationTarget().translation()),
+                        waypoint.translationTarget().intermediateHandoffRadiusMeters()
+                    ),
+                    new RotationTarget(
+                        FlippingUtil.mirrorFieldRotation(waypoint.rotationTarget().rotation()),
+                        waypoint.rotationTarget().t_ratio(),
+                        waypoint.rotationTarget().profiledRotation()
+                    )
+                ));
+            } else if (element instanceof EventTrigger eventTrigger) {
+                mirroredPathElements.add(new EventTrigger(eventTrigger.t_ratio(), eventTrigger.libKey()));
+            } else {
+                mirroredPathElements.add(element.copy());
+            }
+        }
+        pathElements = mirroredPathElements;
     }
 
     /**

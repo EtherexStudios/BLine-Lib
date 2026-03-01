@@ -214,6 +214,7 @@ public class FollowPath extends Command {
     private final Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier;
     private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
     private final Supplier<Boolean> shouldFlipPathSupplier;
+    private final Supplier<Boolean> shouldMirrorPathSupplier;
     private final Consumer<Pose2d> poseResetConsumer;
     private final boolean useTRatioBasedTranslationHandoffs;
     
@@ -292,6 +293,7 @@ public class FollowPath extends Command {
      * <ul>
      *   <li>{@link #withShouldFlip(Supplier)} - Custom alliance flip logic</li>
      *   <li>{@link #withDefaultShouldFlip()} - Use DriverStation alliance for flipping</li>
+     *   <li>{@link #withShouldMirror(Supplier)} - Custom vertical mirror logic</li>
      *   <li>{@link #withPoseReset(Consumer)} - Reset odometry to path start pose</li>
      * </ul>
      * 
@@ -320,6 +322,7 @@ public class FollowPath extends Command {
         private final PIDController crossTrackController;
         
         private Supplier<Boolean> shouldFlipPathSupplier = () -> false;
+        private Supplier<Boolean> shouldMirrorPathSupplier = () -> false;
         private Consumer<Pose2d> poseResetConsumer = (pose) -> {};
         private boolean useTRatioBasedTranslationHandoffs = false;
         
@@ -384,6 +387,22 @@ public class FollowPath extends Command {
         }
 
         /**
+         * Configures a custom supplier to determine whether the path should be mirrored vertically.
+         * 
+         * <p>When the supplier returns true, the path will be mirrored over the vertical
+         * direction across the field width ({@code y -> fieldSizeY - y}) via {@link Path#mirror()}.
+         *
+         * <p>This setting persists for future {@link #build(Path)} calls until changed.
+         * 
+         * @param shouldMirrorPathSupplier Supplier returning true if the path should be mirrored vertically
+         * @return This builder for chaining
+         */
+        public Builder withShouldMirror(Supplier<Boolean> shouldMirrorPathSupplier) {
+            this.shouldMirrorPathSupplier = shouldMirrorPathSupplier;
+            return this;
+        }
+
+        /**
          * Configures a consumer to reset the robot's pose at the start of path following.
          * 
          * <p>When set, the command will call this consumer with the path's starting pose
@@ -438,6 +457,7 @@ public class FollowPath extends Command {
                 robotRelativeSpeedsSupplier,
                 robotRelativeSpeedsConsumer,
                 shouldFlipPathSupplier,
+                shouldMirrorPathSupplier,
                 poseResetConsumer,
                 useTRatioBasedTranslationHandoffs,
                 translationController,
@@ -467,6 +487,7 @@ public class FollowPath extends Command {
         Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier,
         Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer,
         Supplier<Boolean> shouldFlipPathSupplier,
+        Supplier<Boolean> shouldMirrorPathSupplier,
         Consumer<Pose2d> poseResetConsumer,
         boolean useTRatioBasedTranslationHandoffs,
         PIDController translationController, 
@@ -482,6 +503,7 @@ public class FollowPath extends Command {
         this.robotRelativeSpeedsSupplier = robotRelativeSpeedsSupplier;
         this.robotRelativeSpeedsConsumer = robotRelativeSpeedsConsumer;
         this.shouldFlipPathSupplier = shouldFlipPathSupplier;
+        this.shouldMirrorPathSupplier = shouldMirrorPathSupplier;
         this.poseResetConsumer = poseResetConsumer;
         this.useTRatioBasedTranslationHandoffs = useTRatioBasedTranslationHandoffs;
         this.translationController = translationController;
@@ -507,6 +529,9 @@ public class FollowPath extends Command {
 
         if (shouldFlipPathSupplier.get()) {
             path.flip();
+        }
+        if (shouldMirrorPathSupplier.get()) {
+            path.mirror();
         }
         pathElementsWithConstraints = path.getPathElementsWithConstraintsNoWaypoints();
 

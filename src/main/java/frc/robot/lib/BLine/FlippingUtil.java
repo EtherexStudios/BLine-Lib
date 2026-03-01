@@ -68,6 +68,41 @@ public class FlippingUtil {
   }
 
   /**
+   * Mirror a field position across the field width centerline, maintaining a blue alliance origin.
+   *
+   * <p>This performs {@code y -> fieldSizeY - y} while leaving {@code x} unchanged.
+   *
+   * @param pos The position to mirror
+   * @return The mirrored position
+   */
+  public static Translation2d mirrorFieldPosition(Translation2d pos) {
+    return new Translation2d(pos.getX(), fieldSizeY - pos.getY());
+  }
+
+  /**
+   * Mirror a field rotation across the field width centerline, maintaining a blue alliance origin.
+   *
+   * <p>This performs {@code theta -> -theta}.
+   *
+   * @param rotation The rotation to mirror
+   * @return The mirrored rotation
+   */
+  public static Rotation2d mirrorFieldRotation(Rotation2d rotation) {
+    return Rotation2d.fromRadians(-rotation.getRadians());
+  }
+
+  /**
+   * Mirror a field pose across the field width centerline, maintaining a blue alliance origin.
+   *
+   * @param pose The pose to mirror
+   * @return The mirrored pose
+   */
+  public static Pose2d mirrorFieldPose(Pose2d pose) {
+    return new Pose2d(
+        mirrorFieldPosition(pose.getTranslation()), mirrorFieldRotation(pose.getRotation()));
+  }
+
+  /**
    * Flip field relative chassis speeds for the other side of the field, maintaining a blue alliance
    * origin
    *

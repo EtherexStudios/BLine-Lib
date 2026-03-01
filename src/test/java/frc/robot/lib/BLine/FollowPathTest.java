@@ -507,6 +507,130 @@ class FollowPathTest {
         assertTrue(areSpeedsNearZero(robot.getRobotRelativeSpeeds(), 1e-9), "end() should command zero speeds");
     }
 
+    @Test
+    void shouldMirrorVerticallyWhenSupplierReturnsTrue() {
+        FlippingUtil.FieldSymmetry originalSymmetryType = FlippingUtil.symmetryType;
+        try {
+            FlippingUtil.symmetryType = FlippingUtil.FieldSymmetry.kRotational;
+
+            MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+            FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+            Translation2d[][] loggedPathTranslations = new Translation2d[1][];
+            FollowPath.setTranslationListLoggingConsumer((Pair<String, Translation2d[]> value) -> {
+                if ("FollowPath/pathTranslations".equals(value.getFirst())) {
+                    loggedPathTranslations[0] = value.getSecond();
+                }
+            });
+
+            Path path = new Path(
+                new Path.TranslationTarget(new Translation2d(1.0, 2.0)),
+                new Path.TranslationTarget(new Translation2d(3.0, 4.0))
+            );
+
+            FollowPath command = new FollowPath.Builder(
+                new TestSubsystem(),
+                robot::getPose,
+                robot::getRobotRelativeSpeeds,
+                robot::setRobotRelativeSpeeds,
+                new PIDController(5.0, 0.0, 0.0),
+                new PIDController(5.0, 0.0, 0.0),
+                new PIDController(0.0, 0.0, 0.0)
+            ).withShouldMirror(() -> true).build(path);
+            command.initialize();
+
+            assertNotNull(loggedPathTranslations[0], "Expected path translation list to be logged during initialization");
+            assertEquals(1.0, loggedPathTranslations[0][0].getX(), 1e-9);
+            assertEquals(FlippingUtil.fieldSizeY - 2.0, loggedPathTranslations[0][0].getY(), 1e-9);
+            assertEquals(3.0, loggedPathTranslations[0][1].getX(), 1e-9);
+            assertEquals(FlippingUtil.fieldSizeY - 4.0, loggedPathTranslations[0][1].getY(), 1e-9);
+        } finally {
+            FlippingUtil.symmetryType = originalSymmetryType;
+        }
+    }
+
+    @Test
+    void shouldMirrorDoesNothingWhenSupplierReturnsFalse() {
+        FlippingUtil.FieldSymmetry originalSymmetryType = FlippingUtil.symmetryType;
+        try {
+            FlippingUtil.symmetryType = FlippingUtil.FieldSymmetry.kRotational;
+
+            MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+            FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+            Translation2d[][] loggedPathTranslations = new Translation2d[1][];
+            FollowPath.setTranslationListLoggingConsumer((Pair<String, Translation2d[]> value) -> {
+                if ("FollowPath/pathTranslations".equals(value.getFirst())) {
+                    loggedPathTranslations[0] = value.getSecond();
+                }
+            });
+
+            Path path = new Path(
+                new Path.TranslationTarget(new Translation2d(1.0, 2.0)),
+                new Path.TranslationTarget(new Translation2d(3.0, 4.0))
+            );
+
+            FollowPath command = new FollowPath.Builder(
+                new TestSubsystem(),
+                robot::getPose,
+                robot::getRobotRelativeSpeeds,
+                robot::setRobotRelativeSpeeds,
+                new PIDController(5.0, 0.0, 0.0),
+                new PIDController(5.0, 0.0, 0.0),
+                new PIDController(0.0, 0.0, 0.0)
+            ).withShouldMirror(() -> false).build(path);
+            command.initialize();
+
+            assertNotNull(loggedPathTranslations[0], "Expected path translation list to be logged during initialization");
+            assertEquals(1.0, loggedPathTranslations[0][0].getX(), 1e-9);
+            assertEquals(2.0, loggedPathTranslations[0][0].getY(), 1e-9);
+            assertEquals(3.0, loggedPathTranslations[0][1].getX(), 1e-9);
+            assertEquals(4.0, loggedPathTranslations[0][1].getY(), 1e-9);
+        } finally {
+            FlippingUtil.symmetryType = originalSymmetryType;
+        }
+    }
+
+    @Test
+    void shouldFlipUsesRotationalSymmetryEvenIfGlobalSymmetryIsMirrored() {
+        FlippingUtil.FieldSymmetry originalSymmetryType = FlippingUtil.symmetryType;
+        try {
+            FlippingUtil.symmetryType = FlippingUtil.FieldSymmetry.kMirrored;
+
+            MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+            FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+            Translation2d[][] loggedPathTranslations = new Translation2d[1][];
+            FollowPath.setTranslationListLoggingConsumer((Pair<String, Translation2d[]> value) -> {
+                if ("FollowPath/pathTranslations".equals(value.getFirst())) {
+                    loggedPathTranslations[0] = value.getSecond();
+                }
+            });
+
+            Path path = new Path(
+                new Path.TranslationTarget(new Translation2d(1.0, 2.0)),
+                new Path.TranslationTarget(new Translation2d(3.0, 4.0))
+            );
+
+            FollowPath command = new FollowPath.Builder(
+                new TestSubsystem(),
+                robot::getPose,
+                robot::getRobotRelativeSpeeds,
+                robot::setRobotRelativeSpeeds,
+                new PIDController(5.0, 0.0, 0.0),
+                new PIDController(5.0, 0.0, 0.0),
+                new PIDController(0.0, 0.0, 0.0)
+            ).withShouldFlip(() -> true).build(path);
+            command.initialize();
+
+            assertNotNull(loggedPathTranslations[0], "Expected path translation list to be logged during initialization");
+            assertEquals(FlippingUtil.fieldSizeX - 1.0, loggedPathTranslations[0][0].getX(), 1e-9);
+            assertEquals(FlippingUtil.fieldSizeY - 2.0, loggedPathTranslations[0][0].getY(), 1e-9);
+            assertEquals(FlippingUtil.fieldSizeX - 3.0, loggedPathTranslations[0][1].getX(), 1e-9);
+            assertEquals(FlippingUtil.fieldSizeY - 4.0, loggedPathTranslations[0][1].getY(), 1e-9);
+            assertEquals(FlippingUtil.FieldSymmetry.kMirrored, FlippingUtil.symmetryType, "flip() should restore prior symmetry type");
+        } finally {
+            FlippingUtil.symmetryType = originalSymmetryType;
+        }
+    }
+
     private static FollowPath createCommand(Path path, MutableRobot robot) {
         return createCommand(path, robot, false);
     }
