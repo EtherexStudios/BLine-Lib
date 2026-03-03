@@ -20,6 +20,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Utility class for loading and parsing path data from JSON files.
@@ -98,7 +99,38 @@ public class JsonUtils {
      * <p>This is set to the "autos" subdirectory within the robot's deploy directory.
      * Path files should be placed in a "paths" subdirectory within this location.
      */
-    public static final File PROJECT_ROOT = new File(Filesystem.getDeployDirectory(), "autos");
+    public static final File PROJECT_ROOT = resolveProjectRoot();
+
+    private static final String[][] PATH_CONSTRAINT_KEY_ALIASES = {
+        { "max_velocity_meters_per_sec" },
+        { "max_acceleration_meters_per_sec2" },
+        { "max_velocity_deg_per_sec" },
+        { "max_acceleration_deg_per_sec2" },
+        { "end_translation_tolerance_meters" },
+        { "end_rotation_tolerance_deg" }
+    };
+
+    private static final String[][] GLOBAL_CONSTRAINT_KEY_ALIASES = {
+        { "default_max_velocity_meters_per_sec", "max_velocity_meters_per_sec" },
+        { "default_max_acceleration_meters_per_sec2", "max_acceleration_meters_per_sec2" },
+        { "default_max_velocity_deg_per_sec", "max_velocity_deg_per_sec" },
+        { "default_max_acceleration_deg_per_sec2", "max_acceleration_deg_per_sec2" },
+        { "default_end_translation_tolerance_meters", "end_translation_tolerance_meters" },
+        { "default_end_rotation_tolerance_deg", "end_rotation_tolerance_deg" },
+        { "default_intermediate_handoff_radius_meters", "intermediate_handoff_radius_meters" }
+    };
+
+    private static final Path.DefaultGlobalConstraints FALLBACK_GLOBAL_CONSTRAINTS =
+        new Path.DefaultGlobalConstraints(4.5, 7.0, 720.0, 1500.0, 0.03, 2.0, 0.2);
+
+    private static File resolveProjectRoot() {
+        try {
+            return new File(Filesystem.getDeployDirectory(), "autos");
+        } catch (Throwable ignored) {
+            // Allows unit tests or desktop environments that don't include camera server classes.
+            return new File("src/main/deploy/autos");
+        }
+    }
 
     /**
      * Loads a path from a JSON file in the specified autos directory.
@@ -339,29 +371,39 @@ public class JsonUtils {
      */
     private static Path.PathConstraints parsePathConstraints(JSONObject json) {
         Path.PathConstraints constraints = new Path.PathConstraints();
-        JSONObject constraintsJson = (JSONObject) json.get("constraints");
-        if (constraintsJson != null) {
-            parseConstraint(constraintsJson, "max_velocity_meters_per_sec", (val) -> {
-                if (val.isPresent()) constraints.setMaxVelocityMetersPerSec(val.get().toArray(new Path.RangedConstraint[0]));
-            });
-            parseConstraint(constraintsJson, "max_acceleration_meters_per_sec2", (val) -> {
-                if (val.isPresent()) constraints.setMaxAccelerationMetersPerSec2(val.get().toArray(new Path.RangedConstraint[0]));
-            });
-            parseConstraint(constraintsJson, "max_velocity_deg_per_sec", (val) -> {
-                if (val.isPresent()) constraints.setMaxVelocityDegPerSec(val.get().toArray(new Path.RangedConstraint[0]));
-            });
-            parseConstraint(constraintsJson, "max_acceleration_deg_per_sec2", (val) -> {
-                if (val.isPresent()) constraints.setMaxAccelerationDegPerSec2(val.get().toArray(new Path.RangedConstraint[0]));
-            });
-            Object endTranslationTolObj = constraintsJson.get("end_translation_tolerance_meters");
-            if (endTranslationTolObj instanceof Number) {
-                constraints.setEndTranslationToleranceMeters(((Number) endTranslationTolObj).doubleValue());
-            }
-            Object endRotationTolObj = constraintsJson.get("end_rotation_tolerance_deg");
-            if (endRotationTolObj instanceof Number) {
-                constraints.setEndRotationToleranceDeg(((Number) endRotationTolObj).doubleValue());
-            }
+        JSONObject constraintsJson = getNestedObject(json, "constraints");
+        if (constraintsJson == null) {
+            constraintsJson = findBestObjectContainingKeys(json, PATH_CONSTRAINT_KEY_ALIASES);
         }
+
+        parseConstraint(constraintsJson, json, "max_velocity_meters_per_sec", (val) -> {
+            if (val.isPresent()) {
+                constraints.setMaxVelocityMetersPerSec(val.get().toArray(new Path.RangedConstraint[0]));
+            }
+        });
+        parseConstraint(constraintsJson, json, "max_acceleration_meters_per_sec2", (val) -> {
+            if (val.isPresent()) {
+                constraints.setMaxAccelerationMetersPerSec2(val.get().toArray(new Path.RangedConstraint[0]));
+            }
+        });
+        parseConstraint(constraintsJson, json, "max_velocity_deg_per_sec", (val) -> {
+            if (val.isPresent()) {
+                constraints.setMaxVelocityDegPerSec(val.get().toArray(new Path.RangedConstraint[0]));
+            }
+        });
+        parseConstraint(constraintsJson, json, "max_acceleration_deg_per_sec2", (val) -> {
+            if (val.isPresent()) {
+                constraints.setMaxAccelerationDegPerSec2(val.get().toArray(new Path.RangedConstraint[0]));
+            }
+        });
+
+        lookupValueByKeys(constraintsJson, json, "end_translation_tolerance_meters")
+            .flatMap(JsonUtils::toDouble)
+            .ifPresent(constraints::setEndTranslationToleranceMeters);
+        lookupValueByKeys(constraintsJson, json, "end_rotation_tolerance_deg")
+            .flatMap(JsonUtils::toDouble)
+            .ifPresent(constraints::setEndRotationToleranceDeg);
+
         return constraints;
     }
 
@@ -372,13 +414,60 @@ public class JsonUtils {
      * @return DefaultGlobalConstraints with all required values
      */
     private static Path.DefaultGlobalConstraints parseDefaultGlobalConstraints(JSONObject json) {
-        double dMaxVelMps = ((Number) json.get("default_max_velocity_meters_per_sec")).doubleValue();
-        double dMaxAccMps2 = ((Number) json.get("default_max_acceleration_meters_per_sec2")).doubleValue();
-        double dMaxVelDeg = ((Number) json.get("default_max_velocity_deg_per_sec")).doubleValue();
-        double dMaxAccDeg2 = ((Number) json.get("default_max_acceleration_deg_per_sec2")).doubleValue();
-        double endTransTol = ((Number) json.get("default_end_translation_tolerance_meters")).doubleValue();
-        double endRotTolDeg = ((Number) json.get("default_end_rotation_tolerance_deg")).doubleValue();
-        double handoffRadius = ((Number) json.get("default_intermediate_handoff_radius_meters")).doubleValue();
+        JSONObject constraintsJson = getNestedObject(json, "kinematic_constraints");
+        if (constraintsJson == null) {
+            constraintsJson = findBestObjectContainingKeys(json, GLOBAL_CONSTRAINT_KEY_ALIASES);
+        }
+
+        double dMaxVelMps = readDoubleConstraintValue(
+            constraintsJson,
+            json,
+            "default_max_velocity_meters_per_sec",
+            FALLBACK_GLOBAL_CONSTRAINTS.getMaxVelocityMetersPerSec(),
+            "max_velocity_meters_per_sec"
+        );
+        double dMaxAccMps2 = readDoubleConstraintValue(
+            constraintsJson,
+            json,
+            "default_max_acceleration_meters_per_sec2",
+            FALLBACK_GLOBAL_CONSTRAINTS.getMaxAccelerationMetersPerSec2(),
+            "max_acceleration_meters_per_sec2"
+        );
+        double dMaxVelDeg = readDoubleConstraintValue(
+            constraintsJson,
+            json,
+            "default_max_velocity_deg_per_sec",
+            FALLBACK_GLOBAL_CONSTRAINTS.getMaxVelocityDegPerSec(),
+            "max_velocity_deg_per_sec"
+        );
+        double dMaxAccDeg2 = readDoubleConstraintValue(
+            constraintsJson,
+            json,
+            "default_max_acceleration_deg_per_sec2",
+            FALLBACK_GLOBAL_CONSTRAINTS.getMaxAccelerationDegPerSec2(),
+            "max_acceleration_deg_per_sec2"
+        );
+        double endTransTol = readDoubleConstraintValue(
+            constraintsJson,
+            json,
+            "default_end_translation_tolerance_meters",
+            FALLBACK_GLOBAL_CONSTRAINTS.getEndTranslationToleranceMeters(),
+            "end_translation_tolerance_meters"
+        );
+        double endRotTolDeg = readDoubleConstraintValue(
+            constraintsJson,
+            json,
+            "default_end_rotation_tolerance_deg",
+            FALLBACK_GLOBAL_CONSTRAINTS.getEndRotationToleranceDeg(),
+            "end_rotation_tolerance_deg"
+        );
+        double handoffRadius = readDoubleConstraintValue(
+            constraintsJson,
+            json,
+            "default_intermediate_handoff_radius_meters",
+            FALLBACK_GLOBAL_CONSTRAINTS.getIntermediateHandoffRadiusMeters(),
+            "intermediate_handoff_radius_meters"
+        );
 
         return new Path.DefaultGlobalConstraints(
             dMaxVelMps,
@@ -398,17 +487,31 @@ public class JsonUtils {
      * @param key The key for the constraint array
      * @param setter Consumer to set the parsed constraint values
      */
-    private static void parseConstraint(JSONObject constraintsJson, String key, java.util.function.Consumer<Optional<ArrayList<Path.RangedConstraint>>> setter) {
-        JSONArray arr = (JSONArray) constraintsJson.get(key);
-        if (arr != null && !arr.isEmpty()) {
-            ArrayList<Path.RangedConstraint> list = new ArrayList<>();
-            for (Object obj : arr) {
-                JSONObject rcJson = (JSONObject) obj;
-                double value = ((Number) rcJson.get("value")).doubleValue();
-                int startOrdinal = ((Number) rcJson.get("start_ordinal")).intValue();
-                int endOrdinal = ((Number) rcJson.get("end_ordinal")).intValue();
-                list.add(new Path.RangedConstraint(value, startOrdinal, endOrdinal));
+    private static void parseConstraint(
+        JSONObject constraintsJson,
+        JSONObject rootJson,
+        String key,
+        Consumer<Optional<ArrayList<Path.RangedConstraint>>> setter
+    ) {
+        Optional<Object> arrObj = lookupValueByKeys(constraintsJson, rootJson, key);
+        if (arrObj.isEmpty() || !(arrObj.get() instanceof JSONArray arr) || arr.isEmpty()) {
+            return;
+        }
+
+        ArrayList<Path.RangedConstraint> list = new ArrayList<>();
+        for (Object obj : arr) {
+            if (!(obj instanceof JSONObject rcJson)) {
+                continue;
             }
+            Optional<Double> value = toDouble(rcJson.get("value"));
+            Optional<Integer> startOrdinal = toInt(rcJson.get("start_ordinal"));
+            Optional<Integer> endOrdinal = toInt(rcJson.get("end_ordinal"));
+            if (value.isEmpty() || startOrdinal.isEmpty() || endOrdinal.isEmpty()) {
+                continue;
+            }
+            list.add(new Path.RangedConstraint(value.get(), startOrdinal.get(), endOrdinal.get()));
+        }
+        if (!list.isEmpty()) {
             setter.accept(Optional.of(list));
         }
     }
@@ -447,27 +550,172 @@ public class JsonUtils {
             }
 
             JSONObject json = (JSONObject) new JSONParser().parse(fileContent);
-
-            double dMaxVelMps = ((Number) json.get("default_max_velocity_meters_per_sec")).doubleValue();
-            double dMaxAccMps2 = ((Number) json.get("default_max_acceleration_meters_per_sec2")).doubleValue();
-            double dMaxVelDeg = ((Number) json.get("default_max_velocity_deg_per_sec")).doubleValue();
-            double dMaxAccDeg2 = ((Number) json.get("default_max_acceleration_deg_per_sec2")).doubleValue();
-            double endTransTol = ((Number) json.get("default_end_translation_tolerance_meters")).doubleValue();
-            double endRotTolDeg = ((Number) json.get("default_end_rotation_tolerance_deg")).doubleValue();
-            double handoffRadius = ((Number) json.get("default_intermediate_handoff_radius_meters")).doubleValue();
-
-            return new Path.DefaultGlobalConstraints(
-                dMaxVelMps,
-                dMaxAccMps2,
-                dMaxVelDeg,
-                dMaxAccDeg2,
-                endTransTol,
-                endRotTolDeg,
-                handoffRadius
-            );
+            return parseDefaultGlobalConstraints(json);
         } catch (IOException | ParseException e) {
             throw new RuntimeException("Failed to load global constraints from " + autosDir.getPath() + "/config.json", e);
         }
+    }
+
+    private static JSONObject getNestedObject(JSONObject json, String key) {
+        Object val = json.get(key);
+        return val instanceof JSONObject ? (JSONObject) val : null;
+    }
+
+    private static Optional<Object> lookupValueByKeys(
+        JSONObject preferredContainer,
+        JSONObject rootJson,
+        String... keys
+    ) {
+        for (String key : keys) {
+            Optional<Object> preferred = lookupDirect(preferredContainer, key);
+            if (preferred.isPresent()) {
+                return preferred;
+            }
+        }
+        for (String key : keys) {
+            Optional<Object> direct = lookupDirect(rootJson, key);
+            if (direct.isPresent()) {
+                return direct;
+            }
+        }
+        for (String key : keys) {
+            Optional<Object> recursive = findFirstValueByKey(rootJson, key);
+            if (recursive.isPresent()) {
+                return recursive;
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<Object> lookupDirect(JSONObject json, String key) {
+        if (json == null || !json.containsKey(key)) {
+            return Optional.empty();
+        }
+        Object value = json.get(key);
+        return value == null ? Optional.empty() : Optional.of(value);
+    }
+
+    private static Optional<Object> findFirstValueByKey(Object node, String key) {
+        if (node instanceof JSONObject obj) {
+            if (obj.containsKey(key)) {
+                Object value = obj.get(key);
+                if (value != null) {
+                    return Optional.of(value);
+                }
+            }
+            for (Object child : obj.values()) {
+                Optional<Object> found = findFirstValueByKey(child, key);
+                if (found.isPresent()) {
+                    return found;
+                }
+            }
+        } else if (node instanceof JSONArray arr) {
+            for (Object child : arr) {
+                Optional<Object> found = findFirstValueByKey(child, key);
+                if (found.isPresent()) {
+                    return found;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static JSONObject findBestObjectContainingKeys(JSONObject rootJson, String[][] keyAliases) {
+        ArrayList<JSONObject> objects = new ArrayList<>();
+        collectJsonObjects(rootJson, objects);
+
+        JSONObject best = null;
+        int bestScore = 0;
+        for (JSONObject candidate : objects) {
+            int score = countMatchingKeys(candidate, keyAliases);
+            if (score > bestScore) {
+                bestScore = score;
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    private static void collectJsonObjects(Object node, ArrayList<JSONObject> out) {
+        if (node instanceof JSONObject obj) {
+            out.add(obj);
+            for (Object child : obj.values()) {
+                collectJsonObjects(child, out);
+            }
+        } else if (node instanceof JSONArray arr) {
+            for (Object child : arr) {
+                collectJsonObjects(child, out);
+            }
+        }
+    }
+
+    private static int countMatchingKeys(JSONObject json, String[][] keyAliases) {
+        int score = 0;
+        for (String[] aliases : keyAliases) {
+            for (String alias : aliases) {
+                if (json.containsKey(alias) && json.get(alias) != null) {
+                    score++;
+                    break;
+                }
+            }
+        }
+        return score;
+    }
+
+    private static Optional<Double> toDouble(Object value) {
+        if (value instanceof Number number) {
+            return Optional.of(number.doubleValue());
+        }
+        if (value instanceof String text) {
+            try {
+                return Optional.of(Double.parseDouble(text.trim()));
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<Integer> toInt(Object value) {
+        if (value instanceof Number number) {
+            return Optional.of(number.intValue());
+        }
+        if (value instanceof String text) {
+            try {
+                return Optional.of(Integer.parseInt(text.trim()));
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static double readDoubleConstraintValue(
+        JSONObject preferredContainer,
+        JSONObject rootJson,
+        String primaryKey,
+        double fallbackValue,
+        String... aliases
+    ) {
+        String[] keys = new String[aliases.length + 1];
+        keys[0] = primaryKey;
+        System.arraycopy(aliases, 0, keys, 1, aliases.length);
+
+        Optional<Object> raw = lookupValueByKeys(preferredContainer, rootJson, keys);
+        if (raw.isEmpty()) {
+            System.err.println(
+                "BLine JsonUtils: Missing constraint key '" + primaryKey + "', using fallback value " + fallbackValue
+            );
+            return fallbackValue;
+        }
+        Optional<Double> parsed = toDouble(raw.get());
+        if (parsed.isEmpty()) {
+            System.err.println(
+                "BLine JsonUtils: Constraint key '" + primaryKey + "' must be numeric, using fallback value " + fallbackValue
+            );
+            return fallbackValue;
+        }
+        return parsed.get();
     }
 
 }
