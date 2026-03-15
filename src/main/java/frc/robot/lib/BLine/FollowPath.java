@@ -846,17 +846,20 @@ public class FollowPath extends Command {
         TranslationSegmentState currentSegment,
         double handoffRadius
     ) {
+        double distanceToTarget = currentPose.getTranslation().getDistance(currentTranslationTarget.translation());
+
         if (currentSegment.isDegenerate()) {
             return true;
         }
 
         if (!useTRatioBasedTranslationHandoffs) {
-            return currentPose.getTranslation().getDistance(currentTranslationTarget.translation()) <= handoffRadius;
+            return distanceToTarget <= handoffRadius;
         }
 
         double handoffThreshold = 1.0 - (handoffRadius / currentSegment.segmentLength());
         handoffThreshold = Math.max(0.0, Math.min(1.0, handoffThreshold));
-        return currentSegment.segmentProgress() > handoffThreshold;
+        return currentSegment.segmentProgress() >= handoffThreshold
+            || distanceToTarget <= handoffRadius;
     }
 
     /**

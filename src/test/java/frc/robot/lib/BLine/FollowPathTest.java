@@ -172,6 +172,26 @@ class FollowPathTest {
     }
 
     @Test
+    void tratioHandoffStillAdvancesWhenRobotStartsInsideCurrentTargetRadius() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Path path = new Path(
+            new Path.TranslationTarget(new Translation2d(0.0005, 0.0)),
+            new Path.TranslationTarget(new Translation2d(1.0, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot, true);
+        command.initialize();
+        runExecute(command, robot);
+
+        assertEquals(
+            1,
+            command.getCurrentTranslationElementIndex(),
+            "t-ratio mode should still hand off when the robot already starts within the current target radius"
+        );
+    }
+
+    @Test
     void remainingPathDistanceIsZeroBeforeInitialization() {
         MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
         Path path = new Path(
