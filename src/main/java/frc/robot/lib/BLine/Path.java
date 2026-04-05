@@ -1284,6 +1284,10 @@ public class Path {
         return new Path(flippedElements);
     }
 
+    public Path flipCopy(Supplier<Boolean> shouldFlip) {
+        return shouldFlip.get() ? flipCopy() : copy();
+    }
+
     /**
      * Mirrors this path vertically across the field centerline.
      *
@@ -1313,6 +1317,10 @@ public class Path {
         }
 
         return new Path(mirroredElements);
+    }
+
+    public Path mirrorCopy(Supplier<Boolean> shouldFlip) {
+        return shouldFlip.get() ? mirrorCopy() : copy();
     }
 
     /**
