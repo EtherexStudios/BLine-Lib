@@ -1271,6 +1271,19 @@ public class Path {
         flipped = true;
     }
 
+    public Path flipCopy() {
+        if (!isValid()) {
+            return this.copy();
+        }
+
+        List<PathElement> flippedElements = new ArrayList<>(pathElements.size());
+        for (PathElement e : this.pathElements) {
+            flippedElements.add(e.flip());
+        }
+
+        return new Path(flippedElements);
+    }
+
     /**
      * Mirrors this path vertically across the field centerline.
      *
@@ -1287,6 +1300,19 @@ public class Path {
             mirroredPathElements.add(element.mirror());
         }
         pathElements = mirroredPathElements;
+    }
+
+    public Path mirrorCopy() {
+        if (!isValid()) {
+            return this.copy();
+        }
+
+        List<PathElement> mirroredElements = new ArrayList<>(pathElements.size());
+        for (PathElement e : this.pathElements) {
+            mirroredElements.add(e.mirror());
+        }
+
+        return new Path(mirroredElements);
     }
 
     /**

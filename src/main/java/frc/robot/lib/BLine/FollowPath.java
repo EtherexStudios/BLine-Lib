@@ -209,7 +209,7 @@ public class FollowPath extends Command {
     }
     
     
-    private final Path path;
+    private Path path;
     private final Supplier<Pose2d> poseSupplier;
     private final Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier;
     private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
@@ -528,11 +528,13 @@ public class FollowPath extends Command {
         }
 
         if (shouldFlipPathSupplier.get()) {
-            path.flip();
+            this.path = this.path.flipCopy();
         }
         if (shouldMirrorPathSupplier.get()) {
-            path.mirror();
+            this.path = this.path.mirrorCopy();
         }
+        logBoolean("FollowPath/usingFlippedPath", shouldFlipPathSupplier.get());
+        logBoolean("FollowPath/usingMirroredPath", shouldMirrorPathSupplier.get());
         pathElementsWithConstraints = path.getPathElementsWithConstraintsNoWaypoints();
 
         // Resolve and apply start pose once so all segment-relative calculations share a stable origin.
