@@ -1030,7 +1030,7 @@ public class FollowPath extends Command {
      * 
      * @return The remaining path distance in meters
      */
-    private double calculateRemainingPathDistance() {
+    public double calculateRemainingPathDistance() {
         Translation2d previousTranslation = poseSupplier.get().getTranslation();
         double remainingDistance = 0;
         for (int i = translationElementIndex; i < pathElementsWithConstraints.size(); i++) {

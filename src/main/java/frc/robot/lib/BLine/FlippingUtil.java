@@ -37,7 +37,17 @@ public class FlippingUtil {
    * @return The flipped position
    */
   public static Translation2d flipFieldPosition(Translation2d pos) {
-    return switch (symmetryType) {
+    return flipFieldPosition(pos, FlippingUtil.symmetryType);
+  }
+
+  /**
+   * Flip a field position to the other side of the field, maintaining a blue alliance origin
+   *
+   * @param pos The position to flip
+   * @return The flipped position
+   */
+  public static Translation2d flipFieldPosition(Translation2d pos, FieldSymmetry customSymmetryType) {
+    return switch (customSymmetryType) {
       case kMirrored -> new Translation2d(fieldSizeX - pos.getX(), pos.getY());
       case kRotational -> new Translation2d(fieldSizeX - pos.getX(), fieldSizeY - pos.getY());
     };
@@ -50,7 +60,17 @@ public class FlippingUtil {
    * @return The flipped rotation
    */
   public static Rotation2d flipFieldRotation(Rotation2d rotation) {
-    return switch (symmetryType) {
+    return flipFieldRotation(rotation, FlippingUtil.symmetryType);
+  }
+
+  /**
+   * Flip a field rotation to the other side of the field, maintaining a blue alliance origin
+   *
+   * @param rotation The rotation to flip
+   * @return The flipped rotation
+   */
+  public static Rotation2d flipFieldRotation(Rotation2d rotation, FieldSymmetry customFieldSymmetry) {
+    return switch (customFieldSymmetry) {
       case kMirrored -> Rotation2d.kPi.minus(rotation);
       case kRotational -> rotation.minus(Rotation2d.kPi);
     };
@@ -110,7 +130,18 @@ public class FlippingUtil {
    * @return Flipped speeds
    */
   public static ChassisSpeeds flipFieldSpeeds(ChassisSpeeds fieldSpeeds) {
-    return switch (symmetryType) {
+    return flipFieldSpeeds(fieldSpeeds, FlippingUtil.symmetryType);
+  }
+
+  /**
+   * Flip field relative chassis speeds for the other side of the field, maintaining a blue alliance
+   * origin
+   *
+   * @param fieldSpeeds Field relative chassis speeds
+   * @return Flipped speeds
+   */
+  public static ChassisSpeeds flipFieldSpeeds(ChassisSpeeds fieldSpeeds, FieldSymmetry customFieldSymmetry) {
+    return switch (customFieldSymmetry) {
       case kMirrored -> new ChassisSpeeds(
           -fieldSpeeds.vxMetersPerSecond,
           fieldSpeeds.vyMetersPerSecond,
@@ -130,7 +161,18 @@ public class FlippingUtil {
    * @return The flipped feedforwards
    */
   public static double[] flipFeedforwards(double[] feedforwards) {
-    return switch (symmetryType) {
+    return flipFeedforwards(feedforwards, FlippingUtil.symmetryType);
+  }
+
+  /**
+   * Flip an array of drive feedforwards for the other side of the field. Only does anything if
+   * mirrored symmetry is used
+   *
+   * @param feedforwards Array of drive feedforwards
+   * @return The flipped feedforwards
+   */
+  public static double[] flipFeedforwards(double[] feedforwards, FieldSymmetry customFieldSymmetry) {
+    return switch (customFieldSymmetry) {
       case kMirrored -> {
         if (feedforwards.length == 4) {
           yield new double[] {feedforwards[1], feedforwards[0], feedforwards[3], feedforwards[2]};
@@ -162,8 +204,19 @@ public class FlippingUtil {
    * @return The flipped feedforward Y components
    */
   public static double[] flipFeedforwardYs(double[] feedforwardYs) {
+    return flipFeedforwardYs(feedforwardYs, FlippingUtil.symmetryType);
+  }
+
+  /**
+   * Flip an array of drive feedforward Y components for the other side of the field. Only does
+   * anything if mirrored symmetry is used
+   *
+   * @param feedforwardYs Array of drive feedforward Y components
+   * @return The flipped feedforward Y components
+   */
+  public static double[] flipFeedforwardYs(double[] feedforwardYs, FieldSymmetry customFieldSymmetry) {
     var flippedFeedforwardYs = flipFeedforwards(feedforwardYs);
-    return switch (symmetryType) {
+    return switch (customFieldSymmetry) {
       case kMirrored -> {
         // Y directions also need to be inverted
         for (int i = 0; i < flippedFeedforwardYs.length; ++i) {

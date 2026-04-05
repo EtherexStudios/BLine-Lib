@@ -11,6 +11,7 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.lib.BLine.FlippingUtil.FieldSymmetry;
 
 /**
  * Represents a path that a robot can follow, consisting of translation and rotation targets.
@@ -76,6 +77,21 @@ public class Path {
          * @return A new PathElement with the same values
          */
         public PathElement copy();
+
+        /** 
+         * Creates a deep copy of this path element, but flipped (assumes rotation symmetry).
+         * 
+         * 
+         * @return A new PathElement with the same values but flipped
+          */
+        public PathElement flip();
+
+        /** 
+         * Creates a deep copy of this path element, but mirrored along the vertical (long) axis of the field.
+         * 
+         * @return A new PathElement with the same values but mirrored
+          */
+        public PathElement mirror();
     }
 
     /**
@@ -159,6 +175,14 @@ public class Path {
          */
         public Waypoint copy() {
             return new Waypoint(translationTarget.copy(), rotationTarget.copy());
+        }
+
+        public Waypoint flip() {
+            return new Waypoint(translationTarget.flip(), rotationTarget.flip());       
+        }
+
+        public Waypoint mirror() {
+            return new Waypoint(translationTarget.mirror(), rotationTarget.mirror());
         }
         
         /**
@@ -292,6 +316,16 @@ public class Path {
         public TranslationTarget copy() {
             return new TranslationTarget(translation, intermediateHandoffRadiusMeters);
         }
+
+        public TranslationTarget flip() {
+            return new TranslationTarget(
+                FlippingUtil.flipFieldPosition(translation, FieldSymmetry.kRotational), intermediateHandoffRadiusMeters);
+        }
+
+        public TranslationTarget mirror() {
+            return new TranslationTarget(
+                FlippingUtil.mirrorFieldPosition(translation), intermediateHandoffRadiusMeters);
+        }
         
         /**
          * Creates a translation target using the default handoff radius.
@@ -352,6 +386,16 @@ public class Path {
         public RotationTarget copy() {
             return new RotationTarget(rotation, t_ratio, profiledRotation);
         }
+
+        public RotationTarget flip() {
+            return new RotationTarget(
+                FlippingUtil.flipFieldRotation(rotation, FieldSymmetry.kRotational), t_ratio, profiledRotation);
+        }
+
+        public RotationTarget mirror() {
+            return new RotationTarget(
+                FlippingUtil.mirrorFieldRotation(rotation), t_ratio, profiledRotation);
+        }
         
         /**
          * Creates a rotation target with profiled rotation enabled by default.
@@ -384,6 +428,14 @@ public class Path {
          */
         public EventTrigger copy() {
             return new EventTrigger(t_ratio, libKey);
+        }
+        
+        public EventTrigger flip() {
+            return copy();
+        }
+
+        public EventTrigger mirror() {
+            return copy();
         }
     }
 
@@ -1212,45 +1264,11 @@ public class Path {
         
         if (flipped) return;
 
-        FlippingUtil.FieldSymmetry previousSymmetryType = FlippingUtil.symmetryType;
-        FlippingUtil.symmetryType = FlippingUtil.FieldSymmetry.kRotational;
-        try {
-            for (int i = 0; i < pathElements.size(); i++) {
-                PathElement element = pathElements.get(i);
-                if (element instanceof TranslationTarget) {
-                    pathElements.set(i, new TranslationTarget(
-                        FlippingUtil.flipFieldPosition(((TranslationTarget) element).translation()),
-                        ((TranslationTarget) element).intermediateHandoffRadiusMeters()
-                    ));
-                } else if (element instanceof RotationTarget) {
-                    pathElements.set(i, new RotationTarget(
-                        FlippingUtil.flipFieldRotation(((RotationTarget) element).rotation()),
-                        ((RotationTarget) element).t_ratio(),
-                        ((RotationTarget) element).profiledRotation()
-                    ));
-                } else if (element instanceof Waypoint) {
-                    pathElements.set(i, new Waypoint(
-                        new TranslationTarget(
-                            FlippingUtil.flipFieldPosition(((Waypoint) element).translationTarget().translation()),
-                            ((Waypoint) element).translationTarget().intermediateHandoffRadiusMeters()
-                        ),
-                        new RotationTarget(
-                            FlippingUtil.flipFieldRotation(((Waypoint) element).rotationTarget().rotation()),
-                            ((Waypoint) element).rotationTarget().t_ratio(),
-                            ((Waypoint) element).rotationTarget().profiledRotation()
-                        )
-                    ));
-                } else if (element instanceof EventTrigger) {
-                    pathElements.set(i, new EventTrigger(
-                        ((EventTrigger) element).t_ratio(),
-                        ((EventTrigger) element).libKey()
-                    ));
-                }
-            }
-            flipped = true;
-        } finally {
-            FlippingUtil.symmetryType = previousSymmetryType;
+        for (int i = 0; i < pathElements.size(); i++) {
+            PathElement element = pathElements.get(i);
+            pathElements.set(i, element.flip());
         }
+        flipped = true;
     }
 
     /**
@@ -1266,34 +1284,7 @@ public class Path {
 
         List<PathElement> mirroredPathElements = new ArrayList<>(pathElements.size());
         for (PathElement element : pathElements) {
-            if (element instanceof TranslationTarget translationTarget) {
-                mirroredPathElements.add(new TranslationTarget(
-                    FlippingUtil.mirrorFieldPosition(translationTarget.translation()),
-                    translationTarget.intermediateHandoffRadiusMeters()
-                ));
-            } else if (element instanceof RotationTarget rotationTarget) {
-                mirroredPathElements.add(new RotationTarget(
-                    FlippingUtil.mirrorFieldRotation(rotationTarget.rotation()),
-                    rotationTarget.t_ratio(),
-                    rotationTarget.profiledRotation()
-                ));
-            } else if (element instanceof Waypoint waypoint) {
-                mirroredPathElements.add(new Waypoint(
-                    new TranslationTarget(
-                        FlippingUtil.mirrorFieldPosition(waypoint.translationTarget().translation()),
-                        waypoint.translationTarget().intermediateHandoffRadiusMeters()
-                    ),
-                    new RotationTarget(
-                        FlippingUtil.mirrorFieldRotation(waypoint.rotationTarget().rotation()),
-                        waypoint.rotationTarget().t_ratio(),
-                        waypoint.rotationTarget().profiledRotation()
-                    )
-                ));
-            } else if (element instanceof EventTrigger eventTrigger) {
-                mirroredPathElements.add(new EventTrigger(eventTrigger.t_ratio(), eventTrigger.libKey()));
-            } else {
-                mirroredPathElements.add(element.copy());
-            }
+            mirroredPathElements.add(element.mirror());
         }
         pathElements = mirroredPathElements;
     }
