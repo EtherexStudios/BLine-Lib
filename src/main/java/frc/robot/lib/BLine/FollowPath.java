@@ -141,9 +141,9 @@ public class FollowPath extends Command {
     private final PIDController crossTrackController;
 
     private void configureControllers() {
-        translationController.setTolerance(activePath.getEndTranslationToleranceMeters());
-        rotationController.setTolerance(Math.toRadians(activePath.getEndRotationToleranceDeg()));
-        crossTrackController.setTolerance(activePath.getEndTranslationToleranceMeters());
+        translationController.setTolerance(path.getEndTranslationToleranceMeters());
+        rotationController.setTolerance(Math.toRadians(path.getEndRotationToleranceDeg()));
+        crossTrackController.setTolerance(path.getEndTranslationToleranceMeters());
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
@@ -208,9 +208,8 @@ public class FollowPath extends Command {
         timestampSupplier = supplier == null ? Timer::getTimestamp : supplier;
     }
     
-    private Path activePath = new Path();
+    private Path path = new Path();
     
-    private final Path referencePath;
     private final Supplier<Pose2d> poseSupplier;
     private final Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier;
     private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
@@ -391,7 +390,7 @@ public class FollowPath extends Command {
          * Configures a custom supplier to determine whether the path should be mirrored vertically.
          * 
          * <p>When the supplier returns true, the path will be mirrored over the vertical
-         * direction across the field width ({@code y -> fieldSizeY - y}) via {@link Path#mirror()}.
+         * direction across the field width ({@code y -> fieldSizeY - y}) via {@link Path#setToMirrored()}.
          *
          * <p>This setting persists for future {@link #build(Path)} calls until changed.
          * 
@@ -499,8 +498,7 @@ public class FollowPath extends Command {
             throw new IllegalArgumentException("Controllers must be provided and must not be null");
         }
 
-        this.referencePath = path.copy();
-        this.activePath = path.copy();
+        this.path = path.copy();
         this.poseSupplier = poseSupplier;
         this.robotRelativeSpeedsSupplier = robotRelativeSpeedsSupplier;
         this.robotRelativeSpeedsConsumer = robotRelativeSpeedsConsumer;
@@ -524,23 +522,36 @@ public class FollowPath extends Command {
             throw new IllegalArgumentException("Translation and rotation controllers must be provided and must not be null");
         }
 
-        if (!referencePath.isValid()) {
+        if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - skipping initialization");
             return;
         }
 
-        activePath = referencePath.flipCopy(shouldFlipPathSupplier).mirrorCopy(shouldMirrorPathSupplier);
+        boolean needToReset = path.isMutated();
+        if (shouldFlipPathSupplier.get()) {
+            needToReset = false;
+            this.path.setToFlipped();
+        }
 
-        logBoolean("FollowPath/usingFlippedPath", shouldFlipPathSupplier.get());
-        logBoolean("FollowPath/usingMirroredPath", shouldMirrorPathSupplier.get());
-        pathElementsWithConstraints = activePath.getPathElementsWithConstraintsNoWaypoints();
+        if (shouldMirrorPathSupplier.get()) {
+            needToReset = false;
+            this.path.setToMirrored();
+        }
+
+        if (needToReset) {
+            this.path.resetElements();
+        }
+
+        logBoolean("FollowPath/pathIsFlipped", this.path.isFlipped());
+        logBoolean("FollowPath/pathIsMirrored", this.path.isMirrored());
 
         // Resolve and apply start pose once so all segment-relative calculations share a stable origin.
+        pathElementsWithConstraints = path.getPathElementsWithConstraintsNoWaypoints();
         if (pathElementsWithConstraints.isEmpty()) {
             throw new IllegalStateException("Path must contain at least one element");
         }
 
-        Pose2d startPose = activePath.getStartPose(poseSupplier.get().getRotation());
+        Pose2d startPose = path.getStartPose(poseSupplier.get().getRotation());
         poseResetConsumer.accept(startPose);
 
         // Reset traversal state for a fresh command run.
@@ -573,7 +584,7 @@ public class FollowPath extends Command {
 
     @Override
     public void execute() {
-        if (!activePath.isValid()) {
+        if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - skipping execution");
             stopCommandedMotion();
             return;
@@ -707,7 +718,7 @@ public class FollowPath extends Command {
 
                 // Snap rotation to complete when within end-translation tolerance of the target.
                 // This prevents undershooting the final rotation when translation stops early.
-                double endTranslationTolerance = activePath.getEndTranslationToleranceMeters();
+                double endTranslationTolerance = path.getEndTranslationToleranceMeters();
                 if (rotationSegmentLength > SEGMENT_EPSILON && endTranslationTolerance > 0) {
                     double effectiveTolerance = Math.min(endTranslationTolerance, rotationSegmentLength);
                     double toleranceThreshold = 1.0 - (effectiveTolerance / rotationSegmentLength);
@@ -734,8 +745,8 @@ public class FollowPath extends Command {
             targetRotationRad = previousRotationElementTargetRad;
             currentRotationTargetRad = new Rotation2d(targetRotationRad);
             rotationConstraint = new RotationTargetConstraint(
-                    activePath.getDefaultGlobalConstraints().getMaxVelocityDegPerSec(), 
-                    activePath.getDefaultGlobalConstraints().getMaxAccelerationDegPerSec2()
+                    path.getDefaultGlobalConstraints().getMaxVelocityDegPerSec(), 
+                    path.getDefaultGlobalConstraints().getMaxAccelerationDegPerSec2()
                 );
         }
 
@@ -804,6 +815,10 @@ public class FollowPath extends Command {
             pathElementsWithConstraints.get(index).getFirst() instanceof RotationTarget;
     }
 
+    private void resetActivePath() {
+        this.path.undoFlip();
+    }
+
     /**
      * Advances translation targets until the current target is no longer handoff-eligible.
      *
@@ -824,7 +839,7 @@ public class FollowPath extends Command {
 
             TranslationTarget currentTranslationTarget = (TranslationTarget) pathElementsWithConstraints.get(translationElementIndex).getFirst();
             double handoffRadius = currentTranslationTarget.intermediateHandoffRadiusMeters()
-                .orElse(activePath.getDefaultGlobalConstraints().getIntermediateHandoffRadiusMeters());
+                .orElse(path.getDefaultGlobalConstraints().getIntermediateHandoffRadiusMeters());
 
             TranslationSegmentState currentSegment = getCurrentTranslationSegmentState(currentPose);
             if (!shouldHandoffTranslationTarget(currentPose, currentTranslationTarget, currentSegment, handoffRadius)) {
@@ -1304,7 +1319,7 @@ public class FollowPath extends Command {
 
     @Override
     public boolean isFinished() { // TODO add final velocity tolerance
-        if (!activePath.isValid()) {
+        if (!path.isValid()) {
             logger.log(java.util.logging.Level.WARNING, "FollowPath: Path invalid - finishing early");
             return true;
         }
@@ -1328,7 +1343,7 @@ public class FollowPath extends Command {
             }
         }
         boolean translationAtSetpoint = translationController.atSetpoint();
-        boolean rotationAtSetpoint = Math.abs(currentRotationTargetRad.minus(poseSupplier.get().getRotation()).getRadians()) < Math.toRadians(activePath.getEndRotationToleranceDeg());
+        boolean rotationAtSetpoint = Math.abs(currentRotationTargetRad.minus(poseSupplier.get().getRotation()).getRadians()) < Math.toRadians(path.getEndRotationToleranceDeg());
         boolean finished = 
             isLastRotationElement && isLastTranslationElement && 
             translationAtSetpoint &&
@@ -1384,7 +1399,7 @@ public class FollowPath extends Command {
      * @return Remaining path distance in meters
      */
     public double getRemainingPathDistanceMeters() {
-        if (!activePath.isValid() ||
+        if (!path.isValid() ||
             pathElementsWithConstraints.isEmpty() ||
             !isTranslationTargetAt(translationElementIndex)) {
             return 0.0;

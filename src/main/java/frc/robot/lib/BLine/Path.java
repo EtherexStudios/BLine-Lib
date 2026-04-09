@@ -48,7 +48,7 @@ import frc.robot.lib.BLine.FlippingUtil.FieldSymmetry;
  * }</pre>
  * 
  * <h2>Alliance Flipping</h2>
- * <p>Paths can be flipped to the opposite alliance side using {@link #flip()} and
+ * <p>Paths can be flipped to the opposite alliance side using {@link #setToFlipped()} and
  * {@link #undoFlip()}. This uses {@link FlippingUtil} to transform coordinates.
  * 
  * @see PathElement
@@ -726,6 +726,7 @@ public class Path {
     private PathConstraints pathConstraints;
     private static DefaultGlobalConstraints defaultGlobalConstraints = null;
     private boolean flipped = false;
+    private boolean mirrored = false;
     private boolean isValid = true;
     
     /**
@@ -1257,70 +1258,46 @@ public class Path {
      * <p>Uses {@link FlippingUtil} to transform all coordinates. This method only
      * flips once - subsequent calls have no effect until {@link #undoFlip()} is called.
      */
-    public void flip() {
+    public void setToFlipped() {
         if (!isValid()) {
             return;
         }
         
         if (flipped) return;
 
-        for (int i = 0; i < pathElements.size(); i++) {
-            PathElement element = pathElements.get(i);
-            pathElements.set(i, element.flip());
+        List<PathElement> flippedPathElements = new ArrayList<>(pathElements.size());
+        for (PathElement element : pathElements) {
+            flippedPathElements.add(element.flip());
         }
+        pathElements = flippedPathElements;
         flipped = true;
-    }
-
-    public Path flipCopy() {
-        if (!isValid()) {
-            return this.copy();
-        }
-
-        List<PathElement> flippedElements = new ArrayList<>(pathElements.size());
-        for (PathElement e : this.pathElements) {
-            flippedElements.add(e.flip());
-        }
-
-        return new Path(flippedElements);
-    }
-
-    public Path flipCopy(Supplier<Boolean> shouldFlip) {
-        return shouldFlip.get() ? flipCopy() : copy();
     }
 
     /**
      * Mirrors this path vertically across the field centerline.
      *
      * <p>This mirrors across the field width (horizontal centerline), where
-     * {@code y -> fieldSizeY - y} and {@code x} is unchanged, via {@link FlippingUtil}.
+     * {@code y -> fieldSizeY - y} and {@code x} is unchanged, via {@link FlippingUtil}. This method only
+     * mirrors once - subsequent calls have no effect until {@link #undoMirror()} is called.
      */
-    public void mirror() {
+    public void setToMirrored() {
         if (!isValid()) {
             return;
         }
+
+        if (mirrored) return;
 
         List<PathElement> mirroredPathElements = new ArrayList<>(pathElements.size());
         for (PathElement element : pathElements) {
             mirroredPathElements.add(element.mirror());
         }
         pathElements = mirroredPathElements;
+        mirrored = true;
     }
 
-    public Path mirrorCopy() {
-        if (!isValid()) {
-            return this.copy();
-        }
-
-        List<PathElement> mirroredElements = new ArrayList<>(pathElements.size());
-        for (PathElement e : this.pathElements) {
-            mirroredElements.add(e.mirror());
-        }
-
-        return new Path(mirroredElements);
-    }
-
-    public Path mirrorCopy(Supplier<Boolean> shouldFlip) {
-        return shouldFlip.get() ? mirrorCopy() : copy();
+    public void resetElements() {
+        this.undoFlip();
+        this.undoMirror();
     }
 
     /**
@@ -1335,8 +1312,31 @@ public class Path {
         
         if (!flipped) return;
         flipped = false;
-        flip();
+        setToFlipped();
         flipped = false;
+    }
+
+    public void undoMirror() {
+        if (!isValid()) {
+            return;
+        }
+
+        if (!mirrored) return;
+        mirrored = false;
+        setToMirrored();
+        mirrored = false;
+    }
+
+    public boolean isMutated() {
+        return this.flipped || this.mirrored;
+    }
+
+    public boolean isFlipped() {
+        return this.flipped;
+    }
+
+    public boolean isMirrored() {
+        return this.mirrored;
     }
 
     /**
