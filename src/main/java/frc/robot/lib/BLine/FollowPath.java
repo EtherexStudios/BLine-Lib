@@ -390,7 +390,7 @@ public class FollowPath extends Command {
          * Configures a custom supplier to determine whether the path should be mirrored vertically.
          * 
          * <p>When the supplier returns true, the path will be mirrored over the vertical
-         * direction across the field width ({@code y -> fieldSizeY - y}) via {@link Path#setToMirrored()}.
+         * direction across the field width ({@code y -> fieldSizeY - y}) via {@link Path#mirror()}.
          *
          * <p>This setting persists for future {@link #build(Path)} calls until changed.
          * 
@@ -527,20 +527,11 @@ public class FollowPath extends Command {
             return;
         }
 
-        boolean needToReset = path.isMutated();
-        if (shouldFlipPathSupplier.get()) {
-            needToReset = false;
-            this.path.setToFlipped();
-        }
+        if (shouldFlipPathSupplier.get()) this.path.flip();
+        else this.path.unflip();
 
-        if (shouldMirrorPathSupplier.get()) {
-            needToReset = false;
-            this.path.setToMirrored();
-        }
-
-        if (needToReset) {
-            this.path.resetElements();
-        }
+        if (shouldMirrorPathSupplier.get()) this.path.mirror();
+        else this.path.unmirror();
 
         logBoolean("FollowPath/pathIsFlipped", this.path.isFlipped());
         logBoolean("FollowPath/pathIsMirrored", this.path.isMirrored());

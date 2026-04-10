@@ -48,8 +48,8 @@ import frc.robot.lib.BLine.FlippingUtil.FieldSymmetry;
  * }</pre>
  * 
  * <h2>Alliance Flipping</h2>
- * <p>Paths can be flipped to the opposite alliance side using {@link #setToFlipped()} and
- * {@link #undoFlip()}. This uses {@link FlippingUtil} to transform coordinates.
+ * <p>Paths can be flipped to the opposite alliance side using {@link #flip()} and
+ * {@link #unflip()}. This uses {@link FlippingUtil} to transform coordinates.
  * 
  * @see PathElement
  * @see PathConstraints
@@ -1256,9 +1256,9 @@ public class Path {
      * Flips this path to the opposite alliance side.
      * 
      * <p>Uses {@link FlippingUtil} to transform all coordinates. This method only
-     * flips once - subsequent calls have no effect until {@link #undoFlip()} is called.
+     * flips once - subsequent calls have no effect until {@link #unflip()} is called.
      */
-    public void setToFlipped() {
+    public void flip() {
         if (!isValid()) {
             return;
         }
@@ -1278,9 +1278,9 @@ public class Path {
      *
      * <p>This mirrors across the field width (horizontal centerline), where
      * {@code y -> fieldSizeY - y} and {@code x} is unchanged, via {@link FlippingUtil}. This method only
-     * mirrors once - subsequent calls have no effect until {@link #undoMirror()} is called.
+     * mirrors once - subsequent calls have no effect until {@link #unmirror()} is called.
      */
-    public void setToMirrored() {
+    public void mirror() {
         if (!isValid()) {
             return;
         }
@@ -1295,35 +1295,30 @@ public class Path {
         mirrored = true;
     }
 
-    public void resetElements() {
-        this.undoFlip();
-        this.undoMirror();
-    }
-
     /**
      * Undoes a previous flip operation, restoring original coordinates.
      * 
      * <p>Has no effect if the path has not been flipped.
      */
-    public void undoFlip() {
+    public void unflip() {
         if (!isValid()) {
             return;
         }
         
         if (!flipped) return;
         flipped = false;
-        setToFlipped();
+        flip();
         flipped = false;
     }
 
-    public void undoMirror() {
+    public void unmirror() {
         if (!isValid()) {
             return;
         }
 
         if (!mirrored) return;
         mirrored = false;
-        setToMirrored();
+        mirror();
         mirrored = false;
     }
 
