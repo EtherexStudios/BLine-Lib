@@ -69,6 +69,10 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:C">C</h2>
 <dl class="index">
+<dt><a href="frc/robot/lib/BLine/FollowPath.html#calculateRemainingPathDistance()" class="member-name-link">calculateRemainingPathDistance()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
+<dd>
+<div class="block">Calculates the total remaining path distance from the robot's current position.</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/ChassisRateLimiter.html" class="type-name-link" title="class in frc.robot.lib.BLine">ChassisRateLimiter</a> - Class in <a href="frc/robot/lib/BLine/package-summary.html">frc.robot.lib.BLine</a></dt>
 <dd>
 <div class="block">A utility class that limits the rate of change of chassis speeds for smooth motion control.</div>
@@ -188,11 +192,23 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">The Y size or width of the current field in meters</div>
 </dd>
-<dt><a href="frc/robot/lib/BLine/Path.html#flip()" class="member-name-link">flip()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dt><a href="frc/robot/lib/BLine/Path.EventTrigger.html#flip()" class="member-name-link">flip()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.EventTrigger.html" title="class in frc.robot.lib.BLine">Path.EventTrigger</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.PathElement.html#flip()" class="member-name-link">flip()</a> - Method in interface frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.PathElement.html" title="interface in frc.robot.lib.BLine">Path.PathElement</a></dt>
 <dd>
-<div class="block">Flips this path to the opposite alliance side.</div>
+<div class="block">Creates a deep copy of this path element, but flipped (assumes rotation symmetry).</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/Path.RotationTarget.html#flip()" class="member-name-link">flip()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.RotationTarget.html" title="class in frc.robot.lib.BLine">Path.RotationTarget</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.TranslationTarget.html#flip()" class="member-name-link">flip()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.TranslationTarget.html" title="class in frc.robot.lib.BLine">Path.TranslationTarget</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.Waypoint.html#flip()" class="member-name-link">flip()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.Waypoint.html" title="class in frc.robot.lib.BLine">Path.Waypoint</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFeedforwards(double%5B%5D)" class="member-name-link">flipFeedforwards(double[])</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
+<dd>
+<div class="block">Flip an array of drive feedforwards for the other side of the field.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFeedforwards(double%5B%5D,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFeedforwards(double[], FlippingUtil.FieldSymmetry)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
 <dd>
 <div class="block">Flip an array of drive feedforwards for the other side of the field.</div>
 </dd>
@@ -204,6 +220,10 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Flip an array of drive feedforward Y components for the other side of the field.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFeedforwardYs(double%5B%5D,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFeedforwardYs(double[], FlippingUtil.FieldSymmetry)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
+<dd>
+<div class="block">Flip an array of drive feedforward Y components for the other side of the field.</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFieldPose(edu.wpi.first.math.geometry.Pose2d)" class="member-name-link">flipFieldPose(Pose2d)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
 <dd>
 <div class="block">Flip a field pose to the other side of the field, maintaining a blue alliance origin</div>
@@ -212,11 +232,24 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Flip a field position to the other side of the field, maintaining a blue alliance origin</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFieldPosition(edu.wpi.first.math.geometry.Translation2d,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFieldPosition(Translation2d, FlippingUtil.FieldSymmetry)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
+<dd>
+<div class="block">Flip a field position to the other side of the field, maintaining a blue alliance origin</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFieldRotation(edu.wpi.first.math.geometry.Rotation2d)" class="member-name-link">flipFieldRotation(Rotation2d)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
 <dd>
 <div class="block">Flip a field rotation to the other side of the field, maintaining a blue alliance origin</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFieldRotation(edu.wpi.first.math.geometry.Rotation2d,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFieldRotation(Rotation2d, FlippingUtil.FieldSymmetry)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
+<dd>
+<div class="block">Flip a field rotation to the other side of the field, maintaining a blue alliance origin</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFieldSpeeds(edu.wpi.first.math.kinematics.ChassisSpeeds)" class="member-name-link">flipFieldSpeeds(ChassisSpeeds)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
+<dd>
+<div class="block">Flip field relative chassis speeds for the other side of the field, maintaining a blue alliance
+ origin</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FlippingUtil.html#flipFieldSpeeds(edu.wpi.first.math.kinematics.ChassisSpeeds,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFieldSpeeds(ChassisSpeeds, FlippingUtil.FieldSymmetry)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
 <dd>
 <div class="block">Flip field relative chassis speeds for the other side of the field, maintaining a blue alliance
  origin</div>
@@ -382,6 +415,12 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.html#isFinished()" class="member-name-link">isFinished()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#isFlipped()" class="member-name-link">isFlipped()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#isMirrored()" class="member-name-link">isMirrored()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#isMutated()" class="member-name-link">isMutated()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/Path.html#isValid()" class="member-name-link">isValid()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
 <dd>
 <div class="block">Checks if this path passed validation.</div>
@@ -476,10 +515,18 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Returns the value of the <a href="./frc/robot/lib/BLine/Path.WaypointConstraint.html#param-maxVelocityMetersPerSec"><code>maxVelocityMetersPerSec</code></a> record component.</div>
 </dd>
-<dt><a href="frc/robot/lib/BLine/Path.html#mirror()" class="member-name-link">mirror()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dt><a href="frc/robot/lib/BLine/Path.EventTrigger.html#mirror()" class="member-name-link">mirror()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.EventTrigger.html" title="class in frc.robot.lib.BLine">Path.EventTrigger</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.PathElement.html#mirror()" class="member-name-link">mirror()</a> - Method in interface frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.PathElement.html" title="interface in frc.robot.lib.BLine">Path.PathElement</a></dt>
 <dd>
-<div class="block">Mirrors this path vertically across the field centerline.</div>
+<div class="block">Creates a deep copy of this path element, but mirrored along the vertical (long) axis of the field.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/Path.RotationTarget.html#mirror()" class="member-name-link">mirror()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.RotationTarget.html" title="class in frc.robot.lib.BLine">Path.RotationTarget</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.TranslationTarget.html#mirror()" class="member-name-link">mirror()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.TranslationTarget.html" title="class in frc.robot.lib.BLine">Path.TranslationTarget</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/Path.Waypoint.html#mirror()" class="member-name-link">mirror()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.Waypoint.html" title="class in frc.robot.lib.BLine">Path.Waypoint</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/FlippingUtil.html#mirrorFieldPose(edu.wpi.first.math.geometry.Pose2d)" class="member-name-link">mirrorFieldPose(Pose2d)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.html" title="class in frc.robot.lib.BLine">FlippingUtil</a></dt>
 <dd>
 <div class="block">Mirror a field pose across the field width centerline, maintaining a blue alliance origin.</div>
@@ -622,6 +669,8 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Reorders the path elements according to the specified order.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#resetElements()" class="member-name-link">resetElements()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/Path.RotationTarget.html#rotation()" class="member-name-link">rotation()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.RotationTarget.html" title="class in frc.robot.lib.BLine">Path.RotationTarget</a></dt>
 <dd>
 <div class="block">Returns the value of the <a href="./frc/robot/lib/BLine/Path.RotationTarget.html#param-rotation"><code>rotation</code></a> record component.</div>
@@ -712,6 +761,14 @@ loadScripts(document, 'script');</script>
 <dt><a href="frc/robot/lib/BLine/FollowPath.html#setPoseLoggingConsumer(java.util.function.Consumer)" class="member-name-link">setPoseLoggingConsumer(Consumer&lt;Pair&lt;String, Pose2d&gt;&gt;)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
 <dd>
 <div class="block">Sets the consumer for logging pose data during path following.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#setToFlipped()" class="member-name-link">setToFlipped()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>
+<div class="block">Flips this path to the opposite alliance side.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#setToMirrored()" class="member-name-link">setToMirrored()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>
+<div class="block">Mirrors this path vertically across the field centerline.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.html#setTranslationListLoggingConsumer(java.util.function.Consumer)" class="member-name-link">setTranslationListLoggingConsumer(Consumer&lt;Pair&lt;String, Translation2d[]&gt;&gt;)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
 <dd>
@@ -811,6 +868,8 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Undoes a previous flip operation, restoring original coordinates.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#undoMirror()" class="member-name-link">undoMirror()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:V">V</h2>
 <dl class="index">

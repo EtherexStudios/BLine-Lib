@@ -153,12 +153,24 @@ loadScripts(document, 'script');</script>
 <div class="block">Flip an array of drive feedforwards for the other side of the field.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static double[]</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFeedforwardXs(double%5B%5D)" class="member-name-link">flipFeedforwardXs</a><wbr>(double[]&nbsp;feedforwardXs)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFeedforwards(double%5B%5D,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFeedforwards</a><wbr>(double[]&nbsp;feedforwards,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Flip an array of drive feedforward X components for the other side of the field.</div>
+<div class="block">Flip an array of drive feedforwards for the other side of the field.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static double[]</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFeedforwardYs(double%5B%5D)" class="member-name-link">flipFeedforwardYs</a><wbr>(double[]&nbsp;feedforwardYs)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFeedforwardXs(double%5B%5D)" class="member-name-link">flipFeedforwardXs</a><wbr>(double[]&nbsp;feedforwardXs)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Flip an array of drive feedforward X components for the other side of the field.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static double[]</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFeedforwardYs(double%5B%5D)" class="member-name-link">flipFeedforwardYs</a><wbr>(double[]&nbsp;feedforwardYs)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Flip an array of drive feedforward Y components for the other side of the field.</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static double[]</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFeedforwardYs(double%5B%5D,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFeedforwardYs</a><wbr>(double[]&nbsp;feedforwardYs,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Flip an array of drive feedforward Y components for the other side of the field.</div>
 </div>
@@ -172,8 +184,20 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Flip a field position to the other side of the field, maintaining a blue alliance origin</div>
 </div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Translation2d</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFieldPosition(edu.wpi.first.math.geometry.Translation2d,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFieldPosition</a><wbr>(edu.wpi.first.math.geometry.Translation2d&nbsp;pos,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customSymmetryType)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Flip a field position to the other side of the field, maintaining a blue alliance origin</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Rotation2d</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFieldRotation(edu.wpi.first.math.geometry.Rotation2d)" class="member-name-link">flipFieldRotation</a><wbr>(edu.wpi.first.math.geometry.Rotation2d&nbsp;rotation)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Flip a field rotation to the other side of the field, maintaining a blue alliance origin</div>
+</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Rotation2d</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFieldRotation(edu.wpi.first.math.geometry.Rotation2d)" class="member-name-link">flipFieldRotation</a><wbr>(edu.wpi.first.math.geometry.Rotation2d&nbsp;rotation)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFieldRotation(edu.wpi.first.math.geometry.Rotation2d,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFieldRotation</a><wbr>(edu.wpi.first.math.geometry.Rotation2d&nbsp;rotation,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Flip a field rotation to the other side of the field, maintaining a blue alliance origin</div>
 </div>
@@ -183,19 +207,26 @@ loadScripts(document, 'script');</script>
 <div class="block">Flip field relative chassis speeds for the other side of the field, maintaining a blue alliance
  origin</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Pose2d</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#mirrorFieldPose(edu.wpi.first.math.geometry.Pose2d)" class="member-name-link">mirrorFieldPose</a><wbr>(edu.wpi.first.math.geometry.Pose2d&nbsp;pose)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.kinematics.ChassisSpeeds</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#flipFieldSpeeds(edu.wpi.first.math.kinematics.ChassisSpeeds,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)" class="member-name-link">flipFieldSpeeds</a><wbr>(edu.wpi.first.math.kinematics.ChassisSpeeds&nbsp;fieldSpeeds,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Flip field relative chassis speeds for the other side of the field, maintaining a blue alliance
+ origin</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Pose2d</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#mirrorFieldPose(edu.wpi.first.math.geometry.Pose2d)" class="member-name-link">mirrorFieldPose</a><wbr>(edu.wpi.first.math.geometry.Pose2d&nbsp;pose)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Mirror a field pose across the field width centerline, maintaining a blue alliance origin.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Translation2d</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#mirrorFieldPosition(edu.wpi.first.math.geometry.Translation2d)" class="member-name-link">mirrorFieldPosition</a><wbr>(edu.wpi.first.math.geometry.Translation2d&nbsp;pos)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Translation2d</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#mirrorFieldPosition(edu.wpi.first.math.geometry.Translation2d)" class="member-name-link">mirrorFieldPosition</a><wbr>(edu.wpi.first.math.geometry.Translation2d&nbsp;pos)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Mirror a field position across the field width centerline, maintaining a blue alliance origin.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Rotation2d</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#mirrorFieldRotation(edu.wpi.first.math.geometry.Rotation2d)" class="member-name-link">mirrorFieldRotation</a><wbr>(edu.wpi.first.math.geometry.Rotation2d&nbsp;rotation)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.math.geometry.Rotation2d</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#mirrorFieldRotation(edu.wpi.first.math.geometry.Rotation2d)" class="member-name-link">mirrorFieldRotation</a><wbr>(edu.wpi.first.math.geometry.Rotation2d&nbsp;rotation)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Mirror a field rotation across the field width centerline, maintaining a blue alliance origin.</div>
 </div>
 </div>
@@ -272,9 +303,37 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
+<section class="detail" id="flipFieldPosition(edu.wpi.first.math.geometry.Translation2d,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)">
+<h3>flipFieldPosition</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.math.geometry.Translation2d</span>&nbsp;<span class="element-name">flipFieldPosition</span><wbr><span class="parameters">(edu.wpi.first.math.geometry.Translation2d&nbsp;pos,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customSymmetryType)</span></div>
+<div class="block">Flip a field position to the other side of the field, maintaining a blue alliance origin</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>pos</code> - The position to flip</dd>
+<dt>Returns:</dt>
+<dd>The flipped position</dd>
+</dl>
+</section>
+</li>
+<li>
 <section class="detail" id="flipFieldRotation(edu.wpi.first.math.geometry.Rotation2d)">
 <h3>flipFieldRotation</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.math.geometry.Rotation2d</span>&nbsp;<span class="element-name">flipFieldRotation</span><wbr><span class="parameters">(edu.wpi.first.math.geometry.Rotation2d&nbsp;rotation)</span></div>
+<div class="block">Flip a field rotation to the other side of the field, maintaining a blue alliance origin</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>rotation</code> - The rotation to flip</dd>
+<dt>Returns:</dt>
+<dd>The flipped rotation</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="flipFieldRotation(edu.wpi.first.math.geometry.Rotation2d,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)">
+<h3>flipFieldRotation</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.math.geometry.Rotation2d</span>&nbsp;<span class="element-name">flipFieldRotation</span><wbr><span class="parameters">(edu.wpi.first.math.geometry.Rotation2d&nbsp;rotation,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</span></div>
 <div class="block">Flip a field rotation to the other side of the field, maintaining a blue alliance origin</div>
 <dl class="notes">
 <dt>Parameters:</dt>
@@ -355,9 +414,39 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
+<section class="detail" id="flipFieldSpeeds(edu.wpi.first.math.kinematics.ChassisSpeeds,frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)">
+<h3>flipFieldSpeeds</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.math.kinematics.ChassisSpeeds</span>&nbsp;<span class="element-name">flipFieldSpeeds</span><wbr><span class="parameters">(edu.wpi.first.math.kinematics.ChassisSpeeds&nbsp;fieldSpeeds,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</span></div>
+<div class="block">Flip field relative chassis speeds for the other side of the field, maintaining a blue alliance
+ origin</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>fieldSpeeds</code> - Field relative chassis speeds</dd>
+<dt>Returns:</dt>
+<dd>Flipped speeds</dd>
+</dl>
+</section>
+</li>
+<li>
 <section class="detail" id="flipFeedforwards(double[])">
 <h3>flipFeedforwards</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">double[]</span>&nbsp;<span class="element-name">flipFeedforwards</span><wbr><span class="parameters">(double[]&nbsp;feedforwards)</span></div>
+<div class="block">Flip an array of drive feedforwards for the other side of the field. Only does anything if
+ mirrored symmetry is used</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>feedforwards</code> - Array of drive feedforwards</dd>
+<dt>Returns:</dt>
+<dd>The flipped feedforwards</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="flipFeedforwards(double[],frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)">
+<h3>flipFeedforwards</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">double[]</span>&nbsp;<span class="element-name">flipFeedforwards</span><wbr><span class="parameters">(double[]&nbsp;feedforwards,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</span></div>
 <div class="block">Flip an array of drive feedforwards for the other side of the field. Only does anything if
  mirrored symmetry is used</div>
 <dl class="notes">
@@ -386,6 +475,21 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="flipFeedforwardYs(double[])">
 <h3>flipFeedforwardYs</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">double[]</span>&nbsp;<span class="element-name">flipFeedforwardYs</span><wbr><span class="parameters">(double[]&nbsp;feedforwardYs)</span></div>
+<div class="block">Flip an array of drive feedforward Y components for the other side of the field. Only does
+ anything if mirrored symmetry is used</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>feedforwardYs</code> - Array of drive feedforward Y components</dd>
+<dt>Returns:</dt>
+<dd>The flipped feedforward Y components</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="flipFeedforwardYs(double[],frc.robot.lib.BLine.FlippingUtil.FieldSymmetry)">
+<h3>flipFeedforwardYs</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">double[]</span>&nbsp;<span class="element-name">flipFeedforwardYs</span><wbr><span class="parameters">(double[]&nbsp;feedforwardYs,
+ <a href="FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a>&nbsp;customFieldSymmetry)</span></div>
 <div class="block">Flip an array of drive feedforward Y components for the other side of the field. Only does
  anything if mirrored symmetry is used</div>
 <dl class="notes">

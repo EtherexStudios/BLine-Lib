@@ -815,10 +815,6 @@ public class FollowPath extends Command {
             pathElementsWithConstraints.get(index).getFirst() instanceof RotationTarget;
     }
 
-    private void resetActivePath() {
-        this.path.undoFlip();
-    }
-
     /**
      * Advances translation targets until the current target is no longer handoff-eligible.
      *

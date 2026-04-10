@@ -202,10 +202,20 @@ implements <a href="Path.PathElement.html" title="interface in frc.robot.lib.BLi
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Indicates whether some other object is "equal to" this one.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final int</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hashCode()" class="member-name-link">hashCode</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="Path.Waypoint.html" title="class in frc.robot.lib.BLine">Path.Waypoint</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#flip()" class="member-name-link">flip</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Creates a deep copy of this path element, but flipped (assumes rotation symmetry).</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final int</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hashCode()" class="member-name-link">hashCode</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns a hash code value for this object.</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="Path.Waypoint.html" title="class in frc.robot.lib.BLine">Path.Waypoint</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#mirror()" class="member-name-link">mirror</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Creates a deep copy of this path element, but mirrored along the vertical (long) axis of the field.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="Path.RotationTarget.html" title="class in frc.robot.lib.BLine">Path.RotationTarget</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#rotationTarget()" class="member-name-link">rotationTarget</a>()</code></div>
@@ -397,6 +407,34 @@ implements <a href="Path.PathElement.html" title="interface in frc.robot.lib.BLi
 <dd><code><a href="Path.PathElement.html#copy()">copy</a></code>&nbsp;in interface&nbsp;<code><a href="Path.PathElement.html" title="interface in frc.robot.lib.BLine">Path.PathElement</a></code></dd>
 <dt>Returns:</dt>
 <dd>A new Waypoint with copied translation and rotation targets</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="flip()">
+<h3>flip</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="Path.Waypoint.html" title="class in frc.robot.lib.BLine">Path.Waypoint</a></span>&nbsp;<span class="element-name">flip</span>()</div>
+<div class="block"><span class="descfrm-type-label">Description copied from interface:&nbsp;<code><a href="Path.PathElement.html#flip()">Path.PathElement</a></code></span></div>
+<div class="block">Creates a deep copy of this path element, but flipped (assumes rotation symmetry).</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="Path.PathElement.html#flip()">flip</a></code>&nbsp;in interface&nbsp;<code><a href="Path.PathElement.html" title="interface in frc.robot.lib.BLine">Path.PathElement</a></code></dd>
+<dt>Returns:</dt>
+<dd>A new PathElement with the same values but flipped</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="mirror()">
+<h3>mirror</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="Path.Waypoint.html" title="class in frc.robot.lib.BLine">Path.Waypoint</a></span>&nbsp;<span class="element-name">mirror</span>()</div>
+<div class="block"><span class="descfrm-type-label">Description copied from interface:&nbsp;<code><a href="Path.PathElement.html#mirror()">Path.PathElement</a></code></span></div>
+<div class="block">Creates a deep copy of this path element, but mirrored along the vertical (long) axis of the field.</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="Path.PathElement.html#mirror()">mirror</a></code>&nbsp;in interface&nbsp;<code><a href="Path.PathElement.html" title="interface in frc.robot.lib.BLine">Path.PathElement</a></code></dd>
+<dt>Returns:</dt>
+<dd>A new PathElement with the same values but mirrored</dd>
 </dl>
 </section>
 </li>
