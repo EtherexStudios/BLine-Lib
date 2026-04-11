@@ -410,9 +410,6 @@ class FollowPathTest {
         FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
         String keyA = newEventKey("event-order-a");
         String keyB = newEventKey("event-order-b");
-        List<String> firedOrder = new ArrayList<>();
-        FollowPath.registerEventTrigger(keyA, () -> firedOrder.add("A"));
-        FollowPath.registerEventTrigger(keyB, () -> firedOrder.add("B"));
 
         Path path = new Path(
             new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
@@ -425,28 +422,25 @@ class FollowPathTest {
         command.initialize();
 
         runExecute(command, robot);
-        assertEquals(List.of(), firedOrder, "No event should fire at segment progress 0.0");
+        assertFalse(command.hasEventFired(keyA), "No event should fire at segment progress 0.0");
+        assertFalse(command.hasEventFired(keyB), "No event should fire at segment progress 0.0");
 
         robot.setPose(new Pose2d(3.0, 0.0, new Rotation2d()));
         runExecute(command, robot);
-        assertEquals(List.of("A"), firedOrder, "First event should fire once when t_ratio is reached");
+        assertTrue(command.hasEventFired(keyA), "First event should fire when t_ratio is reached");
+        assertFalse(command.hasEventFired(keyB), "Second event should not fire yet");
 
         robot.setPose(new Pose2d(8.0, 0.0, new Rotation2d()));
         runExecute(command, robot);
-        assertEquals(List.of("A", "B"), firedOrder, "Second event should fire after first, in path order");
-
-        robot.setPose(new Pose2d(9.5, 0.0, new Rotation2d()));
-        runExecute(command, robot);
-        assertEquals(List.of("A", "B"), firedOrder, "Events should not refire once already triggered");
+        assertTrue(command.hasEventFired(keyA), "First event should remain fired");
+        assertTrue(command.hasEventFired(keyB), "Second event should fire after first");
     }
 
     @Test
-    void eventTriggerOnDegenerateSegmentFiresImmediatelyAndOnlyOnce() {
+    void eventTriggerOnDegenerateSegmentFiresImmediately() {
         MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
         FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
         String key = newEventKey("event-degenerate");
-        AtomicInteger fireCount = new AtomicInteger(0);
-        FollowPath.registerEventTrigger(key, fireCount::incrementAndGet);
 
         Path path = new Path(
             new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
@@ -459,10 +453,7 @@ class FollowPathTest {
         command.initialize();
 
         runExecute(command, robot);
-        assertEquals(1, fireCount.get(), "Degenerate event segment should trigger immediately when processed");
-
-        runExecute(command, robot);
-        assertEquals(1, fireCount.get(), "Degenerate event should still fire only once");
+        assertTrue(command.hasEventFired(key), "Degenerate event segment should trigger immediately when processed");
     }
 
     @Test
@@ -470,8 +461,6 @@ class FollowPathTest {
         MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
         FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
         String key = newEventKey("event-future");
-        AtomicInteger fireCount = new AtomicInteger(0);
-        FollowPath.registerEventTrigger(key, fireCount::incrementAndGet);
 
         Path path = new Path(
             new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
@@ -486,11 +475,11 @@ class FollowPathTest {
         runExecute(command, robot);
         robot.setPose(new Pose2d(0.6, 0.0, new Rotation2d()));
         runExecute(command, robot);
-        assertEquals(0, fireCount.get(), "Future-segment event must not fire while still on current segment");
+        assertFalse(command.hasEventFired(key), "Future-segment event must not fire while still on current segment");
 
         robot.setPose(new Pose2d(1.2, 0.0, new Rotation2d()));
         runExecute(command, robot);
-        assertEquals(1, fireCount.get(), "Event should fire once robot progresses onto owning segment");
+        assertTrue(command.hasEventFired(key), "Event should fire once robot progresses onto owning segment");
     }
 
     @Test
@@ -555,7 +544,7 @@ class FollowPathTest {
                 new PIDController(5.0, 0.0, 0.0),
                 new PIDController(5.0, 0.0, 0.0),
                 new PIDController(0.0, 0.0, 0.0)
-            ).withShouldMirror(() -> true).build(path);
+            ).withShouldMirror(() -> true).buildFollowPath(path);
             command.initialize();
 
             assertNotNull(loggedPathTranslations[0], "Expected path translation list to be logged during initialization");
@@ -596,7 +585,7 @@ class FollowPathTest {
                 new PIDController(5.0, 0.0, 0.0),
                 new PIDController(5.0, 0.0, 0.0),
                 new PIDController(0.0, 0.0, 0.0)
-            ).withShouldMirror(() -> false).build(path);
+            ).withShouldMirror(() -> false).buildFollowPath(path);
             command.initialize();
 
             assertNotNull(loggedPathTranslations[0], "Expected path translation list to be logged during initialization");
@@ -637,7 +626,7 @@ class FollowPathTest {
                 new PIDController(5.0, 0.0, 0.0),
                 new PIDController(5.0, 0.0, 0.0),
                 new PIDController(0.0, 0.0, 0.0)
-            ).withShouldFlip(() -> true).build(path);
+            ).withShouldFlip(() -> true).buildFollowPath(path);
             command.initialize();
 
             assertNotNull(loggedPathTranslations[0], "Expected path translation list to be logged during initialization");
@@ -665,7 +654,7 @@ class FollowPathTest {
             new PIDController(5.0, 0.0, 0.0),
             new PIDController(0.0, 0.0, 0.0)
         ).withTRatioBasedTranslationHandoffs(useTRatioBasedTranslationHandoffs)
-            .build(path);
+            .buildFollowPath(path);
     }
 
     private static final class TestSubsystem implements Subsystem {}

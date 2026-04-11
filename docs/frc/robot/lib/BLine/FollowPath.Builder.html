@@ -159,31 +159,48 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#build(frc.robot.lib.BLine.Path)" class="member-name-link">build</a><wbr>(<a href="Path.html" title="class in frc.robot.lib.BLine">Path</a>&nbsp;path)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Builds a FollowPath command for the specified path.</div>
+<div class="block">Builds a command for the specified path.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withDefaultShouldFlip()" class="member-name-link">withDefaultShouldFlip</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#buildFollowPath(frc.robot.lib.BLine.Path)" class="member-name-link">buildFollowPath</a><wbr>(<a href="Path.html" title="class in frc.robot.lib.BLine">Path</a>&nbsp;path)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Builds just the FollowPath command without any event wrapping.</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withDefaultShouldFlip()" class="member-name-link">withDefaultShouldFlip</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Configures the builder to use the default alliance-based path flipping.</div>
 </div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withEvent(java.lang.String,edu.wpi.first.wpilibj2.command.Command)" class="member-name-link">withEvent</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;eventKey,
+ edu.wpi.first.wpilibj2.command.Command&nbsp;command)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Registers an event command to run when the robot reaches the event position.</div>
+</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withPoseReset(java.util.function.Consumer)" class="member-name-link">withPoseReset</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;edu.wpi.first.math.geometry.Pose2d&gt;&nbsp;poseResetConsumer)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withNoEvents()" class="member-name-link">withNoEvents</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withPoseReset(java.util.function.Consumer)" class="member-name-link">withPoseReset</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;edu.wpi.first.math.geometry.Pose2d&gt;&nbsp;poseResetConsumer)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Configures a consumer to reset the robot's pose at the start of path following.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withShouldFlip(java.util.function.Supplier)" class="member-name-link">withShouldFlip</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&gt;&nbsp;shouldFlipPathSupplier)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withShouldFlip(java.util.function.Supplier)" class="member-name-link">withShouldFlip</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&gt;&nbsp;shouldFlipPathSupplier)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Configures a custom supplier to determine whether the path should be flipped.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withShouldMirror(java.util.function.Supplier)" class="member-name-link">withShouldMirror</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&gt;&nbsp;shouldMirrorPathSupplier)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withShouldMirror(java.util.function.Supplier)" class="member-name-link">withShouldMirror</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&gt;&nbsp;shouldMirrorPathSupplier)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Configures a custom supplier to determine whether the path should be mirrored vertically.</div>
 </div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withStartingEvent(edu.wpi.first.wpilibj2.command.Command)" class="member-name-link">withStartingEvent</a><wbr>(edu.wpi.first.wpilibj2.command.Command&nbsp;command)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#withTRatioBasedTranslationHandoffs(boolean)" class="member-name-link">withTRatioBasedTranslationHandoffs</a><wbr>(boolean&nbsp;enabled)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
@@ -330,19 +347,70 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="build(frc.robot.lib.BLine.Path)">
-<h3>build</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></span>&nbsp;<span class="element-name">build</span><wbr><span class="parameters">(<a href="Path.html" title="class in frc.robot.lib.BLine">Path</a>&nbsp;path)</span></div>
-<div class="block">Builds a FollowPath command for the specified path.
- 
- <p>The built command will use all the configuration from this builder. Each call
- to build() creates an independent command that can be scheduled, using the builder's
- current optional settings at the time of the call.</div>
+<section class="detail" id="withEvent(java.lang.String,edu.wpi.first.wpilibj2.command.Command)">
+<h3>withEvent</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></span>&nbsp;<span class="element-name">withEvent</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;eventKey,
+ edu.wpi.first.wpilibj2.command.Command&nbsp;command)</span></div>
+<div class="block">Registers an event command to run when the robot reaches the event position.
+
+ <p>When <a href="#build(frc.robot.lib.BLine.Path)"><code>build(Path)</code></a> is called, all registered events are wrapped in a
+ parallel command group with the path following command.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>eventKey</code> - The key of the event trigger (must match the key in the path JSON)</dd>
+<dd><code>command</code> - The command to run when the event position is reached</dd>
+<dt>Returns:</dt>
+<dd>This builder for chaining</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="withNoEvents()">
+<h3>withNoEvents</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></span>&nbsp;<span class="element-name">withNoEvents</span>()</div>
+</section>
+</li>
+<li>
+<section class="detail" id="withStartingEvent(edu.wpi.first.wpilibj2.command.Command)">
+<h3>withStartingEvent</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></span>&nbsp;<span class="element-name">withStartingEvent</span><wbr><span class="parameters">(edu.wpi.first.wpilibj2.command.Command&nbsp;command)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="buildFollowPath(frc.robot.lib.BLine.Path)">
+<h3>buildFollowPath</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></span>&nbsp;<span class="element-name">buildFollowPath</span><wbr><span class="parameters">(<a href="Path.html" title="class in frc.robot.lib.BLine">Path</a>&nbsp;path)</span></div>
+<div class="block">Builds just the FollowPath command without any event wrapping.
+
+ <p>Use this when you need direct access to the FollowPath command,
+ such as for testing or when manually composing commands.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>path</code> - The path to follow</dd>
 <dt>Returns:</dt>
 <dd>A new FollowPath command configured for the given path</dd>
+<dt>Throws:</dt>
+<dd><code><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html" title="class or interface in java.lang" class="external-link">IllegalArgumentException</a></code> - if any required controllers are null</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="build(frc.robot.lib.BLine.Path)">
+<h3>build</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">build</span><wbr><span class="parameters">(<a href="Path.html" title="class in frc.robot.lib.BLine">Path</a>&nbsp;path)</span></div>
+<div class="block">Builds a command for the specified path.
+
+ <p>If events were registered via <a href="#withEvent(java.lang.String,edu.wpi.first.wpilibj2.command.Command)"><code>withEvent(String, Command)</code></a>, the returned
+ command will be a sequence of wait-until commands for each event, with the whole group 
+ treating the path-following as the deadline. If there are no pending events, this returns 
+ just the FollowPath command.
+
+ <p>After building, the pending events list is cleared for the next build call.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>path</code> - The path to follow</dd>
+<dt>Returns:</dt>
+<dd>A command (FollowPath or ParallelCommandGroup) configured for the given path</dd>
 <dt>Throws:</dt>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html" title="class or interface in java.lang" class="external-link">IllegalArgumentException</a></code> - if any required controllers are null</dd>
 </dl>

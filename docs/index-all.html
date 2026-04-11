@@ -48,7 +48,7 @@ loadScripts(document, 'script');</script>
 <div class="header">
 <h1>Index</h1>
 </div>
-<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a>
+<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a><span class="vertical-separator">|</span><a href="constant-values.html">Constant&nbsp;Field&nbsp;Values</a>
 <h2 class="title" id="I:A">A</h2>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/Path.html#addPathElement(frc.robot.lib.BLine.Path.PathElement)" class="member-name-link">addPathElement(Path.PathElement)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
@@ -60,11 +60,15 @@ loadScripts(document, 'script');</script>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#build(frc.robot.lib.BLine.Path)" class="member-name-link">build(Path)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
 <dd>
-<div class="block">Builds a FollowPath command for the specified path.</div>
+<div class="block">Builds a command for the specified path.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#%3Cinit%3E(edu.wpi.first.wpilibj2.command.Subsystem,java.util.function.Supplier,java.util.function.Supplier,java.util.function.Consumer,edu.wpi.first.math.controller.PIDController,edu.wpi.first.math.controller.PIDController,edu.wpi.first.math.controller.PIDController)" class="member-name-link">Builder(Subsystem, Supplier&lt;Pose2d&gt;, Supplier&lt;ChassisSpeeds&gt;, Consumer&lt;ChassisSpeeds&gt;, PIDController, PIDController, PIDController)</a> - Constructor for class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
 <dd>
 <div class="block">Creates a new FollowPath Builder with the required configuration.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#buildFollowPath(frc.robot.lib.BLine.Path)" class="member-name-link">buildFollowPath(Path)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
+<dd>
+<div class="block">Builds just the FollowPath command without any event wrapping.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:C">C</h2>
@@ -372,6 +376,10 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:H">H</h2>
 <dl class="index">
+<dt><a href="frc/robot/lib/BLine/FollowPath.html#hasEventFired(java.lang.String)" class="member-name-link">hasEventFired(String)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
+<dd>
+<div class="block">Checks if an event with the given key has fired during this path execution.</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html#hashCode()" class="member-name-link">hashCode()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html" title="class in frc.robot.lib.BLine">JsonUtils.ParsedPathComponents</a></dt>
 <dd>
 <div class="block">Returns a hash code value for this object.</div>
@@ -417,6 +425,8 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Returns the value of the <a href="./frc/robot/lib/BLine/Path.TranslationTarget.html#param-intermediateHandoffRadiusMeters"><code>intermediateHandoffRadiusMeters</code></a> record component.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.html#isEventOld(java.lang.String)" class="member-name-link">isEventOld(String)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.html#isFinished()" class="member-name-link">isFinished()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/Path.html#isFlipped()" class="member-name-link">isFlipped()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
@@ -661,14 +671,6 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Creates an instance of a <code>RangedConstraint</code> record class.</div>
 </dd>
-<dt><a href="frc/robot/lib/BLine/FollowPath.html#registerEventTrigger(java.lang.String,edu.wpi.first.wpilibj2.command.Command)" class="member-name-link">registerEventTrigger(String, Command)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
-<dd>
-<div class="block">Registers an event trigger action by key using a WPILib Command.</div>
-</dd>
-<dt><a href="frc/robot/lib/BLine/FollowPath.html#registerEventTrigger(java.lang.String,java.lang.Runnable)" class="member-name-link">registerEventTrigger(String, Runnable)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
-<dd>
-<div class="block">Registers an event trigger action by key.</div>
-</dd>
 <dt><a href="frc/robot/lib/BLine/Path.html#removeElement(int)" class="member-name-link">removeElement(int)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
 <dd>
 <div class="block">Removes and returns a path element at the specified index.</div>
@@ -677,6 +679,8 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Reorders the path elements according to the specified order.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.html#RESERVED_KEY_STARTING_EVENT" class="member-name-link">RESERVED_KEY_STARTING_EVENT</a> - Static variable in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/Path.RotationTarget.html#rotation()" class="member-name-link">rotation()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.RotationTarget.html" title="class in frc.robot.lib.BLine">Path.RotationTarget</a></dt>
 <dd>
 <div class="block">Returns the value of the <a href="./frc/robot/lib/BLine/Path.RotationTarget.html#param-rotation"><code>rotation</code></a> record component.</div>
@@ -935,6 +939,12 @@ the order they are declared.</div>
 <dd>
 <div class="block">Configures the builder to use the default alliance-based path flipping.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#withEvent(java.lang.String,edu.wpi.first.wpilibj2.command.Command)" class="member-name-link">withEvent(String, Command)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
+<dd>
+<div class="block">Registers an event command to run when the robot reaches the event position.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#withNoEvents()" class="member-name-link">withNoEvents()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#withPoseReset(java.util.function.Consumer)" class="member-name-link">withPoseReset(Consumer&lt;Pose2d&gt;)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
 <dd>
 <div class="block">Configures a consumer to reset the robot's pose at the start of path following.</div>
@@ -947,12 +957,14 @@ the order they are declared.</div>
 <dd>
 <div class="block">Configures a custom supplier to determine whether the path should be mirrored vertically.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#withStartingEvent(edu.wpi.first.wpilibj2.command.Command)" class="member-name-link">withStartingEvent(Command)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#withTRatioBasedTranslationHandoffs(boolean)" class="member-name-link">withTRatioBasedTranslationHandoffs(boolean)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
 <dd>
 <div class="block">Enables or disables t_ratio-based translation handoffs.</div>
 </dd>
 </dl>
-<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a></main>
+<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a><span class="vertical-separator">|</span><a href="constant-values.html">Constant&nbsp;Field&nbsp;Values</a></main>
 </div>
 </div>
 </body>

@@ -9,7 +9,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.lib.BLine.Path.PathElement;
 import frc.robot.lib.BLine.Path.PathElementConstraint;
@@ -20,10 +19,9 @@ import frc.robot.lib.BLine.Path.TranslationTarget;
 import frc.robot.lib.BLine.Path.TranslationTargetConstraint;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -94,7 +92,6 @@ public class FollowPath extends Command {
     private static Consumer<Pair<String, Translation2d[]>> translationListLoggingConsumer = value -> {};
     private static Consumer<Pair<String, Double>> doubleLoggingConsumer = value -> {};
     private static Consumer<Pair<String, Boolean>> booleanLoggingConsumer = value -> {};
-    private static final Map<String, Runnable> eventTriggerRegistry = new HashMap<>();
 
     private static void logDouble(String key, double value) {
         doubleLoggingConsumer.accept(new Pair<>(key, value));
@@ -106,34 +103,6 @@ public class FollowPath extends Command {
 
     private static void logPose(String key, Pose2d value) {
         poseLoggingConsumer.accept(new Pair<>(key, value));
-    }
-
-    /**
-     * Registers an event trigger action by key.
-     *
-     * @param key The event trigger key referenced in JSON
-     * @param action The action to execute when the trigger is reached
-     */
-    public static void registerEventTrigger(String key, Runnable action) {
-        if (key == null || key.isEmpty() || action == null) {
-            logger.warning("FollowPath: Ignoring invalid event trigger registration");
-            return;
-        }
-        eventTriggerRegistry.put(key, action);
-    }
-
-    /**
-     * Registers an event trigger action by key using a WPILib Command.
-     *
-     * @param key The event trigger key referenced in JSON
-     * @param command The command to schedule when the trigger is reached
-     */
-    public static void registerEventTrigger(String key, Command command) {
-        if (command == null) {
-            logger.warning("FollowPath: Ignoring null command registration for key: " + key);
-            return;
-        }
-        registerEventTrigger(key, () -> CommandScheduler.getInstance().schedule(command));
     }
 
     private final PIDController translationController;
@@ -221,6 +190,7 @@ public class FollowPath extends Command {
     private int rotationElementIndex = NO_ACTIVE_ROTATION_INDEX;
     private int translationElementIndex = 0;
     private int eventTriggerElementIndex = 0;
+    public final static String RESERVED_KEY_STARTING_EVENT = "__start__";
 
     private ChassisSpeeds lastSpeeds = new ChassisSpeeds();
     private double lastTimestamp = 0;
@@ -234,8 +204,9 @@ public class FollowPath extends Command {
     private int logCounter = 0;
     private ArrayList<Translation2d> robotTranslations = new ArrayList<>();
     private double cachedRemainingDistance = 0.0;
-    private final Set<Integer> firedEventTriggerIndices = new HashSet<>();
-    private int firedEventTriggerCount = 0;
+    private final Set<String> firedEventKeys = new HashSet<>();
+    private String lastFiredEventKey = "";
+    private int expectedEventCount = 0;
 
     // Snapshot of the currently tracked translation segment and robot progress on it.
     private record TranslationSegmentState(
@@ -325,7 +296,11 @@ public class FollowPath extends Command {
         private Supplier<Boolean> shouldMirrorPathSupplier = () -> false;
         private Consumer<Pose2d> poseResetConsumer = (pose) -> {};
         private boolean useTRatioBasedTranslationHandoffs = false;
-        
+
+        // Pending event commands to wrap in parallel with the path
+        private List<Pair<String, Command>> pendingEvents = new ArrayList<>();
+        private Optional<Command> startingCommand = Optional.empty();
+
         /**
          * Creates a new FollowPath Builder with the required configuration.
          * 
@@ -439,17 +414,48 @@ public class FollowPath extends Command {
         }
 
         /**
-         * Builds a FollowPath command for the specified path.
-         * 
-         * <p>The built command will use all the configuration from this builder. Each call
-         * to build() creates an independent command that can be scheduled, using the builder's
-         * current optional settings at the time of the call.
-         * 
+         * Registers an event command to run when the robot reaches the event position.
+         *
+         * <p>When {@link #build(Path)} is called, all registered events are wrapped in a
+         * parallel command group with the path following command.
+         *
+         *
+         * @param eventKey The key of the event trigger (must match the key in the path JSON)
+         * @param command The command to run when the event position is reached
+         * @return This builder for chaining
+         */
+        public Builder withEvent(String eventKey, Command command) {
+            if (eventKey != null && !eventKey.isEmpty() && command != null) {
+                if (eventKey.equals(RESERVED_KEY_STARTING_EVENT)) {
+                    throw new UnsupportedOperationException("Event Triggers cannot be named " + RESERVED_KEY_STARTING_EVENT);
+                }
+
+                this.pendingEvents.add(new Pair<>(eventKey, command));
+            }
+            return this;
+        }
+
+        public Builder withNoEvents() {
+            this.pendingEvents.clear();
+            return this;
+        }
+
+        public Builder withStartingEvent(Command command) {
+            this.startingCommand = Optional.of(command);
+            return this;
+        }
+
+        /**
+         * Builds just the FollowPath command without any event wrapping.
+         *
+         * <p>Use this when you need direct access to the FollowPath command,
+         * such as for testing or when manually composing commands.
+         *
          * @param path The path to follow
          * @return A new FollowPath command configured for the given path
          * @throws IllegalArgumentException if any required controllers are null
          */
-        public FollowPath build(Path path) {
+        public FollowPath buildFollowPath(Path path) {
             return new FollowPath(
                 path,
                 driveSubsystem,
@@ -462,8 +468,52 @@ public class FollowPath extends Command {
                 useTRatioBasedTranslationHandoffs,
                 translationController,
                 rotationController,
-                crossTrackController
+                crossTrackController,
+                pendingEvents.size()
             );
+        }
+
+        /**
+         * Builds a command for the specified path.
+         *
+         * <p>If events were registered via {@link #withEvent(String, Command)}, the returned
+         * command will be a sequence of wait-until commands for each event, with the whole group 
+         * treating the path-following as the deadline. If there are no pending events, this returns 
+         * just the FollowPath command.
+         *
+         * <p>After building, the pending events list is cleared for the next build call.
+         *
+         * @param path The path to follow
+         * @return A command (FollowPath or ParallelCommandGroup) configured for the given path
+         * @throws IllegalArgumentException if any required controllers are null
+         */
+        public Command build(Path path) {
+            FollowPath followPath = buildFollowPath(path);
+
+            if (pendingEvents.isEmpty() && startingCommand.isEmpty()) {
+                return followPath;
+            }
+
+            List<Command> commands = new ArrayList<>();
+
+            if (startingCommand.isPresent()) {
+                commands.add(
+                    startingCommand.get().until(() -> followPath.isEventOld(RESERVED_KEY_STARTING_EVENT)));
+            }
+
+            for (Pair<String, Command> event : pendingEvents) {
+                String eventKey = event.getFirst();
+                Command eventCommand = event.getSecond();
+                commands.add(edu.wpi.first.wpilibj2.command.Commands
+                    .waitUntil(() -> followPath.hasEventFired(eventKey))
+                    .andThen(eventCommand)
+                    .until(() -> followPath.isEventOld(eventKey)));
+            }
+
+            startingCommand = Optional.empty();
+            pendingEvents.clear();
+            return edu.wpi.first.wpilibj2.command.Commands.sequence(commands.toArray(new Command[0]))
+                .withDeadline(followPath);
         }
     }
 
@@ -492,12 +542,31 @@ public class FollowPath extends Command {
         boolean useTRatioBasedTranslationHandoffs,
         PIDController translationController, 
         PIDController rotationController,
-        PIDController crossTrackController
+        PIDController crossTrackController) {
+        this(path, driveSubsystem, poseSupplier, robotRelativeSpeedsSupplier, robotRelativeSpeedsConsumer, shouldFlipPathSupplier,
+            shouldMirrorPathSupplier, poseResetConsumer, useTRatioBasedTranslationHandoffs, translationController, rotationController,
+            crossTrackController, 0);
+    }
+
+    private FollowPath(
+        Path path, 
+        Subsystem driveSubsystem, 
+        Supplier<Pose2d> poseSupplier, 
+        Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier,
+        Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer,
+        Supplier<Boolean> shouldFlipPathSupplier,
+        Supplier<Boolean> shouldMirrorPathSupplier,
+        Consumer<Pose2d> poseResetConsumer,
+        boolean useTRatioBasedTranslationHandoffs,
+        PIDController translationController, 
+        PIDController rotationController,
+        PIDController crossTrackController,
+        int expectedEventCount
     ) {
         if (translationController == null || rotationController == null || crossTrackController == null) {
             throw new IllegalArgumentException("Controllers must be provided and must not be null");
         }
-
+        this.setName("FollowPath");
         this.path = path.copy();
         this.poseSupplier = poseSupplier;
         this.robotRelativeSpeedsSupplier = robotRelativeSpeedsSupplier;
@@ -509,6 +578,7 @@ public class FollowPath extends Command {
         this.translationController = translationController;
         this.rotationController = rotationController;
         this.crossTrackController = crossTrackController;
+        this.expectedEventCount = expectedEventCount;
         
         configureControllers();
         
@@ -549,8 +619,7 @@ public class FollowPath extends Command {
         rotationElementIndex = NO_ACTIVE_ROTATION_INDEX;
         translationElementIndex = 0;
         eventTriggerElementIndex = 0;
-        firedEventTriggerIndices.clear();
-        firedEventTriggerCount = 0;
+        firedEventKeys.clear();
         lastTimestamp = timestampSupplier.get();
         pathInitStartPose = poseSupplier.get();
         lastSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeedsSupplier.get(), pathInitStartPose.getRotation());
@@ -780,7 +849,7 @@ public class FollowPath extends Command {
         logDouble("FollowPath/rotationErrorDeg", Math.toDegrees(currentRotationTargetRad.minus(currentPose.getRotation()).getRadians()));
         logDouble("FollowPath/currentRotationTargetInitRad", currentRotationTargetInitRad);
         logDouble("FollowPath/eventTriggerElementIndex", (double) eventTriggerElementIndex);
-        logDouble("FollowPath/eventTriggersFiredCount", (double) firedEventTriggerCount);
+        logDouble("FollowPath/eventTriggersFiredCount", (double) firedEventKeys.size());
     }
 
     /**
@@ -1223,22 +1292,17 @@ public class FollowPath extends Command {
                 eventTriggerElementIndex++;
                 continue;
             }
-            if (firedEventTriggerIndices.contains(eventTriggerElementIndex)) {
+            EventTrigger trigger = (EventTrigger) element;
+            if (firedEventKeys.contains(trigger.libKey())) {
                 eventTriggerElementIndex++;
                 continue;
             }
             if (!isEventTriggerTRatioReached(eventTriggerElementIndex, currentPose)) {
                 break;
             }
-            EventTrigger trigger = (EventTrigger) element;
-            Runnable action = eventTriggerRegistry.get(trigger.libKey());
-            if (action != null) {
-                action.run();
-            } else {
-                logger.warning("FollowPath: Unregistered event trigger key: " + trigger.libKey());
-            }
-            firedEventTriggerIndices.add(eventTriggerElementIndex);
-            firedEventTriggerCount++;
+            logger.info("FollowPath: Event trigger reached: " + trigger.libKey());
+            firedEventKeys.add(trigger.libKey());
+            lastFiredEventKey = trigger.libKey();
             eventTriggerElementIndex++;
         }
     }
@@ -1347,6 +1411,7 @@ public class FollowPath extends Command {
     @Override
     public void end(boolean interrupted) {
         stopCommandedMotion();
+        checkAllEventsHaveFired();
     }
 
     /**
@@ -1392,6 +1457,28 @@ public class FollowPath extends Command {
             return 0.0;
         }
         return calculateRemainingPathDistance();
+    }
+
+    /**
+     * Checks if an event with the given key has fired during this path execution.
+     *
+     * @param eventKey The event key to check
+     * @return true if the event has fired, false otherwise
+     */
+    public boolean hasEventFired(String eventKey) {
+        return firedEventKeys.contains(eventKey);
+    }
+
+    public boolean isEventOld(String eventKey) {
+        if (eventKey.equals(FollowPath.RESERVED_KEY_STARTING_EVENT)) 
+            return firedEventKeys.size() > 0;
+        return hasEventFired(eventKey) && !eventKey.equals(lastFiredEventKey);
+    }
+
+    private void checkAllEventsHaveFired() {
+        if (firedEventKeys.size() != expectedEventCount) {
+            logger.warning("FollowPath: Not all events fired. Expected " + expectedEventCount + ", got " + firedEventKeys.size());
+        }
     }
 
 }
