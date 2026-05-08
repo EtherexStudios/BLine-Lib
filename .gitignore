@@ -2,6 +2,7 @@
 .gradle/
 build/
 out/
+bin/
 
 # IDE
 .idea/
@@ -11,6 +12,9 @@ out/
 .vscode/
 .cursor/
 *.code-workspace
+
+# Local agent state
+.omc/
 
 # OS
 .DS_Store
