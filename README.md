@@ -2,7 +2,7 @@
 
 **BLine** is an open-source path generation and tracking suite designed for **holonomic drivetrains** (swerve, mecanum, etc.) made by students for students. It's built around simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
 
-📚 **[Documentation](https://edanliahovetsky.github.io/BLine-Docs/)** — full guides, tutorials, and reference.
+📚 **[Documentation](https://bline-docs.pages.dev/)** — full guides, tutorials, and reference.
 
 📖 **[Javadoc](https://edanliahovetsky.github.io/BLine-Lib/)** — full Java API documentation.
 
@@ -23,6 +23,12 @@
 5. Paste this URL:
 
 ```
+https://bline-metrics.edan-liahovetsky.workers.dev/vendor/BLine-Lib.json
+```
+
+Fallback direct vendor JSON:
+
+```text
 https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/main/BLine-Lib.json
 ```
 
@@ -46,7 +52,7 @@ dependencies {
 
 ## Quick Start
 
-For a complete getting started guide, see the **[Full Documentation](https://edanliahovetsky.github.io/BLine-Docs/getting-started/)**.
+For a complete getting started guide, see the **[Full Documentation](https://bline-docs.pages.dev/getting-started/)**.
 
 ### Basic Setup
 

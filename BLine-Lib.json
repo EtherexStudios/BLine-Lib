@@ -7,7 +7,7 @@
     "mavenUrls": [
         "https://jitpack.io"
     ],
-    "jsonUrl": "https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/main/BLine-Lib.json",
+    "jsonUrl": "https://bline-metrics.edan-liahovetsky.workers.dev/vendor/BLine-Lib.json",
     "javaDependencies": [
         {
             "groupId": "com.github.edanliahovetsky",
