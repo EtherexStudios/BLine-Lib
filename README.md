@@ -16,17 +16,22 @@
 
 ### Using Vendor JSON (Recommended)
 
+BLine-Lib's recommended WPILib vendor URL is the BLine Metrics Worker endpoint.
+It serves the same vendor JSON as this repository while keeping aggregate fetch
+counts for release health.
+
 1. Open VS Code with your FRC project
 2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
 3. Type **"WPILib: Manage Vendor Libraries"**
 4. Select **"Install new libraries (online)"**
-5. Paste this URL:
+5. Paste the recommended vendor URL:
 
 ```
 https://bline-metrics.edan-liahovetsky.workers.dev/vendor/BLine-Lib.json
 ```
 
-Fallback direct vendor JSON:
+If the Worker URL is temporarily unavailable, use the direct GitHub vendor JSON
+as the fallback:
 
 ```text
 https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/main/BLine-Lib.json
