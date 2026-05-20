@@ -93,6 +93,31 @@ Path myPath = new Path("myPathFile");  // loads deploy/autos/paths/myPathFile.js
 Command followCommand = pathBuilder.build(myPath);
 ```
 
+### Command-Based Autos With Event Triggers
+
+When a B-line path contains event triggers that schedule WPILib commands, prefer
+`BLineCommands` for the surrounding command composition:
+
+```java
+import static frc.robot.lib.BLine.BLineCommands.sequence;
+import edu.wpi.first.wpilibj2.command.Command;
+
+Command auto = sequence(
+    shooter.shoot().withTimeout(2.0),
+    pathing.followPath("intakethroughdepot"),
+    shooter.shoot()
+);
+```
+
+`BLineCommands` mirrors the WPILib `Commands` composition methods that accept
+child commands, but proxies those children before building the group. This keeps
+the outer auto from owning every child requirement for its whole lifetime, which
+lets B-line event-trigger commands use normal WPILib scheduling. See the
+`BLineCommands` Javadocs for method-by-method behavior and limitations. The API
+intentionally contains only WPILib `Commands` counterparts: `either`, `select`,
+`defer`, `deferredProxy`, `sequence`, `repeatingSequence`, `parallel`, `race`,
+and `deadline`.
+
 ## Performance
 
 BLine has been validated through extensive testing with a WPILib physics simulation, utilizing Theta* for initial pathfinding and an Artificial Bee Colony (ABC) optimizer to benchmark the system against PathPlanner.

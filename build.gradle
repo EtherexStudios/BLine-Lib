@@ -14,6 +14,9 @@ java {
 }
 
 repositories {
+    maven {
+        url = "${System.getProperty('user.home')}/wpilib/2026/maven"
+    }
     mavenCentral()
     
     // WPILib Maven repository
@@ -40,8 +43,45 @@ dependencies {
     implementation "com.googlecode.json-simple:json-simple:1.1.1"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+    testRuntimeOnly "edu.wpi.first.hal:hal-java:${wpiVersion}"
+    testRuntimeOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
+    testRuntimeOnly "edu.wpi.first.wpinet:wpinet-java:${wpiVersion}"
+    testRuntimeOnly "com.fasterxml.jackson.core:jackson-databind:2.19.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
     testRuntimeOnly "us.hebi.quickbuf:quickbuf-runtime:1.4"
+}
+
+def wpilibLocalMaven = file("${System.getProperty('user.home')}/wpilib/2026/maven")
+def currentOperatingSystem = org.gradle.internal.os.OperatingSystem.current()
+def wpilibNativeClassifier = currentOperatingSystem.isMacOsX()
+    ? "osxuniversal"
+    : currentOperatingSystem.isWindows()
+        ? "windowsx86-64"
+        : "linuxx86-64"
+def wpilibNativeSharedPath = currentOperatingSystem.isMacOsX()
+    ? "osx/universal/shared"
+    : currentOperatingSystem.isWindows()
+        ? "windows/x86-64/shared"
+        : "linux/x86-64/shared"
+def wpilibHalNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/hal/hal-cpp/${wpiVersion}/hal-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibUtilNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/wpiutil/wpiutil-cpp/${wpiVersion}/wpiutil-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibNtcoreNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/ntcore/ntcore-cpp/${wpiVersion}/ntcore-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibNetNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/wpinet/wpinet-cpp/${wpiVersion}/wpinet-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibTestNativeDir = layout.buildDirectory.dir("wpilib-test-natives")
+
+tasks.register('extractWpilibTestNatives', Copy) {
+    onlyIf {
+        wpilibHalNativeZip.exists() &&
+            wpilibUtilNativeZip.exists() &&
+            wpilibNtcoreNativeZip.exists() &&
+            wpilibNetNativeZip.exists()
+    }
+    from zipTree(wpilibUtilNativeZip)
+    from zipTree(wpilibNetNativeZip)
+    from zipTree(wpilibNtcoreNativeZip)
+    from zipTree(wpilibHalNativeZip)
+    into wpilibTestNativeDir
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 // Configuration for JitPack
@@ -94,4 +134,6 @@ tasks.withType(JavaCompile).configureEach {
 
 test {
     useJUnitPlatform()
+    dependsOn tasks.named('extractWpilibTestNatives')
+    systemProperty 'java.library.path', "${layout.buildDirectory.get().asFile}/wpilib-test-natives/${wpilibNativeSharedPath}"
 }

@@ -111,6 +111,12 @@ public class FollowPath extends Command {
     /**
      * Registers an event trigger action by key.
      *
+     * <p>The {@code key} must match the {@code lib_key} of an {@link EventTrigger}
+     * in a path JSON file. The action runs inline from this {@code FollowPath}
+     * command when the trigger's {@code t_ratio} is reached, so it should be quick
+     * and non-blocking. Use {@link #registerEventTrigger(String, Command)} when the
+     * trigger should start a normal WPILib command.
+     *
      * @param key The event trigger key referenced in JSON
      * @param action The action to execute when the trigger is reached
      */
@@ -124,6 +130,17 @@ public class FollowPath extends Command {
 
     /**
      * Registers an event trigger action by key using a WPILib Command.
+     *
+     * <p>The {@code key} must match the {@code lib_key} of an {@link EventTrigger}
+     * in a path JSON file. When the marker is reached, B-line schedules the supplied
+     * command with WPILib's {@link CommandScheduler}. The command is not automatically
+     * proxied here and is not automatically canceled when the path ends; it runs until
+     * it finishes or is interrupted by normal WPILib scheduling rules.
+     *
+     * <p>If this event command requires a subsystem that is also used by commands before
+     * or after the path, compose the surrounding autonomous routine with
+     * {@link BLineCommands} so the outer composition does not hold those child
+     * requirements for its whole lifetime.
      *
      * @param key The event trigger key referenced in JSON
      * @param command The command to schedule when the trigger is reached

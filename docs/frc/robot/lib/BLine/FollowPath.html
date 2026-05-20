@@ -256,7 +256,13 @@ loadScripts(document, 'script');</script>
 <h3>registerEventTrigger</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">registerEventTrigger</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;key,
  <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;action)</span></div>
-<div class="block">Registers an event trigger action by key.</div>
+<div class="block">Registers an event trigger action by key.
+
+ <p>The <code>key</code> must match the <code>lib_key</code> of an <a href="Path.EventTrigger.html" title="class in frc.robot.lib.BLine"><code>Path.EventTrigger</code></a>
+ in a path JSON file. The action runs inline from this <code>FollowPath</code>
+ command when the trigger's <code>t_ratio</code> is reached, so it should be quick
+ and non-blocking. Use <a href="#registerEventTrigger(java.lang.String,edu.wpi.first.wpilibj2.command.Command)"><code>registerEventTrigger(String, Command)</code></a> when the
+ trigger should start a normal WPILib command.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>key</code> - The event trigger key referenced in JSON</dd>
@@ -269,7 +275,18 @@ loadScripts(document, 'script');</script>
 <h3>registerEventTrigger</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">registerEventTrigger</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;key,
  edu.wpi.first.wpilibj2.command.Command&nbsp;command)</span></div>
-<div class="block">Registers an event trigger action by key using a WPILib Command.</div>
+<div class="block">Registers an event trigger action by key using a WPILib Command.
+
+ <p>The <code>key</code> must match the <code>lib_key</code> of an <a href="Path.EventTrigger.html" title="class in frc.robot.lib.BLine"><code>Path.EventTrigger</code></a>
+ in a path JSON file. When the marker is reached, B-line schedules the supplied
+ command with WPILib's <code>CommandScheduler</code>. The command is not automatically
+ proxied here and is not automatically canceled when the path ends; it runs until
+ it finishes or is interrupted by normal WPILib scheduling rules.
+
+ <p>If this event command requires a subsystem that is also used by commands before
+ or after the path, compose the surrounding autonomous routine with
+ <a href="BLineCommands.html" title="class in frc.robot.lib.BLine"><code>BLineCommands</code></a> so the outer composition does not hold those child
+ requirements for its whole lifetime.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>key</code> - The event trigger key referenced in JSON</dd>
