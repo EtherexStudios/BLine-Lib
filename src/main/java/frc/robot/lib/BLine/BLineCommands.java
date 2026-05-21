@@ -11,7 +11,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * Marker-safe command composition helpers for B-line autonomous routines.
+ * Marker-safe command composition helpers for BLine autonomous routines.
  *
  * <p>This class mirrors the WPILib {@link Commands} methods that accept child
  * {@link Command Commands}. Each supplied child command is wrapped with
@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * its whole lifetime, while still letting WPILib schedule each child command
  * normally when that child actually runs.
  *
- * <p>This is useful for autonomous routines that contain B-line event triggers:
+ * <p>This is useful for autonomous routines that contain BLine event triggers:
  *
      * <pre>{@code
      * import static frc.robot.lib.BLine.BLineCommands.sequence;
@@ -46,7 +46,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#either(Command, Command, BooleanSupplier)}.
+     * BLine marker-safe counterpart to {@link Commands#either(Command, Command, BooleanSupplier)}.
      *
      * <p>The supplied branch commands are wrapped with {@link Command#asProxy()}
      * before they are passed to WPILib. The returned conditional command does not
@@ -65,7 +65,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#select(Map, Supplier)}.
+     * BLine marker-safe counterpart to {@link Commands#select(Map, Supplier)}.
      *
      * <p>Each command in {@code commands} is wrapped with {@link Command#asProxy()}
      * before it is passed to WPILib. The returned select command does not inherit
@@ -84,7 +84,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#defer(Supplier, Set)}.
+     * BLine marker-safe counterpart to {@link Commands#defer(Supplier, Set)}.
      *
      * <p>The command supplied at runtime is wrapped with {@link Command#asProxy()}
      * before it is run by WPILib. The explicit {@code requirements} argument still
@@ -107,7 +107,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#deferredProxy(Supplier)}.
+     * BLine marker-safe counterpart to {@link Commands#deferredProxy(Supplier)}.
      *
      * <p>The command supplied at runtime is wrapped with {@link Command#asProxy()}
      * before it is run by WPILib. The returned deferred proxy has no requirements;
@@ -124,7 +124,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#sequence(Command...)}.
+     * BLine marker-safe counterpart to {@link Commands#sequence(Command...)}.
      *
      * <p>Each supplied command is wrapped with {@link Command#asProxy()} before it
      * is passed to WPILib. The returned sequence does not inherit the proxied
@@ -141,7 +141,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#repeatingSequence(Command...)}.
+     * BLine marker-safe counterpart to {@link Commands#repeatingSequence(Command...)}.
      *
      * <p>Each supplied command is wrapped with {@link Command#asProxy()} before it
      * is passed to WPILib. The returned repeating sequence does not inherit the
@@ -158,7 +158,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#parallel(Command...)}.
+     * BLine marker-safe counterpart to {@link Commands#parallel(Command...)}.
      *
      * <p>Each supplied command is wrapped with {@link Command#asProxy()} before it
      * is passed to WPILib. The returned parallel group does not inherit the
@@ -175,7 +175,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#race(Command...)}.
+     * BLine marker-safe counterpart to {@link Commands#race(Command...)}.
      *
      * <p>Each supplied command is wrapped with {@link Command#asProxy()} before it
      * is passed to WPILib. The returned race group does not inherit the proxied
@@ -192,7 +192,7 @@ public final class BLineCommands {
     }
 
     /**
-     * B-line marker-safe counterpart to {@link Commands#deadline(Command, Command...)}.
+     * BLine marker-safe counterpart to {@link Commands#deadline(Command, Command...)}.
      *
      * <p>The deadline and parallel commands are wrapped with {@link Command#asProxy()}
      * before they are passed to WPILib. The returned deadline group does not inherit

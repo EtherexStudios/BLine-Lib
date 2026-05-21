@@ -189,9 +189,9 @@ class BLineCommandsTest {
         runSchedulerUntil(() -> postRan.get(), 20);
         runSchedulerCycles(3);
 
-        assertTrue(eventRan.get(), "Event command should run without canceling the B-line sequence");
-        assertTrue(postRan.get(), "B-line sequence should continue to the post-path command");
-        assertFalse(scheduler.isScheduled(auto), "B-line sequence should finish cleanly");
+        assertTrue(eventRan.get(), "Event command should run without canceling the BLine sequence");
+        assertTrue(postRan.get(), "BLine sequence should continue to the post-path command");
+        assertFalse(scheduler.isScheduled(auto), "BLine sequence should finish cleanly");
     }
 
     @Test
