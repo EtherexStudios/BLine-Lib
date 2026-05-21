@@ -754,8 +754,29 @@ public class FollowPath extends Command {
         TranslationTargetConstraint translationConstraint = (TranslationTargetConstraint) pathElementsWithConstraints.get(translationElementIndex).getSecond();
 
         // Clamp translation controller output as to not overpower the crossTrackController output during the velo accel limiting phase
-        double translationControllerOutput = MathUtil.clamp(-translationController.calculate(remainingDistance, 0), -translationConstraint.maxVelocityMetersPerSec(), translationConstraint.maxVelocityMetersPerSec());
+        double rawTranslationControllerOutput = -translationController.calculate(remainingDistance, 0);
+        double clampedTranslationControllerOutput = MathUtil.clamp(
+            rawTranslationControllerOutput,
+            -translationConstraint.maxVelocityMetersPerSec(),
+            translationConstraint.maxVelocityMetersPerSec()
+        );
+        boolean shouldApplyTranslationMinimum =
+            remainingDistance > path.getEndTranslationToleranceMeters();
+        double translationControllerOutput = applyMinimumMagnitude(
+            clampedTranslationControllerOutput,
+            translationConstraint.minVelocityMetersPerSec(),
+            translationConstraint.maxVelocityMetersPerSec(),
+            remainingDistance,
+            shouldApplyTranslationMinimum
+        );
+        boolean translationMinimumApplied =
+            Math.abs(translationControllerOutput) > Math.abs(clampedTranslationControllerOutput) + 1e-9;
+        logDouble("FollowPath/rawTranslationControllerOutput", rawTranslationControllerOutput);
+        logDouble("FollowPath/clampedTranslationControllerOutput", clampedTranslationControllerOutput);
         logDouble("FollowPath/translationControllerOutput", translationControllerOutput);
+        logDouble("FollowPath/minTranslationVelocityMetersPerSec", translationConstraint.minVelocityMetersPerSec());
+        logDouble("FollowPath/maxTranslationVelocityMetersPerSec", translationConstraint.maxVelocityMetersPerSec());
+        logBoolean("FollowPath/translationMinimumApplied", translationMinimumApplied);
         
         // Cache the remaining distance for logging
         cachedRemainingDistance = remainingDistance;
@@ -835,7 +856,22 @@ public class FollowPath extends Command {
 
         targetRotationRad = MathUtil.angleModulus(targetRotationRad);
         double rotationPidOutput = rotationController.calculate(currentPose.getRotation().getRadians(), targetRotationRad);
-        double omega = rotationPidOutput;
+        double rotationErrorRad = MathUtil.angleModulus(targetRotationRad - currentPose.getRotation().getRadians());
+        double rawOmega = rotationPidOutput;
+        double maxOmegaRadPerSec = Math.toRadians(rotationConstraint.maxVelocityDegPerSec());
+        double minOmegaRadPerSec = Math.toRadians(rotationConstraint.minVelocityDegPerSec());
+        double clampedOmega = MathUtil.clamp(rawOmega, -maxOmegaRadPerSec, maxOmegaRadPerSec);
+        boolean shouldApplyRotationMinimum =
+            Math.abs(rotationErrorRad) > Math.toRadians(path.getEndRotationToleranceDeg());
+        double omega = applyMinimumMagnitude(
+            clampedOmega,
+            minOmegaRadPerSec,
+            maxOmegaRadPerSec,
+            rotationErrorRad,
+            shouldApplyRotationMinimum
+        );
+        boolean rotationMinimumApplied =
+            Math.abs(omega) > Math.abs(clampedOmega) + 1e-9;
 
         DoubleSupplier activeRotationOverrideSupplier = rotationOverrideSupplier;
         RotationOverrideBehavior activeRotationOverrideBehavior = rotationOverrideBehavior;
@@ -847,6 +883,7 @@ public class FollowPath extends Command {
         if (rotationOverrideActive) {
             rotationOverrideOmegaRadPerSec = activeRotationOverrideSupplier.getAsDouble();
             omega = rotationOverrideOmegaRadPerSec;
+            rotationMinimumApplied = false;
         }
 
         // Phase 6: apply acceleration/velocity limiting and output final command.
@@ -888,16 +925,49 @@ public class FollowPath extends Command {
         logDouble("FollowPath/translationElementIndex", (double) translationElementIndex);
         logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
         logDouble("FollowPath/targetRotationDeg", Math.toDegrees(targetRotationRad));
+        logDouble("FollowPath/rawRotationControllerOutput", rawOmega);
+        logDouble("FollowPath/clampedRotationControllerOutput", clampedOmega);
         logDouble("FollowPath/rotationControllerOutput", omega);
         logDouble("FollowPath/rotationPidOutputRadPerSec", rotationPidOutput);
         logBoolean("FollowPath/rotationOverrideActive", rotationOverrideActive);
         logBoolean("FollowPath/rotationOverrideBypassesConstraints", rotationOverrideBypassesConstraints);
         logDouble("FollowPath/rotationOverrideOmegaRadPerSec", rotationOverrideOmegaRadPerSec);
         logDouble("FollowPath/outputOmegaRadPerSec", targetSpeeds.omegaRadiansPerSecond);
+        logDouble("FollowPath/minRotationVelocityDegPerSec", rotationConstraint.minVelocityDegPerSec());
+        logDouble("FollowPath/maxRotationVelocityDegPerSec", rotationConstraint.maxVelocityDegPerSec());
+        logBoolean("FollowPath/rotationMinimumApplied", rotationMinimumApplied);
         logDouble("FollowPath/rotationErrorDeg", Math.toDegrees(currentRotationTargetRad.minus(currentPose.getRotation()).getRadians()));
         logDouble("FollowPath/currentRotationTargetInitRad", currentRotationTargetInitRad);
         logDouble("FollowPath/eventTriggerElementIndex", (double) eventTriggerElementIndex);
         logDouble("FollowPath/eventTriggersFiredCount", (double) firedEventTriggerCount);
+    }
+
+    private static double applyMinimumMagnitude(
+        double value,
+        double minimumMagnitude,
+        double maximumMagnitude,
+        double directionWhenZero,
+        boolean enabled
+    ) {
+        if (!enabled || minimumMagnitude <= 0) {
+            return value;
+        }
+
+        double boundedMinimum = maximumMagnitude > 0
+            ? Math.min(minimumMagnitude, maximumMagnitude)
+            : minimumMagnitude;
+        if (Math.abs(value) >= boundedMinimum) {
+            return value;
+        }
+
+        double sign = Math.signum(value);
+        if (sign == 0.0) {
+            sign = Math.signum(directionWhenZero);
+        }
+        if (sign == 0.0) {
+            sign = 1.0;
+        }
+        return sign * boundedMinimum;
     }
 
     /**

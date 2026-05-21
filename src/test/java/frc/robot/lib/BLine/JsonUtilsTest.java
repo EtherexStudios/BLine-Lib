@@ -139,6 +139,12 @@ class JsonUtilsTest {
                   "max_acceleration_deg_per_sec2": [
                     { "value": 900.0, "start_ordinal": 0, "end_ordinal": 1 }
                   ],
+                  "min_velocity_meters_per_sec": [
+                    { "value": 0.7, "start_ordinal": 0, "end_ordinal": 1 }
+                  ],
+                  "min_velocity_deg_per_sec": [
+                    { "value": 55.0, "start_ordinal": 0, "end_ordinal": 1 }
+                  ],
                   "end_translation_tolerance_meters": 0.06,
                   "end_rotation_tolerance_deg": 2.7
                 }
@@ -157,6 +163,8 @@ class JsonUtilsTest {
         assertEquals(3.5, constraints.getMaxAccelerationMetersPerSec2().get().get(0).value(), 1e-9);
         assertEquals(400.0, constraints.getMaxVelocityDegPerSec().get().get(0).value(), 1e-9);
         assertEquals(900.0, constraints.getMaxAccelerationDegPerSec2().get().get(0).value(), 1e-9);
+        assertEquals(0.7, constraints.getMinVelocityMetersPerSec().get().get(0).value(), 1e-9);
+        assertEquals(55.0, constraints.getMinVelocityDegPerSec().get().get(0).value(), 1e-9);
         assertEquals(0.06, constraints.getEndTranslationToleranceMeters().orElseThrow(), 1e-9);
         assertEquals(2.7, constraints.getEndRotationToleranceDeg().orElseThrow(), 1e-9);
     }

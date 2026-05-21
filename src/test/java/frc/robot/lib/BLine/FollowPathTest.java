@@ -379,6 +379,120 @@ class FollowPathTest {
     }
 
     @Test
+    void translationMinimumBaselineRaisesControllerOutputOutsideTolerance() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Double> doubleLogs = new HashMap<>();
+        Map<String, Boolean> booleanLogs = new HashMap<>();
+        FollowPath.setDoubleLoggingConsumer((Pair<String, Double> pair) -> doubleLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.setBooleanLoggingConsumer((Pair<String, Boolean> pair) -> booleanLogs.put(pair.getFirst(), pair.getSecond()));
+
+        Path path = new Path(
+            new Path.PathConstraints()
+                .setMaxVelocityMetersPerSec(2.0)
+                .setMinVelocityMetersPerSec(1.25)
+                .setMaxAccelerationMetersPerSec2(1000.0)
+                .setEndTranslationToleranceMeters(0.01),
+            new Path.TranslationTarget(new Translation2d(0.10, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        assertTrue(doubleLogs.get("FollowPath/rawTranslationControllerOutput") < 1.25);
+        assertEquals(1.25, doubleLogs.get("FollowPath/translationControllerOutput"), 1e-9);
+        assertTrue(booleanLogs.get("FollowPath/translationMinimumApplied"));
+    }
+
+    @Test
+    void translationMinimumBaselineTurnsOffInsideTolerance() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Double> doubleLogs = new HashMap<>();
+        Map<String, Boolean> booleanLogs = new HashMap<>();
+        FollowPath.setDoubleLoggingConsumer((Pair<String, Double> pair) -> doubleLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.setBooleanLoggingConsumer((Pair<String, Boolean> pair) -> booleanLogs.put(pair.getFirst(), pair.getSecond()));
+
+        Path path = new Path(
+            new Path.PathConstraints()
+                .setMaxVelocityMetersPerSec(2.0)
+                .setMinVelocityMetersPerSec(1.25),
+            new Path.TranslationTarget(new Translation2d(0.02, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        assertEquals(
+            doubleLogs.get("FollowPath/clampedTranslationControllerOutput"),
+            doubleLogs.get("FollowPath/translationControllerOutput"),
+            1e-9
+        );
+        assertFalse(booleanLogs.get("FollowPath/translationMinimumApplied"));
+    }
+
+    @Test
+    void rotationMinimumBaselineRaisesControllerOutputOutsideTolerance() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, new Rotation2d()));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Double> doubleLogs = new HashMap<>();
+        Map<String, Boolean> booleanLogs = new HashMap<>();
+        FollowPath.setDoubleLoggingConsumer((Pair<String, Double> pair) -> doubleLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.setBooleanLoggingConsumer((Pair<String, Boolean> pair) -> booleanLogs.put(pair.getFirst(), pair.getSecond()));
+
+        Path path = new Path(
+            new Path.PathConstraints()
+                .setMaxVelocityDegPerSec(180.0)
+                .setMinVelocityDegPerSec(60.0)
+                .setMaxAccelerationDegPerSec2(10000.0)
+                .setEndRotationToleranceDeg(0.5),
+            new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
+            new Path.RotationTarget(Rotation2d.fromDegrees(5.0), 0.5, false),
+            new Path.TranslationTarget(new Translation2d(1.0, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        assertTrue(doubleLogs.get("FollowPath/rawRotationControllerOutput") < Math.toRadians(60.0));
+        assertEquals(Math.toRadians(60.0), doubleLogs.get("FollowPath/rotationControllerOutput"), 1e-9);
+        assertTrue(booleanLogs.get("FollowPath/rotationMinimumApplied"));
+    }
+
+    @Test
+    void rotationMinimumBaselineTurnsOffInsideTolerance() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(4.8)));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Double> doubleLogs = new HashMap<>();
+        Map<String, Boolean> booleanLogs = new HashMap<>();
+        FollowPath.setDoubleLoggingConsumer((Pair<String, Double> pair) -> doubleLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.setBooleanLoggingConsumer((Pair<String, Boolean> pair) -> booleanLogs.put(pair.getFirst(), pair.getSecond()));
+
+        Path path = new Path(
+            new Path.PathConstraints()
+                .setMaxVelocityDegPerSec(180.0)
+                .setMinVelocityDegPerSec(60.0),
+            new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
+            new Path.RotationTarget(Rotation2d.fromDegrees(5.0), 0.5, false),
+            new Path.TranslationTarget(new Translation2d(1.0, 0.0))
+        );
+
+        FollowPath command = createCommand(path, robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        assertEquals(
+            doubleLogs.get("FollowPath/clampedRotationControllerOutput"),
+            doubleLogs.get("FollowPath/rotationControllerOutput"),
+            1e-9
+        );
+        assertFalse(booleanLogs.get("FollowPath/rotationMinimumApplied"));
+    }
+
+    @Test
     void rotationIndexTransitionsToNoActiveTargetAfterLastRotation() {
         MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
         FollowPath.setTimestampSupplier(robot::getTimestampSeconds);

@@ -106,6 +106,8 @@ public class JsonUtils {
         { "max_acceleration_meters_per_sec2" },
         { "max_velocity_deg_per_sec" },
         { "max_acceleration_deg_per_sec2" },
+        { "min_velocity_meters_per_sec" },
+        { "min_velocity_deg_per_sec" },
         { "end_translation_tolerance_meters" },
         { "end_rotation_tolerance_deg" }
     };
@@ -362,6 +364,8 @@ public class JsonUtils {
      *   <li>max_acceleration_meters_per_sec2</li>
      *   <li>max_velocity_deg_per_sec</li>
      *   <li>max_acceleration_deg_per_sec2</li>
+     *   <li>min_velocity_meters_per_sec</li>
+     *   <li>min_velocity_deg_per_sec</li>
      *   <li>end_translation_tolerance_meters</li>
      *   <li>end_rotation_tolerance_deg</li>
      * </ul>
@@ -394,6 +398,16 @@ public class JsonUtils {
         parseConstraint(constraintsJson, json, "max_acceleration_deg_per_sec2", (val) -> {
             if (val.isPresent()) {
                 constraints.setMaxAccelerationDegPerSec2(val.get().toArray(new Path.RangedConstraint[0]));
+            }
+        });
+        parseConstraint(constraintsJson, json, "min_velocity_meters_per_sec", (val) -> {
+            if (val.isPresent()) {
+                constraints.setMinVelocityMetersPerSec(val.get().toArray(new Path.RangedConstraint[0]));
+            }
+        });
+        parseConstraint(constraintsJson, json, "min_velocity_deg_per_sec", (val) -> {
+            if (val.isPresent()) {
+                constraints.setMinVelocityDegPerSec(val.get().toArray(new Path.RangedConstraint[0]));
             }
         });
 

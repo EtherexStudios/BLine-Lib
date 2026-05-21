@@ -93,35 +93,73 @@ public class Path {
      * @param maxAccelerationMetersPerSec2 Maximum translational acceleration in meters per second squared
      * @param maxVelocityDegPerSec Maximum rotational velocity in degrees per second
      * @param maxAccelerationDegPerSec2 Maximum rotational acceleration in degrees per second squared
+     * @param minVelocityMetersPerSec Minimum translational velocity baseline in meters per second
+     * @param minVelocityDegPerSec Minimum rotational velocity baseline in degrees per second
      */
     public static record WaypointConstraint(
         double maxVelocityMetersPerSec,
         double maxAccelerationMetersPerSec2,
         double maxVelocityDegPerSec,
-        double maxAccelerationDegPerSec2
-    ) implements PathElementConstraint {}
+        double maxAccelerationDegPerSec2,
+        double minVelocityMetersPerSec,
+        double minVelocityDegPerSec
+    ) implements PathElementConstraint {
+        public WaypointConstraint(
+            double maxVelocityMetersPerSec,
+            double maxAccelerationMetersPerSec2,
+            double maxVelocityDegPerSec,
+            double maxAccelerationDegPerSec2
+        ) {
+            this(
+                maxVelocityMetersPerSec,
+                maxAccelerationMetersPerSec2,
+                maxVelocityDegPerSec,
+                maxAccelerationDegPerSec2,
+                0.0,
+                0.0
+            );
+        }
+    }
 
     /**
      * Constraints for a {@link TranslationTarget}.
      * 
      * @param maxVelocityMetersPerSec Maximum translational velocity in meters per second
      * @param maxAccelerationMetersPerSec2 Maximum translational acceleration in meters per second squared
+     * @param minVelocityMetersPerSec Minimum translational velocity baseline in meters per second
      */
     public static record TranslationTargetConstraint(
         double maxVelocityMetersPerSec,
-        double maxAccelerationMetersPerSec2
-    ) implements PathElementConstraint {}
+        double maxAccelerationMetersPerSec2,
+        double minVelocityMetersPerSec
+    ) implements PathElementConstraint {
+        public TranslationTargetConstraint(
+            double maxVelocityMetersPerSec,
+            double maxAccelerationMetersPerSec2
+        ) {
+            this(maxVelocityMetersPerSec, maxAccelerationMetersPerSec2, 0.0);
+        }
+    }
 
     /**
      * Constraints for a {@link RotationTarget}.
      * 
      * @param maxVelocityDegPerSec Maximum rotational velocity in degrees per second
      * @param maxAccelerationDegPerSec2 Maximum rotational acceleration in degrees per second squared
+     * @param minVelocityDegPerSec Minimum rotational velocity baseline in degrees per second
      */
     public static record RotationTargetConstraint(
         double maxVelocityDegPerSec,
-        double maxAccelerationDegPerSec2
-    ) implements PathElementConstraint {}
+        double maxAccelerationDegPerSec2,
+        double minVelocityDegPerSec
+    ) implements PathElementConstraint {
+        public RotationTargetConstraint(
+            double maxVelocityDegPerSec,
+            double maxAccelerationDegPerSec2
+        ) {
+            this(maxVelocityDegPerSec, maxAccelerationDegPerSec2, 0.0);
+        }
+    }
 
     /**
      * A waypoint that combines both a translation target and a rotation target.
@@ -508,6 +546,8 @@ public class Path {
         private Optional<ArrayList<RangedConstraint>> maxAccelerationMetersPerSec2 = Optional.empty();
         private Optional<ArrayList<RangedConstraint>> maxVelocityDegPerSec = Optional.empty();
         private Optional<ArrayList<RangedConstraint>> maxAccelerationDegPerSec2 = Optional.empty();
+        private Optional<ArrayList<RangedConstraint>> minVelocityMetersPerSec = Optional.empty();
+        private Optional<ArrayList<RangedConstraint>> minVelocityDegPerSec = Optional.empty();
         private Optional<Double> endTranslationToleranceMeters = Optional.empty();
         private Optional<Double> endRotationToleranceDeg = Optional.empty();
 
@@ -613,6 +653,70 @@ public class Path {
         }
 
         /**
+         * Sets a global minimum translational velocity baseline for the entire path.
+         *
+         * <p>This is an advanced feature. Minimum output baselines can help overcome
+         * static friction, but values that are too high may cause overshoot or
+         * controller oscillation near targets.
+         *
+         * @param value The minimum velocity in meters per second
+         * @return This PathConstraints for chaining
+         */
+        public PathConstraints setMinVelocityMetersPerSec(double value) {
+            ArrayList<RangedConstraint> list = new ArrayList<>();
+            list.add(new RangedConstraint(value, 0, Integer.MAX_VALUE));
+            this.minVelocityMetersPerSec = Optional.of(list);
+            return this;
+        }
+
+        /**
+         * Sets ranged minimum translational velocity baseline constraints.
+         *
+         * <p>This is an advanced feature. Minimum output baselines can help overcome
+         * static friction, but values that are too high may cause overshoot or
+         * controller oscillation near targets.
+         *
+         * @param constraints The ranged constraints to apply
+         * @return This PathConstraints for chaining
+         */
+        public PathConstraints setMinVelocityMetersPerSec(RangedConstraint... constraints) {
+            this.minVelocityMetersPerSec = Optional.of(new ArrayList<>(List.of(constraints)));
+            return this;
+        }
+
+        /**
+         * Sets a global minimum rotational velocity baseline for the entire path.
+         *
+         * <p>This is an advanced feature. Minimum output baselines can help overcome
+         * static friction, but values that are too high may cause overshoot or
+         * controller oscillation near targets.
+         *
+         * @param value The minimum angular velocity in degrees per second
+         * @return This PathConstraints for chaining
+         */
+        public PathConstraints setMinVelocityDegPerSec(double value) {
+            ArrayList<RangedConstraint> list = new ArrayList<>();
+            list.add(new RangedConstraint(value, 0, Integer.MAX_VALUE));
+            this.minVelocityDegPerSec = Optional.of(list);
+            return this;
+        }
+
+        /**
+         * Sets ranged minimum rotational velocity baseline constraints.
+         *
+         * <p>This is an advanced feature. Minimum output baselines can help overcome
+         * static friction, but values that are too high may cause overshoot or
+         * controller oscillation near targets.
+         *
+         * @param constraints The ranged constraints to apply
+         * @return This PathConstraints for chaining
+         */
+        public PathConstraints setMinVelocityDegPerSec(RangedConstraint... constraints) {
+            this.minVelocityDegPerSec = Optional.of(new ArrayList<>(List.of(constraints)));
+            return this;
+        }
+
+        /**
          * Sets the translation tolerance for path completion.
          * 
          * @param value The tolerance in meters
@@ -645,6 +749,12 @@ public class Path {
         
         /** @return Optional ranged constraints for maximum rotational acceleration */
         public Optional<ArrayList<RangedConstraint>> getMaxAccelerationDegPerSec2() { return maxAccelerationDegPerSec2.map(list -> new ArrayList<>(list)); }
+
+        /** @return Optional ranged constraints for minimum translational velocity */
+        public Optional<ArrayList<RangedConstraint>> getMinVelocityMetersPerSec() { return minVelocityMetersPerSec.map(list -> new ArrayList<>(list)); }
+
+        /** @return Optional ranged constraints for minimum rotational velocity */
+        public Optional<ArrayList<RangedConstraint>> getMinVelocityDegPerSec() { return minVelocityDegPerSec.map(list -> new ArrayList<>(list)); }
         
         /** @return Optional end translation tolerance override */
         public Optional<Double> getEndTranslationToleranceMeters() { return endTranslationToleranceMeters; }
@@ -663,6 +773,8 @@ public class Path {
             if (maxAccelerationMetersPerSec2.isPresent()) c.setMaxAccelerationMetersPerSec2(maxAccelerationMetersPerSec2.get().toArray(new RangedConstraint[0]));
             if (maxVelocityDegPerSec.isPresent()) c.setMaxVelocityDegPerSec(maxVelocityDegPerSec.get().toArray(new RangedConstraint[0]));
             if (maxAccelerationDegPerSec2.isPresent()) c.setMaxAccelerationDegPerSec2(maxAccelerationDegPerSec2.get().toArray(new RangedConstraint[0]));
+            if (minVelocityMetersPerSec.isPresent()) c.setMinVelocityMetersPerSec(minVelocityMetersPerSec.get().toArray(new RangedConstraint[0]));
+            if (minVelocityDegPerSec.isPresent()) c.setMinVelocityDegPerSec(minVelocityDegPerSec.get().toArray(new RangedConstraint[0]));
             if (endTranslationToleranceMeters.isPresent()) c.setEndTranslationToleranceMeters(endTranslationToleranceMeters.get());
             if (endRotationToleranceDeg.isPresent()) c.setEndRotationToleranceDeg(endRotationToleranceDeg.get());
             return c;
@@ -986,6 +1098,53 @@ public class Path {
         this.pathElements = new ArrayList<>(pathElements); 
     }
 
+    private record ResolvedConstraintValue(double maxValue, double minValue) {}
+
+    private Optional<Double> findRangedConstraintValue(
+        Optional<ArrayList<RangedConstraint>> constraints,
+        int ordinal
+    ) {
+        if (constraints.isEmpty()) {
+            return Optional.empty();
+        }
+        for (RangedConstraint constraint : constraints.get()) {
+            if (constraint.startOrdinal() <= ordinal && constraint.endOrdinal() >= ordinal) {
+                return Optional.of(constraint.value());
+            }
+        }
+        return Optional.empty();
+    }
+
+    private ResolvedConstraintValue resolveConstraintValue(
+        String label,
+        int ordinal,
+        Optional<ArrayList<RangedConstraint>> maxConstraints,
+        Optional<ArrayList<RangedConstraint>> minConstraints,
+        double globalMaxValue
+    ) {
+        double maxValue = findRangedConstraintValue(maxConstraints, ordinal).orElse(globalMaxValue);
+        double minValue = findRangedConstraintValue(minConstraints, ordinal).orElse(0.0);
+
+        if (minValue > maxValue) {
+            logger.log(
+                Level.WARNING,
+                "Path constraint conflict for {0} at ordinal {1}: minimum {2} exceeds maximum {3}; using global default {4} and disabling the minimum baseline",
+                new Object[] { label, ordinal, minValue, maxValue, globalMaxValue }
+            );
+            return new ResolvedConstraintValue(globalMaxValue, 0.0);
+        }
+
+        return new ResolvedConstraintValue(maxValue, minValue);
+    }
+
+    private double resolveMaxConstraintValue(
+        Optional<ArrayList<RangedConstraint>> maxConstraints,
+        int ordinal,
+        double globalMaxValue
+    ) {
+        return findRangedConstraintValue(maxConstraints, ordinal).orElse(globalMaxValue);
+    }
+
     /**
      * Gets all path elements paired with their computed constraints.
      * 
@@ -1004,59 +1163,41 @@ public class Path {
         int rotationOrdinal = 0;
         for (PathElement element : pathElements) {
             if (element instanceof Waypoint) {
-                double maxVelocityMetersPerSec = -1;
-                double maxAccelerationMetersPerSec2 = -1;
-                double maxVelocityDegPerSec = -1;
-                double maxAccelerationDegPerSec2 = -1;
-                if (pathConstraints.getMaxVelocityMetersPerSec().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxVelocityMetersPerSec().get()) {
-                        if (constraint.startOrdinal() <= translationOrdinal && constraint.endOrdinal() >= translationOrdinal) {
-                            maxVelocityMetersPerSec = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                if (pathConstraints.getMaxAccelerationMetersPerSec2().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxAccelerationMetersPerSec2().get()) {
-                        if (constraint.startOrdinal() <= translationOrdinal && constraint.endOrdinal() >= translationOrdinal) {
-                            maxAccelerationMetersPerSec2 = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                if (pathConstraints.getMaxVelocityDegPerSec().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxVelocityDegPerSec().get()) {
-                        if (constraint.startOrdinal() <= rotationOrdinal && constraint.endOrdinal() >= rotationOrdinal) {
-                            maxVelocityDegPerSec = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                if (pathConstraints.getMaxAccelerationDegPerSec2().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxAccelerationDegPerSec2().get()) {
-                        if (constraint.startOrdinal() <= rotationOrdinal && constraint.endOrdinal() >= rotationOrdinal) {
-                            maxAccelerationDegPerSec2 = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                maxVelocityMetersPerSec = maxVelocityMetersPerSec == -1 ? 
-                    defaultGlobalConstraints.getMaxVelocityMetersPerSec() : maxVelocityMetersPerSec;
-                maxAccelerationMetersPerSec2 = maxAccelerationMetersPerSec2 == -1 ? 
-                    defaultGlobalConstraints.getMaxAccelerationMetersPerSec2() : maxAccelerationMetersPerSec2;
-                maxVelocityDegPerSec = maxVelocityDegPerSec == -1 ? 
-                    defaultGlobalConstraints.getMaxVelocityDegPerSec() : maxVelocityDegPerSec;
-                maxAccelerationDegPerSec2 = maxAccelerationDegPerSec2 == -1 ? 
-                    defaultGlobalConstraints.getMaxAccelerationDegPerSec2() : maxAccelerationDegPerSec2;
+                ResolvedConstraintValue translationVelocity = resolveConstraintValue(
+                    "translation velocity",
+                    translationOrdinal,
+                    pathConstraints.getMaxVelocityMetersPerSec(),
+                    pathConstraints.getMinVelocityMetersPerSec(),
+                    defaultGlobalConstraints.getMaxVelocityMetersPerSec()
+                );
+                double translationAcceleration = resolveMaxConstraintValue(
+                    pathConstraints.getMaxAccelerationMetersPerSec2(),
+                    translationOrdinal,
+                    defaultGlobalConstraints.getMaxAccelerationMetersPerSec2()
+                );
+                ResolvedConstraintValue rotationVelocity = resolveConstraintValue(
+                    "rotation velocity",
+                    rotationOrdinal,
+                    pathConstraints.getMaxVelocityDegPerSec(),
+                    pathConstraints.getMinVelocityDegPerSec(),
+                    defaultGlobalConstraints.getMaxVelocityDegPerSec()
+                );
+                double rotationAcceleration = resolveMaxConstraintValue(
+                    pathConstraints.getMaxAccelerationDegPerSec2(),
+                    rotationOrdinal,
+                    defaultGlobalConstraints.getMaxAccelerationDegPerSec2()
+                );
 
                 elementsWithConstraints.add(
                     new Pair<>(
-                        element, 
+                        element,
                         new WaypointConstraint(
-                            maxVelocityMetersPerSec, 
-                            maxAccelerationMetersPerSec2, 
-                            maxVelocityDegPerSec, 
-                            maxAccelerationDegPerSec2
+                            translationVelocity.maxValue(),
+                            translationAcceleration,
+                            rotationVelocity.maxValue(),
+                            rotationAcceleration,
+                            translationVelocity.minValue(),
+                            rotationVelocity.minValue()
                         )
                     )
                 );
@@ -1064,64 +1205,54 @@ public class Path {
                 rotationOrdinal++;
             }
             else if (element instanceof TranslationTarget) {
-                double maxVelocityMetersPerSec = -1;
-                double maxAccelerationMetersPerSec2 = -1;
-                if (pathConstraints.getMaxVelocityMetersPerSec().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxVelocityMetersPerSec().get()) {
-                        if (constraint.startOrdinal() <= translationOrdinal && constraint.endOrdinal() >= translationOrdinal) {
-                            maxVelocityMetersPerSec = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                if (pathConstraints.getMaxAccelerationMetersPerSec2().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxAccelerationMetersPerSec2().get()) {
-                        if (constraint.startOrdinal() <= translationOrdinal && constraint.endOrdinal() >= translationOrdinal) {
-                            maxAccelerationMetersPerSec2 = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                maxVelocityMetersPerSec = maxVelocityMetersPerSec == -1 ? 
-                    defaultGlobalConstraints.getMaxVelocityMetersPerSec() : maxVelocityMetersPerSec;
-                maxAccelerationMetersPerSec2 = maxAccelerationMetersPerSec2 == -1 ? 
-                    defaultGlobalConstraints.getMaxAccelerationMetersPerSec2() : maxAccelerationMetersPerSec2;
+                ResolvedConstraintValue translationVelocity = resolveConstraintValue(
+                    "translation velocity",
+                    translationOrdinal,
+                    pathConstraints.getMaxVelocityMetersPerSec(),
+                    pathConstraints.getMinVelocityMetersPerSec(),
+                    defaultGlobalConstraints.getMaxVelocityMetersPerSec()
+                );
+                double translationAcceleration = resolveMaxConstraintValue(
+                    pathConstraints.getMaxAccelerationMetersPerSec2(),
+                    translationOrdinal,
+                    defaultGlobalConstraints.getMaxAccelerationMetersPerSec2()
+                );
 
                 elementsWithConstraints.add(
                     new Pair<>(
-                        element, 
+                        element,
                         new TranslationTargetConstraint(
-                            maxVelocityMetersPerSec, 
-                            maxAccelerationMetersPerSec2
+                            translationVelocity.maxValue(),
+                            translationAcceleration,
+                            translationVelocity.minValue()
                         )
                     )
                 );
                 translationOrdinal++;
             }
             else if (element instanceof RotationTarget) {
-                double maxVelocityDegPerSec = -1;
-                double maxAccelerationDegPerSec2 = -1;
-                if (pathConstraints.getMaxVelocityDegPerSec().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxVelocityDegPerSec().get()) {
-                        if (constraint.startOrdinal() <= rotationOrdinal && constraint.endOrdinal() >= rotationOrdinal) {
-                            maxVelocityDegPerSec = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                if (pathConstraints.getMaxAccelerationDegPerSec2().isPresent()) {
-                    for (RangedConstraint constraint : pathConstraints.getMaxAccelerationDegPerSec2().get()) {
-                        if (constraint.startOrdinal() <= rotationOrdinal && constraint.endOrdinal() >= rotationOrdinal) {
-                            maxAccelerationDegPerSec2 = constraint.value();
-                            break;
-                        }
-                    }
-                }
-                maxVelocityDegPerSec = maxVelocityDegPerSec == -1 ? 
-                    defaultGlobalConstraints.getMaxVelocityDegPerSec() : maxVelocityDegPerSec;
-                maxAccelerationDegPerSec2 = maxAccelerationDegPerSec2 == -1 ? 
-                    defaultGlobalConstraints.getMaxAccelerationDegPerSec2() : maxAccelerationDegPerSec2;
-                elementsWithConstraints.add(new Pair<>(element, new RotationTargetConstraint(maxVelocityDegPerSec, maxAccelerationDegPerSec2)));
+                ResolvedConstraintValue rotationVelocity = resolveConstraintValue(
+                    "rotation velocity",
+                    rotationOrdinal,
+                    pathConstraints.getMaxVelocityDegPerSec(),
+                    pathConstraints.getMinVelocityDegPerSec(),
+                    defaultGlobalConstraints.getMaxVelocityDegPerSec()
+                );
+                double rotationAcceleration = resolveMaxConstraintValue(
+                    pathConstraints.getMaxAccelerationDegPerSec2(),
+                    rotationOrdinal,
+                    defaultGlobalConstraints.getMaxAccelerationDegPerSec2()
+                );
+                elementsWithConstraints.add(
+                    new Pair<>(
+                        element,
+                        new RotationTargetConstraint(
+                            rotationVelocity.maxValue(),
+                            rotationAcceleration,
+                            rotationVelocity.minValue()
+                        )
+                    )
+                );
 
                 rotationOrdinal++;
             } else if (element instanceof EventTrigger) {
@@ -1155,12 +1286,14 @@ public class Path {
                 TranslationTarget translationTarget = ((Waypoint)element).translationTarget();
                 TranslationTargetConstraint translationTargetConstraint = new TranslationTargetConstraint(
                     ((WaypointConstraint)constraint).maxVelocityMetersPerSec(), 
-                    ((WaypointConstraint)constraint).maxAccelerationMetersPerSec2()
+                    ((WaypointConstraint)constraint).maxAccelerationMetersPerSec2(),
+                    ((WaypointConstraint)constraint).minVelocityMetersPerSec()
                 );
                 RotationTarget rotationTarget = ((Waypoint)element).rotationTarget();
                 RotationTargetConstraint rotationTargetConstraint = new RotationTargetConstraint(
                     ((WaypointConstraint)constraint).maxVelocityDegPerSec(), 
-                    ((WaypointConstraint)constraint).maxAccelerationDegPerSec2()
+                    ((WaypointConstraint)constraint).maxAccelerationDegPerSec2(),
+                    ((WaypointConstraint)constraint).minVelocityDegPerSec()
                 );
                 if (i == 0) {
                     rotationTarget = new RotationTarget(
