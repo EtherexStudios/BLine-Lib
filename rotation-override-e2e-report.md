@@ -13,10 +13,11 @@ that is desired.
 
 PathPlanner reference points:
 
-- PathPlanner documents feedback overrides as static methods on `PPHolonomicDriveController`, with a supplier used for X, Y, or rotation during path following: https://pathplanner.dev/pplib-override-feedback.html
-- The 2026 Java API exposes the analogous PathPlanner methods as
-  `overrideRotationFeedback(DoubleSupplier)`, `clearRotationFeedbackOverride()`, and
-  `clearFeedbackOverrides()`: https://pathplanner.dev/api/java/com/pathplanner/lib/controllers/PPHolonomicDriveController.html
+- PathPlanner documents the same controller-extension concept as static overrides on
+  `PPHolonomicDriveController`, with suppliers used for X, Y, or rotation during path
+  following: https://pathplanner.dev/pplib-override-feedback.html
+- The 2026 Java API reference for `PPHolonomicDriveController` was used to compare the
+  shape of the equivalent rotation supplier API: https://pathplanner.dev/api/java/com/pathplanner/lib/controllers/PPHolonomicDriveController.html
 
 ## Implementation
 
