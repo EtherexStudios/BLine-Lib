@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -81,6 +82,23 @@ import java.util.function.Supplier;
  * @see ChassisRateLimiter
  */
 public class FollowPath extends Command {
+    /**
+     * Determines how a rotation override interacts with BLine's normal constraints.
+     */
+    public enum RotationOverrideBehavior {
+        /**
+         * The supplied omega replaces the rotation PID output before BLine applies its
+         * existing rotational velocity and acceleration limits.
+         */
+        RESPECT_CONSTRAINTS,
+
+        /**
+         * BLine still rate-limits translation, but the supplied omega is restored after
+         * path-follower limiting so the caller owns the final rotational command.
+         */
+        BYPASS_CONSTRAINTS
+    }
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FollowPath.class.getName());
     // Shared epsilon for all segment-length degeneracy checks.
     private static final double SEGMENT_EPSILON = 1e-6;
@@ -95,6 +113,9 @@ public class FollowPath extends Command {
     private static Consumer<Pair<String, Double>> doubleLoggingConsumer = value -> {};
     private static Consumer<Pair<String, Boolean>> booleanLoggingConsumer = value -> {};
     private static final Map<String, Runnable> eventTriggerRegistry = new HashMap<>();
+    private static volatile DoubleSupplier rotationOverrideSupplier = null;
+    private static volatile RotationOverrideBehavior rotationOverrideBehavior =
+        RotationOverrideBehavior.BYPASS_CONSTRAINTS;
 
     private static void logDouble(String key, double value) {
         doubleLoggingConsumer.accept(new Pair<>(key, value));
@@ -132,7 +153,7 @@ public class FollowPath extends Command {
      * Registers an event trigger action by key using a WPILib Command.
      *
      * <p>The {@code key} must match the {@code lib_key} of an {@link EventTrigger}
-     * in a path JSON file. When the marker is reached, B-line schedules the supplied
+     * in a path JSON file. When the marker is reached, BLine schedules the supplied
      * command with WPILib's {@link CommandScheduler}. The command is not automatically
      * proxied here and is not automatically canceled when the path ends; it runs until
      * it finishes or is interrupted by normal WPILib scheduling rules.
@@ -151,6 +172,62 @@ public class FollowPath extends Command {
             return;
         }
         registerEventTrigger(key, () -> CommandScheduler.getInstance().schedule(command));
+    }
+
+    /**
+     * Overrides the rotational output of all {@code FollowPath} commands.
+     *
+     * <p>The supplier is called every execution cycle while active and must return omega in
+     * radians per second. This overload bypasses BLine's rotational velocity and acceleration
+     * limits so the caller owns the final path-follower omega command.
+     *
+     * <p>Call {@link #clearRotationOverride()} when the override should stop affecting
+     * path following.
+     *
+     * @param supplier supplies omega in radians per second
+     * @throws IllegalArgumentException if supplier is null
+     */
+    public static void overrideRotation(DoubleSupplier supplier) {
+        overrideRotation(supplier, RotationOverrideBehavior.BYPASS_CONSTRAINTS);
+    }
+
+    /**
+     * Overrides the rotational output of all {@code FollowPath} commands.
+     *
+     * <p>The supplier is called every execution cycle while active and must return omega in
+     * radians per second. Use {@link RotationOverrideBehavior#RESPECT_CONSTRAINTS}
+     * to keep BLine's normal rotational limits, or
+     * {@link RotationOverrideBehavior#BYPASS_CONSTRAINTS} when the caller owns the
+     * final rotational command.
+     *
+     * <p>Call {@link #clearRotationOverride()} when the override should stop affecting
+     * path following.
+     *
+     * @param supplier supplies omega in radians per second
+     * @param behavior whether the supplied omega should respect or bypass BLine constraints
+     * @throws IllegalArgumentException if supplier or behavior is null
+     */
+    public static void overrideRotation(
+        DoubleSupplier supplier,
+        RotationOverrideBehavior behavior
+    ) {
+        if (supplier == null) {
+            throw new IllegalArgumentException("Rotation override supplier must not be null");
+        }
+        if (behavior == null) {
+            throw new IllegalArgumentException("Rotation override behavior must not be null");
+        }
+
+        rotationOverrideBehavior = behavior;
+        rotationOverrideSupplier = supplier;
+    }
+
+    /**
+     * Clears the active rotation override, restoring normal path rotation control.
+     */
+    public static void clearRotationOverride() {
+        rotationOverrideSupplier = null;
+        rotationOverrideBehavior = RotationOverrideBehavior.BYPASS_CONSTRAINTS;
     }
 
     private final PIDController translationController;
@@ -757,7 +834,20 @@ public class FollowPath extends Command {
         }
 
         targetRotationRad = MathUtil.angleModulus(targetRotationRad);
-        double omega = rotationController.calculate(currentPose.getRotation().getRadians(), targetRotationRad);
+        double rotationPidOutput = rotationController.calculate(currentPose.getRotation().getRadians(), targetRotationRad);
+        double omega = rotationPidOutput;
+
+        DoubleSupplier activeRotationOverrideSupplier = rotationOverrideSupplier;
+        RotationOverrideBehavior activeRotationOverrideBehavior = rotationOverrideBehavior;
+        boolean rotationOverrideActive = activeRotationOverrideSupplier != null;
+        boolean rotationOverrideBypassesConstraints =
+            rotationOverrideActive &&
+            activeRotationOverrideBehavior == RotationOverrideBehavior.BYPASS_CONSTRAINTS;
+        double rotationOverrideOmegaRadPerSec = 0.0;
+        if (rotationOverrideActive) {
+            rotationOverrideOmegaRadPerSec = activeRotationOverrideSupplier.getAsDouble();
+            omega = rotationOverrideOmegaRadPerSec;
+        }
 
         // Phase 6: apply acceleration/velocity limiting and output final command.
         ChassisSpeeds targetSpeeds = new ChassisSpeeds(vx, vy, omega);
@@ -770,6 +860,13 @@ public class FollowPath extends Command {
             translationConstraint.maxVelocityMetersPerSec(),
             Math.toRadians(rotationConstraint.maxVelocityDegPerSec())
         );
+        if (rotationOverrideBypassesConstraints) {
+            targetSpeeds = new ChassisSpeeds(
+                targetSpeeds.vxMetersPerSecond,
+                targetSpeeds.vyMetersPerSecond,
+                rotationOverrideOmegaRadPerSec
+            );
+        }
 
         robotRelativeSpeedsConsumer.accept(ChassisSpeeds.fromFieldRelativeSpeeds(targetSpeeds, currentPose.getRotation()));
 
@@ -792,6 +889,11 @@ public class FollowPath extends Command {
         logDouble("FollowPath/rotationElementIndex", (double) rotationElementIndex);
         logDouble("FollowPath/targetRotationDeg", Math.toDegrees(targetRotationRad));
         logDouble("FollowPath/rotationControllerOutput", omega);
+        logDouble("FollowPath/rotationPidOutputRadPerSec", rotationPidOutput);
+        logBoolean("FollowPath/rotationOverrideActive", rotationOverrideActive);
+        logBoolean("FollowPath/rotationOverrideBypassesConstraints", rotationOverrideBypassesConstraints);
+        logDouble("FollowPath/rotationOverrideOmegaRadPerSec", rotationOverrideOmegaRadPerSec);
+        logDouble("FollowPath/outputOmegaRadPerSec", targetSpeeds.omegaRadiansPerSecond);
         logDouble("FollowPath/rotationErrorDeg", Math.toDegrees(currentRotationTargetRad.minus(currentPose.getRotation()).getRadians()));
         logDouble("FollowPath/currentRotationTargetInitRad", currentRotationTargetInitRad);
         logDouble("FollowPath/eventTriggerElementIndex", (double) eventTriggerElementIndex);

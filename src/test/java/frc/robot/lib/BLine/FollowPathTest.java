@@ -3,6 +3,7 @@ package frc.robot.lib.BLine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import edu.wpi.first.math.Pair;
@@ -41,6 +42,7 @@ class FollowPathTest {
         FollowPath.setDoubleLoggingConsumer(value -> {});
         FollowPath.setBooleanLoggingConsumer(value -> {});
         FollowPath.setTranslationListLoggingConsumer(value -> {});
+        FollowPath.clearRotationOverride();
     }
 
     @AfterEach
@@ -50,6 +52,7 @@ class FollowPathTest {
         FollowPath.setDoubleLoggingConsumer(value -> {});
         FollowPath.setBooleanLoggingConsumer(value -> {});
         FollowPath.setTranslationListLoggingConsumer(value -> {});
+        FollowPath.clearRotationOverride();
     }
 
     @Test
@@ -528,6 +531,128 @@ class FollowPathTest {
     }
 
     @Test
+    void rotationOverrideRejectsNullInputs() {
+        assertThrows(IllegalArgumentException.class, () -> FollowPath.overrideRotation(null));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> FollowPath.overrideRotation(() -> 0.0, null)
+        );
+    }
+
+    @Test
+    void normalRotationRunsWhenOverrideInactive() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Double> doubleLogs = new HashMap<>();
+        Map<String, Boolean> booleanLogs = new HashMap<>();
+        FollowPath.setDoubleLoggingConsumer((Pair<String, Double> pair) -> doubleLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.setBooleanLoggingConsumer((Pair<String, Boolean> pair) -> booleanLogs.put(pair.getFirst(), pair.getSecond()));
+
+        FollowPath command = createCommand(createDegenerateRotationPath(1.0), robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        double expectedOmega = 5.0 * Math.toRadians(1.0);
+        assertEquals(expectedOmega, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(expectedOmega, doubleLogs.get("FollowPath/rotationPidOutputRadPerSec"), 1e-9);
+        assertEquals(expectedOmega, doubleLogs.get("FollowPath/rotationControllerOutput"), 1e-9);
+        assertEquals(expectedOmega, doubleLogs.get("FollowPath/outputOmegaRadPerSec"), 1e-9);
+        assertEquals(0.0, doubleLogs.get("FollowPath/rotationOverrideOmegaRadPerSec"), 1e-9);
+        assertFalse(booleanLogs.get("FollowPath/rotationOverrideActive"));
+        assertFalse(booleanLogs.get("FollowPath/rotationOverrideBypassesConstraints"));
+    }
+
+    @Test
+    void rotationOverrideSupplierRunsEachExecute() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        AtomicInteger supplierCalls = new AtomicInteger(0);
+        FollowPath.overrideRotation(() -> {
+            supplierCalls.incrementAndGet();
+            return 0.25;
+        });
+
+        FollowPath command = createCommand(createDegenerateRotationPath(1.0), robot);
+        command.initialize();
+        runExecute(command, robot);
+        runExecute(command, robot);
+
+        assertEquals(2, supplierCalls.get(), "Override supplier should be sampled every execute cycle");
+        assertEquals(0.25, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+    }
+
+    @Test
+    void limitedRotationOverrideRespectsPathConstraints() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Double> doubleLogs = new HashMap<>();
+        Map<String, Boolean> booleanLogs = new HashMap<>();
+        FollowPath.setDoubleLoggingConsumer((Pair<String, Double> pair) -> doubleLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.setBooleanLoggingConsumer((Pair<String, Boolean> pair) -> booleanLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.overrideRotation(
+            () -> 10.0,
+            FollowPath.RotationOverrideBehavior.RESPECT_CONSTRAINTS
+        );
+
+        FollowPath command = createCommand(createDegenerateRotationPath(1.0), robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        double expectedLimitedOmega = Math.toRadians(TEST_GLOBAL_CONSTRAINTS.getMaxAccelerationDegPerSec2()) * 0.02;
+        assertEquals(expectedLimitedOmega, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(10.0, doubleLogs.get("FollowPath/rotationOverrideOmegaRadPerSec"), 1e-9);
+        assertEquals(expectedLimitedOmega, doubleLogs.get("FollowPath/outputOmegaRadPerSec"), 1e-9);
+        assertTrue(booleanLogs.get("FollowPath/rotationOverrideActive"));
+        assertFalse(booleanLogs.get("FollowPath/rotationOverrideBypassesConstraints"));
+    }
+
+    @Test
+    void defaultRotationOverrideSkipsPathFollowerOmegaLimits() {
+        MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
+        FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
+        Map<String, Double> doubleLogs = new HashMap<>();
+        Map<String, Boolean> booleanLogs = new HashMap<>();
+        FollowPath.setDoubleLoggingConsumer((Pair<String, Double> pair) -> doubleLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.setBooleanLoggingConsumer((Pair<String, Boolean> pair) -> booleanLogs.put(pair.getFirst(), pair.getSecond()));
+        FollowPath.overrideRotation(() -> 10.0);
+
+        FollowPath command = createCommand(createDegenerateRotationPath(1.0), robot);
+        command.initialize();
+        runExecute(command, robot);
+
+        assertEquals(0.0, robot.getRobotRelativeSpeeds().vxMetersPerSecond, 1e-9);
+        assertEquals(0.0, robot.getRobotRelativeSpeeds().vyMetersPerSecond, 1e-9);
+        assertEquals(10.0, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(10.0, doubleLogs.get("FollowPath/rotationOverrideOmegaRadPerSec"), 1e-9);
+        assertEquals(10.0, doubleLogs.get("FollowPath/rotationControllerOutput"), 1e-9);
+        assertEquals(10.0, doubleLogs.get("FollowPath/outputOmegaRadPerSec"), 1e-9);
+        assertTrue(booleanLogs.get("FollowPath/rotationOverrideActive"));
+        assertTrue(booleanLogs.get("FollowPath/rotationOverrideBypassesConstraints"));
+    }
+
+    @Test
+    void clearRotationOverrideRestoresNormalRotationForNewCommands() {
+        MutableRobot overrideRobot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
+        FollowPath.setTimestampSupplier(overrideRobot::getTimestampSeconds);
+        FollowPath.overrideRotation(() -> 10.0);
+        FollowPath overrideCommand = createCommand(createDegenerateRotationPath(1.0), overrideRobot);
+        overrideCommand.initialize();
+        runExecute(overrideCommand, overrideRobot);
+        assertEquals(10.0, overrideRobot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+
+        FollowPath.clearRotationOverride();
+
+        MutableRobot normalRobot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
+        FollowPath.setTimestampSupplier(normalRobot::getTimestampSeconds);
+        FollowPath normalCommand = createCommand(createDegenerateRotationPath(1.0), normalRobot);
+        normalCommand.initialize();
+        runExecute(normalCommand, normalRobot);
+
+        double expectedOmega = 5.0 * Math.toRadians(1.0);
+        assertEquals(expectedOmega, normalRobot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+    }
+
+    @Test
     void shouldMirrorVerticallyWhenSupplierReturnsTrue() {
         FlippingUtil.FieldSymmetry originalSymmetryType = FlippingUtil.symmetryType;
         try {
@@ -666,6 +791,14 @@ class FollowPathTest {
             new PIDController(0.0, 0.0, 0.0)
         ).withTRatioBasedTranslationHandoffs(useTRatioBasedTranslationHandoffs)
             .build(path);
+    }
+
+    private static Path createDegenerateRotationPath(double targetDegrees) {
+        return new Path(
+            new Path.TranslationTarget(new Translation2d(0.0, 0.0)),
+            new Path.RotationTarget(Rotation2d.fromDegrees(targetDegrees), 1.0),
+            new Path.TranslationTarget(new Translation2d(0.0, 0.0))
+        );
     }
 
     private static final class TestSubsystem implements Subsystem {}
