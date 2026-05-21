@@ -76,7 +76,7 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">BLineCommands</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
-<div class="block">Marker-safe command composition helpers for B-line autonomous routines.
+<div class="block">Marker-safe command composition helpers for BLine autonomous routines.
 
  <p>This class mirrors the WPILib <code>Commands</code> methods that accept child
  <code>Commands</code>. Each supplied child command is wrapped with
@@ -85,7 +85,7 @@ loadScripts(document, 'script');</script>
  its whole lifetime, while still letting WPILib schedule each child command
  normally when that child actually runs.
 
- <p>This is useful for autonomous routines that contain B-line event triggers:
+ <p>This is useful for autonomous routines that contain BLine event triggers:
 
  <pre><code>
  import static frc.robot.lib.BLine.BLineCommands.sequence;
@@ -128,51 +128,51 @@ loadScripts(document, 'script');</script>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#deadline(edu.wpi.first.wpilibj2.command.Command,edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">deadline</a><wbr>(edu.wpi.first.wpilibj2.command.Command&nbsp;deadline,
  edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.deadline(Command, Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.deadline(Command, Command...)</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#defer(java.util.function.Supplier,java.util.Set)" class="member-name-link">defer</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;edu.wpi.first.wpilibj2.command.Command&gt;&nbsp;supplier,
  <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Set.html" title="class or interface in java.util" class="external-link">Set</a>&lt;edu.wpi.first.wpilibj2.command.Subsystem&gt;&nbsp;requirements)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.defer(Supplier, Set)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.defer(Supplier, Set)</code>.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#deferredProxy(java.util.function.Supplier)" class="member-name-link">deferredProxy</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;edu.wpi.first.wpilibj2.command.Command&gt;&nbsp;supplier)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.deferredProxy(Supplier)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.deferredProxy(Supplier)</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#either(edu.wpi.first.wpilibj2.command.Command,edu.wpi.first.wpilibj2.command.Command,java.util.function.BooleanSupplier)" class="member-name-link">either</a><wbr>(edu.wpi.first.wpilibj2.command.Command&nbsp;onTrue,
  edu.wpi.first.wpilibj2.command.Command&nbsp;onFalse,
  <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/BooleanSupplier.html" title="class or interface in java.util.function" class="external-link">BooleanSupplier</a>&nbsp;selector)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.either(Command, Command, BooleanSupplier)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.either(Command, Command, BooleanSupplier)</code>.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parallel(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">parallel</a><wbr>(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.parallel(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.parallel(Command...)</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#race(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">race</a><wbr>(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.race(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.race(Command...)</code>.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#repeatingSequence(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">repeatingSequence</a><wbr>(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.repeatingSequence(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.repeatingSequence(Command...)</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;K&gt;&nbsp;edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#select(java.util.Map,java.util.function.Supplier)" class="member-name-link">select</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;K,<wbr>edu.wpi.first.wpilibj2.command.Command&gt;&nbsp;commands,
  <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;? extends K&gt;&nbsp;selector)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.select(Map, Supplier)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.select(Map, Supplier)</code>.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static edu.wpi.first.wpilibj2.command.Command</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#sequence(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">sequence</a><wbr>(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">B-line marker-safe counterpart to <code>Commands.sequence(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.sequence(Command...)</code>.</div>
 </div>
 </div>
 </div>
@@ -197,7 +197,7 @@ loadScripts(document, 'script');</script>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">either</span><wbr><span class="parameters">(edu.wpi.first.wpilibj2.command.Command&nbsp;onTrue,
  edu.wpi.first.wpilibj2.command.Command&nbsp;onFalse,
  <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/BooleanSupplier.html" title="class or interface in java.util.function" class="external-link">BooleanSupplier</a>&nbsp;selector)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.either(Command, Command, BooleanSupplier)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.either(Command, Command, BooleanSupplier)</code>.
 
  <p>The supplied branch commands are wrapped with <code>Command.asProxy()</code>
  before they are passed to WPILib. The returned conditional command does not
@@ -226,7 +226,7 @@ loadScripts(document, 'script');</script>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;K&gt;</span>
 <span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">select</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;K,<wbr>edu.wpi.first.wpilibj2.command.Command&gt;&nbsp;commands,
  <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;? extends K&gt;&nbsp;selector)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.select(Map, Supplier)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.select(Map, Supplier)</code>.
 
  <p>Each command in <code>commands</code> is wrapped with <code>Command.asProxy()</code>
  before it is passed to WPILib. The returned select command does not inherit
@@ -255,7 +255,7 @@ loadScripts(document, 'script');</script>
 <h3>defer</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">defer</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;edu.wpi.first.wpilibj2.command.Command&gt;&nbsp;supplier,
  <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Set.html" title="class or interface in java.util" class="external-link">Set</a>&lt;edu.wpi.first.wpilibj2.command.Subsystem&gt;&nbsp;requirements)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.defer(Supplier, Set)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.defer(Supplier, Set)</code>.
 
  <p>The command supplied at runtime is wrapped with <code>Command.asProxy()</code>
  before it is run by WPILib. The explicit <code>requirements</code> argument still
@@ -282,7 +282,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="deferredProxy(java.util.function.Supplier)">
 <h3>deferredProxy</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">deferredProxy</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Supplier.html" title="class or interface in java.util.function" class="external-link">Supplier</a>&lt;edu.wpi.first.wpilibj2.command.Command&gt;&nbsp;supplier)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.deferredProxy(Supplier)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.deferredProxy(Supplier)</code>.
 
  <p>The command supplied at runtime is wrapped with <code>Command.asProxy()</code>
  before it is run by WPILib. The returned deferred proxy has no requirements;
@@ -307,7 +307,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="sequence(edu.wpi.first.wpilibj2.command.Command...)">
 <h3>sequence</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">sequence</span><wbr><span class="parameters">(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.sequence(Command...)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.sequence(Command...)</code>.
 
  <p>Each supplied command is wrapped with <code>Command.asProxy()</code> before it
  is passed to WPILib. The returned sequence does not inherit the proxied
@@ -332,7 +332,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="repeatingSequence(edu.wpi.first.wpilibj2.command.Command...)">
 <h3>repeatingSequence</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">repeatingSequence</span><wbr><span class="parameters">(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.repeatingSequence(Command...)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.repeatingSequence(Command...)</code>.
 
  <p>Each supplied command is wrapped with <code>Command.asProxy()</code> before it
  is passed to WPILib. The returned repeating sequence does not inherit the
@@ -357,7 +357,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="parallel(edu.wpi.first.wpilibj2.command.Command...)">
 <h3>parallel</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">parallel</span><wbr><span class="parameters">(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.parallel(Command...)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.parallel(Command...)</code>.
 
  <p>Each supplied command is wrapped with <code>Command.asProxy()</code> before it
  is passed to WPILib. The returned parallel group does not inherit the
@@ -382,7 +382,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="race(edu.wpi.first.wpilibj2.command.Command...)">
 <h3>race</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">race</span><wbr><span class="parameters">(edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.race(Command...)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.race(Command...)</code>.
 
  <p>Each supplied command is wrapped with <code>Command.asProxy()</code> before it
  is passed to WPILib. The returned race group does not inherit the proxied
@@ -408,7 +408,7 @@ loadScripts(document, 'script');</script>
 <h3>deadline</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">edu.wpi.first.wpilibj2.command.Command</span>&nbsp;<span class="element-name">deadline</span><wbr><span class="parameters">(edu.wpi.first.wpilibj2.command.Command&nbsp;deadline,
  edu.wpi.first.wpilibj2.command.Command...&nbsp;commands)</span></div>
-<div class="block">B-line marker-safe counterpart to <code>Commands.deadline(Command, Command...)</code>.
+<div class="block">BLine marker-safe counterpart to <code>Commands.deadline(Command, Command...)</code>.
 
  <p>The deadline and parallel commands are wrapped with <code>Command.asProxy()</code>
  before they are passed to WPILib. The returned deadline group does not inherit

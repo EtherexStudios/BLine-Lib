@@ -48,7 +48,7 @@ loadScripts(document, 'script');</script>
 <div class="header">
 <h1>Index</h1>
 </div>
-<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a>
+<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a>
 <h2 class="title" id="I:A">A</h2>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/Path.html#addPathElement(frc.robot.lib.BLine.Path.PathElement)" class="member-name-link">addPathElement(Path.PathElement)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
@@ -60,7 +60,7 @@ loadScripts(document, 'script');</script>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html" class="type-name-link" title="class in frc.robot.lib.BLine">BLineCommands</a> - Class in <a href="frc/robot/lib/BLine/package-summary.html">frc.robot.lib.BLine</a></dt>
 <dd>
-<div class="block">Marker-safe command composition helpers for B-line autonomous routines.</div>
+<div class="block">Marker-safe command composition helpers for BLine autonomous routines.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#build(frc.robot.lib.BLine.Path)" class="member-name-link">build(Path)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
 <dd>
@@ -69,6 +69,11 @@ loadScripts(document, 'script');</script>
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#%3Cinit%3E(edu.wpi.first.wpilibj2.command.Subsystem,java.util.function.Supplier,java.util.function.Supplier,java.util.function.Consumer,edu.wpi.first.math.controller.PIDController,edu.wpi.first.math.controller.PIDController,edu.wpi.first.math.controller.PIDController)" class="member-name-link">Builder(Subsystem, Supplier&lt;Pose2d&gt;, Supplier&lt;ChassisSpeeds&gt;, Consumer&lt;ChassisSpeeds&gt;, PIDController, PIDController, PIDController)</a> - Constructor for class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
 <dd>
 <div class="block">Creates a new FollowPath Builder with the required configuration.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html#BYPASS_CONSTRAINTS" class="member-name-link">BYPASS_CONSTRAINTS</a> - Enum constant in enum class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html" title="enum class in frc.robot.lib.BLine">FollowPath.RotationOverrideBehavior</a></dt>
+<dd>
+<div class="block">BLine still rate-limits translation, but the supplied omega is restored after
+ path-follower limiting so the caller owns the final rotational command.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:C">C</h2>
@@ -79,6 +84,10 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="frc/robot/lib/BLine/ChassisRateLimiter.html#%3Cinit%3E()" class="member-name-link">ChassisRateLimiter()</a> - Constructor for class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/ChassisRateLimiter.html" title="class in frc.robot.lib.BLine">ChassisRateLimiter</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.html#clearRotationOverride()" class="member-name-link">clearRotationOverride()</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
+<dd>
+<div class="block">Clears the active rotation override, restoring normal path rotation control.</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html#constraints()" class="member-name-link">constraints()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html" title="class in frc.robot.lib.BLine">JsonUtils.ParsedPathComponents</a></dt>
 <dd>
 <div class="block">Returns the value of the <a href="./frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html#param-constraints"><code>constraints</code></a> record component.</div>
@@ -120,7 +129,7 @@ loadScripts(document, 'script');</script>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#deadline(edu.wpi.first.wpilibj2.command.Command,edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">deadline(Command, Command...)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.deadline(Command, Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.deadline(Command, Command...)</code>.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html#defaultGlobalConstraints()" class="member-name-link">defaultGlobalConstraints()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html" title="class in frc.robot.lib.BLine">JsonUtils.ParsedPathComponents</a></dt>
 <dd>
@@ -132,18 +141,18 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#defer(java.util.function.Supplier,java.util.Set)" class="member-name-link">defer(Supplier&lt;Command&gt;, Set&lt;Subsystem&gt;)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.defer(Supplier, Set)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.defer(Supplier, Set)</code>.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#deferredProxy(java.util.function.Supplier)" class="member-name-link">deferredProxy(Supplier&lt;Command&gt;)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.deferredProxy(Supplier)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.deferredProxy(Supplier)</code>.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:E">E</h2>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#either(edu.wpi.first.wpilibj2.command.Command,edu.wpi.first.wpilibj2.command.Command,java.util.function.BooleanSupplier)" class="member-name-link">either(Command, Command, BooleanSupplier)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.either(Command, Command, BooleanSupplier)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.either(Command, Command, BooleanSupplier)</code>.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html#elements()" class="member-name-link">elements()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html" title="class in frc.robot.lib.BLine">JsonUtils.ParsedPathComponents</a></dt>
 <dd>
@@ -256,6 +265,10 @@ loadScripts(document, 'script');</script>
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html" class="type-name-link" title="class in frc.robot.lib.BLine">FollowPath.Builder</a> - Class in <a href="frc/robot/lib/BLine/package-summary.html">frc.robot.lib.BLine</a></dt>
 <dd>
 <div class="block">Builder class for constructing <a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine"><code>FollowPath</code></a> commands with a fluent API.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html" class="type-name-link" title="enum class in frc.robot.lib.BLine">FollowPath.RotationOverrideBehavior</a> - Enum Class in <a href="frc/robot/lib/BLine/package-summary.html">frc.robot.lib.BLine</a></dt>
+<dd>
+<div class="block">Determines how a rotation override interacts with BLine's normal constraints.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/package-summary.html">frc.robot.lib.BLine</a> - package frc.robot.lib.BLine</dt>
 <dd>&nbsp;</dd>
@@ -513,11 +526,22 @@ loadScripts(document, 'script');</script>
 <div class="block">Mirror a field rotation across the field width centerline, maintaining a blue alliance origin.</div>
 </dd>
 </dl>
+<h2 class="title" id="I:O">O</h2>
+<dl class="index">
+<dt><a href="frc/robot/lib/BLine/FollowPath.html#overrideRotation(java.util.function.DoubleSupplier)" class="member-name-link">overrideRotation(DoubleSupplier)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
+<dd>
+<div class="block">Overrides the rotational output of all <code>FollowPath</code> commands.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.html#overrideRotation(java.util.function.DoubleSupplier,frc.robot.lib.BLine.FollowPath.RotationOverrideBehavior)" class="member-name-link">overrideRotation(DoubleSupplier, FollowPath.RotationOverrideBehavior)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
+<dd>
+<div class="block">Overrides the rotational output of all <code>FollowPath</code> commands.</div>
+</dd>
+</dl>
 <h2 class="title" id="I:P">P</h2>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#parallel(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">parallel(Command...)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.parallel(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.parallel(Command...)</code>.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html#%3Cinit%3E(java.util.ArrayList,frc.robot.lib.BLine.Path.PathConstraints,frc.robot.lib.BLine.Path.DefaultGlobalConstraints)" class="member-name-link">ParsedPathComponents(ArrayList&lt;Path.PathElement&gt;, Path.PathConstraints, Path.DefaultGlobalConstraints)</a> - Constructor for record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/JsonUtils.ParsedPathComponents.html" title="class in frc.robot.lib.BLine">JsonUtils.ParsedPathComponents</a></dt>
 <dd>
@@ -628,7 +652,7 @@ loadScripts(document, 'script');</script>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#race(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">race(Command...)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.race(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.race(Command...)</code>.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/Path.RangedConstraint.html#%3Cinit%3E(double,int,int)" class="member-name-link">RangedConstraint(double, int, int)</a> - Constructor for record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.RangedConstraint.html" title="class in frc.robot.lib.BLine">Path.RangedConstraint</a></dt>
 <dd>
@@ -652,7 +676,12 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#repeatingSequence(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">repeatingSequence(Command...)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.repeatingSequence(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.repeatingSequence(Command...)</code>.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html#RESPECT_CONSTRAINTS" class="member-name-link">RESPECT_CONSTRAINTS</a> - Enum constant in enum class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html" title="enum class in frc.robot.lib.BLine">FollowPath.RotationOverrideBehavior</a></dt>
+<dd>
+<div class="block">The supplied omega replaces the rotation PID output before BLine applies its
+ existing rotational velocity and acceleration limits.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/Path.RotationTarget.html#rotation()" class="member-name-link">rotation()</a> - Method in record class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.RotationTarget.html" title="class in frc.robot.lib.BLine">Path.RotationTarget</a></dt>
 <dd>
@@ -679,11 +708,11 @@ loadScripts(document, 'script');</script>
 <dl class="index">
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#select(java.util.Map,java.util.function.Supplier)" class="member-name-link">select(Map&lt;K, Command&gt;, Supplier&lt;? extends K&gt;)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.select(Map, Supplier)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.select(Map, Supplier)</code>.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#sequence(edu.wpi.first.wpilibj2.command.Command...)" class="member-name-link">sequence(Command...)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
-<div class="block">B-line marker-safe counterpart to <code>Commands.sequence(Command...)</code>.</div>
+<div class="block">BLine marker-safe counterpart to <code>Commands.sequence(Command...)</code>.</div>
 </dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.html#setBooleanLoggingConsumer(java.util.function.Consumer)" class="member-name-link">setBooleanLoggingConsumer(Consumer&lt;Pair&lt;String, Boolean&gt;&gt;)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.html" title="class in frc.robot.lib.BLine">FollowPath</a></dt>
 <dd>
@@ -862,7 +891,16 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Returns the enum constant of this class with the specified name.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html#valueOf(java.lang.String)" class="member-name-link">valueOf(String)</a> - Static method in enum class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html" title="enum class in frc.robot.lib.BLine">FollowPath.RotationOverrideBehavior</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this class with the specified name.</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/FlippingUtil.FieldSymmetry.html#values()" class="member-name-link">values()</a> - Static method in enum class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FlippingUtil.FieldSymmetry.html" title="enum class in frc.robot.lib.BLine">FlippingUtil.FieldSymmetry</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum class, in
+the order they are declared.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html#values()" class="member-name-link">values()</a> - Static method in enum class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.RotationOverrideBehavior.html" title="enum class in frc.robot.lib.BLine">FollowPath.RotationOverrideBehavior</a></dt>
 <dd>
 <div class="block">Returns an array containing the constants of this enum class, in
 the order they are declared.</div>
@@ -935,7 +973,7 @@ the order they are declared.</div>
 <div class="block">Enables or disables t_ratio-based translation handoffs.</div>
 </dd>
 </dl>
-<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a></main>
+<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:J">J</a>&nbsp;<a href="#I:K">K</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a></main>
 </div>
 </div>
 </body>

@@ -93,9 +93,36 @@ Path myPath = new Path("myPathFile");  // loads deploy/autos/paths/myPathFile.js
 Command followCommand = pathBuilder.build(myPath);
 ```
 
+### Rotation Override
+
+For paths that need another system to own robot heading temporarily, such as
+vision aiming while translating along a path, override the path follower's
+rotational output:
+
+```java
+FollowPath.overrideRotation(
+    () -> shooterAimController.getOmegaRadiansPerSecond()
+);
+
+// Later, when normal path rotation should resume:
+FollowPath.clearRotationOverride();
+```
+
+The default override behavior bypasses BLine's rotational velocity and
+acceleration constraints so the caller owns the final path-follower omega
+command. If the supplied omega should still respect BLine's rotation limits,
+use the explicit constrained mode:
+
+```java
+FollowPath.overrideRotation(
+    () -> shooterAimController.getOmegaRadiansPerSecond(),
+    FollowPath.RotationOverrideBehavior.RESPECT_CONSTRAINTS
+);
+```
+
 ### Command-Based Autos With Event Triggers
 
-When a B-line path contains event triggers that schedule WPILib commands, prefer
+When a BLine path contains event triggers that schedule WPILib commands, prefer
 `BLineCommands` for the surrounding command composition:
 
 ```java
@@ -112,7 +139,7 @@ Command auto = sequence(
 `BLineCommands` mirrors the WPILib `Commands` composition methods that accept
 child commands, but proxies those children before building the group. This keeps
 the outer auto from owning every child requirement for its whole lifetime, which
-lets B-line event-trigger commands use normal WPILib scheduling. See the
+lets BLine event-trigger commands use normal WPILib scheduling. See the
 `BLineCommands` Javadocs for method-by-method behavior and limitations. The API
 intentionally contains only WPILib `Commands` counterparts: `either`, `select`,
 `defer`, `deferredProxy`, `sequence`, `repeatingSequence`, `parallel`, `race`,
