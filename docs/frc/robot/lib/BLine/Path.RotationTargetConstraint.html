@@ -79,6 +79,7 @@ loadScripts(document, 'script');</script>
 <dt>Record Components:</dt>
 <dd><code><span id="param-maxVelocityDegPerSec">maxVelocityDegPerSec</span></code> - Maximum rotational velocity in degrees per second</dd>
 <dd><code><span id="param-maxAccelerationDegPerSec2">maxAccelerationDegPerSec2</span></code> - Maximum rotational acceleration in degrees per second squared</dd>
+<dd><code><span id="param-minVelocityDegPerSec">minVelocityDegPerSec</span></code> - Minimum rotational velocity baseline in degrees per second</dd>
 </dl>
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
@@ -89,7 +90,7 @@ loadScripts(document, 'script');</script>
 <dd><a href="Path.html" title="class in frc.robot.lib.BLine">Path</a></dd>
 </dl>
 <hr>
-<div class="type-signature"><span class="modifiers">public static record </span><span class="element-name type-name-label">Path.RotationTargetConstraint</span>(double&nbsp;maxVelocityDegPerSec, double&nbsp;maxAccelerationDegPerSec2)
+<div class="type-signature"><span class="modifiers">public static record </span><span class="element-name type-name-label">Path.RotationTargetConstraint</span>(double&nbsp;maxVelocityDegPerSec, double&nbsp;maxAccelerationDegPerSec2, double&nbsp;minVelocityDegPerSec)
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Record.html" title="class or interface in java.lang" class="external-link">Record</a>
 implements <a href="Path.PathElementConstraint.html" title="interface in frc.robot.lib.BLine">Path.PathElementConstraint</a></span></div>
 <div class="block">Constraints for a <a href="Path.RotationTarget.html" title="class in frc.robot.lib.BLine"><code>Path.RotationTarget</code></a>.</div>
@@ -106,7 +107,11 @@ implements <a href="Path.PathElementConstraint.html" title="interface in frc.rob
 <div class="table-header col-last">Description</div>
 <div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(double,double)" class="member-name-link">RotationTargetConstraint</a><wbr>(double&nbsp;maxVelocityDegPerSec,
  double&nbsp;maxAccelerationDegPerSec2)</code></div>
-<div class="col-last even-row-color">
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(double,double,double)" class="member-name-link">RotationTargetConstraint</a><wbr>(double&nbsp;maxVelocityDegPerSec,
+ double&nbsp;maxAccelerationDegPerSec2,
+ double&nbsp;minVelocityDegPerSec)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Creates an instance of a <code>RotationTargetConstraint</code> record class.</div>
 </div>
 </div>
@@ -143,9 +148,14 @@ implements <a href="Path.PathElementConstraint.html" title="interface in frc.rob
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns the value of the <a href="#param-maxVelocityDegPerSec"><code>maxVelocityDegPerSec</code></a> record component.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#toString()" class="member-name-link">toString</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>double</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#minVelocityDegPerSec()" class="member-name-link">minVelocityDegPerSec</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Returns the value of the <a href="#param-minVelocityDegPerSec"><code>minVelocityDegPerSec</code></a> record component.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#toString()" class="member-name-link">toString</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns a string representation of this record class.</div>
 </div>
 </div>
@@ -170,11 +180,20 @@ implements <a href="Path.PathElementConstraint.html" title="interface in frc.rob
 <h3>RotationTargetConstraint</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">RotationTargetConstraint</span><wbr><span class="parameters">(double&nbsp;maxVelocityDegPerSec,
  double&nbsp;maxAccelerationDegPerSec2)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="&lt;init&gt;(double,double,double)">
+<h3>RotationTargetConstraint</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">RotationTargetConstraint</span><wbr><span class="parameters">(double&nbsp;maxVelocityDegPerSec,
+ double&nbsp;maxAccelerationDegPerSec2,
+ double&nbsp;minVelocityDegPerSec)</span></div>
 <div class="block">Creates an instance of a <code>RotationTargetConstraint</code> record class.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>maxVelocityDegPerSec</code> - the value for the <a href="#param-maxVelocityDegPerSec"><code>maxVelocityDegPerSec</code></a> record component</dd>
 <dd><code>maxAccelerationDegPerSec2</code> - the value for the <a href="#param-maxAccelerationDegPerSec2"><code>maxAccelerationDegPerSec2</code></a> record component</dd>
+<dd><code>minVelocityDegPerSec</code> - the value for the <a href="#param-minVelocityDegPerSec"><code>minVelocityDegPerSec</code></a> record component</dd>
 </dl>
 </section>
 </li>
@@ -246,6 +265,17 @@ implements <a href="Path.PathElementConstraint.html" title="interface in frc.rob
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>the value of the <a href="#param-maxAccelerationDegPerSec2"><code>maxAccelerationDegPerSec2</code></a> record component</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="minVelocityDegPerSec()">
+<h3>minVelocityDegPerSec</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">double</span>&nbsp;<span class="element-name">minVelocityDegPerSec</span>()</div>
+<div class="block">Returns the value of the <a href="#param-minVelocityDegPerSec"><code>minVelocityDegPerSec</code></a> record component.</div>
+<dl class="notes">
+<dt>Returns:</dt>
+<dd>the value of the <a href="#param-minVelocityDegPerSec"><code>minVelocityDegPerSec</code></a> record component</dd>
 </dl>
 </section>
 </li>
