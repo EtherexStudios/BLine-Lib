@@ -76,7 +76,7 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">BLineCommands</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
-<div class="block">Marker-safe command composition helpers for autonomous routines.
+<div class="block">Command composition helpers that proxy child commands before delegating to WPILib.
 
  <p>This class mirrors the WPILib <code>Commands</code> methods that accept child
  <code>Commands</code>. Each supplied child command is wrapped with
@@ -85,7 +85,7 @@ loadScripts(document, 'script');</script>
  its whole lifetime, while still letting WPILib schedule each child command
  normally when that child actually runs.
 
- <p>This is useful for autonomous routines that contain event triggers:
+ <p>This is useful when a path contains event triggers:
 
  <pre><code>
  import static frc.robot.lib.BLine.BLineCommands.sequence;

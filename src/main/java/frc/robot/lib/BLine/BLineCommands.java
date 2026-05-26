@@ -11,7 +11,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * Marker-safe command composition helpers for autonomous routines.
+ * Command composition helpers that proxy child commands before delegating to WPILib.
  *
  * <p>This class mirrors the WPILib {@link Commands} methods that accept child
  * {@link Command Commands}. Each supplied child command is wrapped with
@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * its whole lifetime, while still letting WPILib schedule each child command
  * normally when that child actually runs.
  *
- * <p>This is useful for autonomous routines that contain event triggers:
+ * <p>This is useful when a path contains event triggers:
  *
      * <pre>{@code
      * import static frc.robot.lib.BLine.BLineCommands.sequence;
