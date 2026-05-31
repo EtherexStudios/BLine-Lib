@@ -62,6 +62,10 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Command composition helpers that proxy child commands before delegating to WPILib.</div>
 </dd>
+<dt><a href="frc/robot/lib/BLine/BLineField.html" class="type-name-link" title="class in frc.robot.lib.BLine">BLineField</a> - Class in <a href="frc/robot/lib/BLine/package-summary.html">frc.robot.lib.BLine</a></dt>
+<dd>
+<div class="block">Helpers for visualizing BLine paths on a WPILib <code>Field2d</code> widget.</div>
+</dd>
 <dt><a href="frc/robot/lib/BLine/FollowPath.Builder.html#build(frc.robot.lib.BLine.Path)" class="member-name-link">build(Path)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/FollowPath.Builder.html" title="class in frc.robot.lib.BLine">FollowPath.Builder</a></dt>
 <dd>
 <div class="block">Builds a FollowPath command for the specified path.</div>
@@ -146,6 +150,14 @@ loadScripts(document, 'script');</script>
 <dt><a href="frc/robot/lib/BLine/BLineCommands.html#deferredProxy(java.util.function.Supplier)" class="member-name-link">deferredProxy(Supplier&lt;Command&gt;)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineCommands.html" title="class in frc.robot.lib.BLine">BLineCommands</a></dt>
 <dd>
 <div class="block">Marker-safe counterpart to <code>Commands.deferredProxy(Supplier)</code>.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/BLineField.html#drawPath(edu.wpi.first.wpilibj.smartdashboard.Field2d,frc.robot.lib.BLine.Path)" class="member-name-link">drawPath(Field2d, Path)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineField.html" title="class in frc.robot.lib.BLine">BLineField</a></dt>
+<dd>
+<div class="block">Draws a path's planned polyline using a stable, generated object name.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/BLineField.html#drawPath(edu.wpi.first.wpilibj.smartdashboard.Field2d,java.lang.String,frc.robot.lib.BLine.Path)" class="member-name-link">drawPath(Field2d, String, Path)</a> - Static method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/BLineField.html" title="class in frc.robot.lib.BLine">BLineField</a></dt>
+<dd>
+<div class="block">Draws a path's planned polyline using the given object name.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:E">E</h2>
@@ -368,6 +380,10 @@ loadScripts(document, 'script');</script>
 <dt><a href="frc/robot/lib/BLine/Path.html#getStartPose(edu.wpi.first.math.geometry.Rotation2d)" class="member-name-link">getStartPose(Rotation2d)</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
 <dd>
 <div class="block">Gets the starting pose for this path.</div>
+</dd>
+<dt><a href="frc/robot/lib/BLine/Path.html#getTranslations()" class="member-name-link">getTranslations()</a> - Method in class frc.robot.lib.BLine.<a href="frc/robot/lib/BLine/Path.html" title="class in frc.robot.lib.BLine">Path</a></dt>
+<dd>
+<div class="block">Gets the ordered translations that make up this path's polyline.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:H">H</h2>
