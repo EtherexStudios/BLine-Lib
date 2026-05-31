@@ -1086,6 +1086,32 @@ public class Path {
     public List<PathElement> getPathElements() { return new ArrayList<>(pathElements); }
 
     /**
+     * Gets the ordered translations that make up this path's polyline.
+     *
+     * <p>The translations are taken from translation targets, with waypoints
+     * expanded automatically. Rotation targets and event triggers are ignored
+     * because they do not add vertices to the path polyline. Coordinates reflect
+     * this path's current flip/mirror state.
+     *
+     * @return Ordered translations for this path, or an empty list if the path is invalid
+     */
+    public List<Translation2d> getTranslations() {
+        List<Translation2d> translations = new ArrayList<>();
+        if (!isValid()) {
+            return translations;
+        }
+
+        for (PathElement element : pathElements) {
+            if (element instanceof TranslationTarget translationTarget) {
+                translations.add(translationTarget.translation());
+            } else if (element instanceof Waypoint waypoint) {
+                translations.add(waypoint.translationTarget().translation());
+            }
+        }
+        return translations;
+    }
+
+    /**
      * Sets the path elements, replacing all existing elements.
      * 
      * @param pathElements The new list of path elements

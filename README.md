@@ -145,6 +145,34 @@ intentionally contains only WPILib `Commands` counterparts: `either`, `select`,
 `defer`, `deferredProxy`, `sequence`, `repeatingSequence`, `parallel`, `race`,
 and `deadline`.
 
+### Field2d Visualization
+
+BLine paths are polylines, so visualizing them on a WPILib `Field2d` widget (in
+Elastic or Glass) needs no simulation. `BLineField` provides small helpers for
+drawing a BLine path directly as a connected field object:
+
+```java
+import frc.robot.lib.BLine.BLineField;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+Field2d field = new Field2d();
+SmartDashboard.putData("Field", field);
+
+// Draw a planned path once. BLine assigns a stable unique field object name for
+// this path instance and returns it if you want to inspect it.
+String objectName = BLineField.drawPath(field, myPath);
+
+// Or choose the display slot yourself. BLine appends "Trajectory" if needed.
+BLineField.drawPath(field, "ScoreTwo", myPath);
+```
+
+The no-name overload generates names like `"BLinePath0Trajectory"` per
+`Field2d`, reusing the same name when called again with the same `Path` instance.
+Explicit names are treated as user-owned display slots, so reusing
+`"ScoreTwo"` updates `"ScoreTwoTrajectory"`. If you only need the raw polyline
+points, use `myPath.getTranslations()`.
+
 ## Performance
 
 BLine has been validated through extensive testing with a WPILib physics simulation, utilizing Theta* for initial pathfinding and an Artificial Bee Colony (ABC) optimizer to benchmark the system against PathPlanner.

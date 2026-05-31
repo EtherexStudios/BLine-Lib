@@ -36,7 +36,10 @@ dependencies {
     implementation "edu.wpi.first.wpimath:wpimath-java:${wpiVersion}"
     implementation "edu.wpi.first.wpiutil:wpiutil-java:${wpiVersion}"
     implementation "edu.wpi.first.wpiunits:wpiunits-java:${wpiVersion}"
+    // Required by Field2d/SmartDashboard (NTSendable); wpilibj does not pull it transitively here.
+    compileOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
     compileOnly "com.fasterxml.jackson.core:jackson-annotations:2.18.3"
+    testCompileOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
     testCompileOnly "com.fasterxml.jackson.core:jackson-annotations:2.18.3"
     
     // JSON Simple for path loading
