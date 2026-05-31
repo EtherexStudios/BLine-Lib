@@ -51,7 +51,7 @@ Add the dependency:
 
 ```gradle
 dependencies {
-    implementation 'com.github.edanliahovetsky:BLine-Lib:v0.9.0'
+    implementation 'com.github.edanliahovetsky:BLine-Lib:v0.9.1'
 }
 ```
 
