@@ -1,12 +1,17 @@
 # BLine-Lib
 
-**BLine** is an open-source path generation and tracking suite designed for **holonomic drivetrains** (swerve, mecanum, etc.) made by students for students. It's built around simplicity and performance in time-constrained environments where quick iteration and rapid empirical testing prove advantageous.
+**BLine** is a rapid point-to-point autonomous path planning and tracking
+library for FIRST Robotics Competition. It is made by students for students and
+built around practical tuning, quick iteration, and rapid empirical testing in
+time-constrained build-season environments.
 
 📚 **[Documentation](https://bline-docs.pages.dev/)** — full guides, tutorials, and reference.
 
 📖 **[Javadoc](https://edanliahovetsky.github.io/BLine-Lib/)** — full Java API documentation.
 
-🎨 **[BLine-GUI](https://github.com/edanliahovetsky/BLine-GUI)** — visual path planning interface.
+🖥️ **[BLine Web](https://github.com/edanliahovetsky/BLine-Web)** — current web and desktop editor.
+
+🚀 **[Open the hosted editor](https://bline-web.pages.dev/)** — create, tune, preview, and export BLine paths in the browser.
 
 💬 **[Chief Delphi Thread](https://www.chiefdelphi.com/t/introducing-bline-a-new-rapid-polyline-autonomous-path-planning-suite/509778)** — discussion, feedback, and announcements.
 
