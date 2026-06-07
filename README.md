@@ -1,25 +1,35 @@
-# BLine-Lib
+<h1 align="center">BLine-Lib</h1>
+
+<p align="center">
+  <a href="BLine-Lib.json"><img src="https://img.shields.io/badge/version-v0.9.1-2563eb" alt="Version v0.9.1"></a>
+  <a href="BLine-Lib.json"><img src="https://img.shields.io/badge/FRC-2026-c1121f" alt="FRC 2026"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-0f766e" alt="BSD 3-Clause License"></a>
+</p>
 
 **BLine** is a rapid point-to-point autonomous path planning and tracking
 library for FIRST Robotics Competition. It is made by students for students and
 built around practical tuning, quick iteration, and rapid empirical testing in
 time-constrained build-season environments.
 
-📚 **[Documentation](https://bline-docs.pages.dev/)** — full guides, tutorials, and reference.
-
-📖 **[Javadoc](https://edanliahovetsky.github.io/BLine-Lib/)** — full Java API documentation.
-
-🖥️ **[BLine Web](https://github.com/edanliahovetsky/BLine-Web)** — current web and desktop editor.
+**Quick links**
 
 🚀 **[Open the hosted editor](https://bline-web.pages.dev/)** — create, tune, preview, and export BLine paths in the browser.
 
+🖥️ **[BLine Web](https://github.com/edanliahovetsky/BLine-Web)** — current web and desktop editor.
+
 💬 **[Chief Delphi Thread](https://www.chiefdelphi.com/t/introducing-bline-a-new-rapid-polyline-autonomous-path-planning-suite/509778)** — discussion, feedback, and announcements.
 
-![Robot Demo](docs/cone-demo.gif)
+📚 **[Documentation](https://bline-docs.pages.dev/)** — full guides, tutorials, and reference.
+
+<p align="center">
+  <img src="docs/readme/bline-web-demo.gif" alt="BLine Web editor GUI demo" width="900">
+  <br><br>
+  <img src="docs/cone-demo.gif" alt="BLine robot cone demo" width="900">
+</p>
 
 ## Installation
 
-### Using Vendor JSON (Recommended)
+### Vendor JSON (Recommended)
 
 BLine-Lib's recommended WPILib vendor URL is the BLine Metrics Worker endpoint.
 It serves the same vendor JSON as this repository while keeping aggregate fetch
@@ -31,7 +41,7 @@ counts for release health.
 4. Select **"Install new libraries (online)"**
 5. Paste the recommended vendor URL:
 
-```
+```text
 https://bline-metrics.edan-liahovetsky.workers.dev/vendor/BLine-Lib.json
 ```
 
@@ -42,9 +52,9 @@ as the fallback:
 https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/main/BLine-Lib.json
 ```
 
-### Using Gradle (Alternative)
+### Gradle Dependency (Alternative)
 
-Add JitPack repository to your `build.gradle`:
+Add the JitPack repository to your `build.gradle`:
 
 ```gradle
 repositories {
@@ -52,7 +62,7 @@ repositories {
 }
 ```
 
-Add the dependency:
+Then add the BLine-Lib dependency:
 
 ```gradle
 dependencies {
@@ -62,7 +72,7 @@ dependencies {
 
 ## Quick Start
 
-For a complete getting started guide, see the **[Full Documentation](https://bline-docs.pages.dev/getting-started/)**.
+For a complete walkthrough, see the **[getting started guide](https://bline-docs.pages.dev/getting-started/)**.
 
 ### Basic Setup
 
@@ -180,21 +190,25 @@ points, use `myPath.getTranslations()`.
 
 ## Performance
 
-BLine has been validated through extensive testing with a WPILib physics simulation, utilizing Theta* for initial pathfinding and an Artificial Bee Colony (ABC) optimizer to benchmark the system against PathPlanner.
+BLine has been validated with randomized Monte Carlo trials in a WPILib physics
+simulation, using Theta* for initial pathfinding and an Artificial Bee Colony
+(ABC) optimizer to benchmark the system against PathPlanner.
 
-**Quantitative Results** from randomized Monte Carlo trials:
+| Measurement | Result |
+| --- | --- |
+| Path computation time | **97% reduction** |
+| Cross-track error at waypoints | **66% reduction** |
+| Total path tracking time | **2.6% decrease** compared to PathPlanner |
 
-- **97% reduction** in path computation time
-- **66% reduction** in cross-track error at waypoints
-- Negligible **2.6% decrease** in total path tracking time compared to PathPlanner
+Read the **[full white paper](https://docs.google.com/document/d/1Tc87YKWHtsEMEvmVDBD1Ww4e7vIUO2FyK3lwwuf-ZL4/edit?usp=sharing)**.
 
-**[Read the Full White Paper](https://docs.google.com/document/d/1Tc87YKWHtsEMEvmVDBD1Ww4e7vIUO2FyK3lwwuf-ZL4/edit?usp=sharing)**
-
-## Building from Source
+## Build From Source
 
 ```bash
 ./gradlew build
 ```
+
+### API Reference
 
 Generate Javadoc locally:
 
@@ -203,16 +217,21 @@ Generate Javadoc locally:
 # Open build/docs/javadoc/index.html
 ```
 
+Published API reference: **[Javadoc](https://edanliahovetsky.github.io/BLine-Lib/)**.
+
 ## Troubleshooting
 
-If another robot repo consumes your local `BLine-Lib` checkout (for example via `includeBuild`) and you run `./gradlew clean` in this repo, you may need to rebuild the jar before the robot repo can package/sim successfully.
+If another robot repo consumes your local `BLine-Lib` checkout (for example via
+`includeBuild`) and you run `./gradlew clean` in this repo, rebuild the jar
+before the robot repo packages or runs simulation.
 
 ```bash
 ./gradlew jar
 ```
 
-This regenerates `build/libs/BLine-Lib-<version>.jar` that some downstream fat-jar tasks expect.
+This regenerates `build/libs/BLine-Lib-<version>.jar` for downstream fat-jar
+tasks.
 
 ## License
 
-BSD 3-Clause License — See [LICENSE](LICENSE) file.
+BSD 3-Clause License. See [LICENSE](LICENSE).
