@@ -787,6 +787,7 @@ public class Path {
     private static DefaultGlobalConstraints defaultGlobalConstraints = null;
     private boolean flipped = false;
     private boolean isValid = true;
+
     
     /**
      * Creates a new Path with the specified elements, constraints, and global defaults.
@@ -943,6 +944,7 @@ public class Path {
         return isValid;
     }
 
+    
     /**
      * Gets a copy of the current default global constraints.
      * 

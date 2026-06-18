@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.lib.BLine.Path.PathElement;
 import frc.robot.lib.BLine.Path.PathElementConstraint;
@@ -116,6 +117,7 @@ public class FollowPath extends Command {
     private static volatile DoubleSupplier rotationOverrideSupplier = null;
     private static volatile RotationOverrideBehavior rotationOverrideBehavior =
         RotationOverrideBehavior.BYPASS_CONSTRAINTS;
+
 
     private static void logDouble(String key, double value) {
         doubleLoggingConsumer.accept(new Pair<>(key, value));
@@ -304,6 +306,7 @@ public class FollowPath extends Command {
     
     
     private final Path path;
+    private FollowPath pathFollow;
     private final Supplier<Pose2d> poseSupplier;
     private final Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier;
     private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
@@ -324,7 +327,7 @@ public class FollowPath extends Command {
     private Rotation2d currentRotationTargetRad = new Rotation2d();
     private double currentRotationTargetInitRad = 0;
     private List<Pair<PathElement, PathElementConstraint>> pathElementsWithConstraints = new ArrayList<>();
-
+ private  int savedPathIndex = 0;
     private int logCounter = 0;
     private ArrayList<Translation2d> robotTranslations = new ArrayList<>();
     private double cachedRemainingDistance = 0.0;
@@ -414,7 +417,7 @@ public class FollowPath extends Command {
         private final PIDController translationController;
         private final PIDController rotationController;
         private final PIDController crossTrackController;
-        
+        private int savedPathIndex;
         private Supplier<Boolean> shouldFlipPathSupplier = () -> false;
         private Supplier<Boolean> shouldMirrorPathSupplier = () -> false;
         private Consumer<Pose2d> poseResetConsumer = (pose) -> {};
@@ -544,7 +547,7 @@ public class FollowPath extends Command {
          * @throws IllegalArgumentException if any required controllers are null
          */
         public FollowPath build(Path path) {
-            return new FollowPath(
+           return new FollowPath(
                 path,
                 driveSubsystem,
                 poseSupplier,
@@ -558,7 +561,45 @@ public class FollowPath extends Command {
                 rotationController,
                 crossTrackController
             );
+
+           
         }
+         //Saves the paths current translation index
+
+public int getSavedIndex() {
+    return savedPathIndex;
+}
+public Command pause(Supplier<Boolean> condition, Command command) {
+return command.until(() -> !condition.get());
+}
+  public  FollowPath resume(FollowPath pathFollow, Path originalPath, Translation2d robotPose) {
+    if (pathFollow == null) {
+        return null;
+    }
+    
+    // Get the current index where we left off
+     savedPathIndex = pathFollow.getCurrentTranslationElementIndex();
+    
+    // Get all the path elements from the original path
+    var flat = originalPath.getPathElementsWithConstraintsNoWaypoints();
+    
+    // Start from current robot position
+    List<Path.PathElement> remaining = new ArrayList<>();
+    remaining.add(
+        new Path.TranslationTarget(robotPose));
+    
+    // Add all remaining elements from where we left off
+    for (int j = getSavedIndex(); j < flat.size(); j++) {
+        remaining.add(flat.get(j).getFirst().copy());
+    }
+    
+    // Build a new path with the remaining elements
+    Path remainderPath = new Path(remaining, originalPath.getPathConstraints());
+    
+    // Return the command to follow the remaining path
+    return build(remainderPath);
+}
+        
     }
 
     /**
@@ -1547,6 +1588,7 @@ public class FollowPath extends Command {
     public int getCurrentRotationElementIndex() {
         return rotationElementIndex;
     }
+   
 
     /**
      * Gets the current translation element index in the path.
