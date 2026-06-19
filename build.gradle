@@ -15,7 +15,7 @@ java {
 
 repositories {
     maven {
-        url = "${System.getProperty('user.home')}/wpilib/2026/maven"
+        url = "${System.getProperty('user.home')}/wpilib/2027_alpha5/maven"
     }
     mavenCentral()
     

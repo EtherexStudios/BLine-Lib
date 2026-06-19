@@ -469,7 +469,7 @@ public class FollowPath extends Command {
          * Configures the builder to use the default alliance-based path flipping.
          * 
          * <p>When enabled, paths will automatically be flipped when the robot is on the
-         * red alliance, based on {@link org.wpilib.wpilibj.DriverStation#getAlliance()}.
+         * red alliance, based on {@link org.wpilib.driverstation.MatchState#getAlliance()}.
          *
          * <p>This setting persists for future {@link #build(Path)} calls until changed.
          * 
