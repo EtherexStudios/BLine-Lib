@@ -1,16 +1,16 @@
 package frc.robot.lib.BLine;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.math.util.Pair;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.system.Timer;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.Subsystem;
 import frc.robot.lib.BLine.Path.PathElement;
 import frc.robot.lib.BLine.Path.PathElementConstraint;
 import frc.robot.lib.BLine.Path.EventTrigger;
@@ -305,8 +305,8 @@ public class FollowPath extends Command {
     
     private final Path path;
     private final Supplier<Pose2d> poseSupplier;
-    private final Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier;
-    private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
+    private final Supplier<ChassisVelocities> robotRelativeSpeedsSupplier;
+    private final Consumer<ChassisVelocities> robotRelativeSpeedsConsumer;
     private final Supplier<Boolean> shouldFlipPathSupplier;
     private final Supplier<Boolean> shouldMirrorPathSupplier;
     private final Consumer<Pose2d> poseResetConsumer;
@@ -316,7 +316,7 @@ public class FollowPath extends Command {
     private int translationElementIndex = 0;
     private int eventTriggerElementIndex = 0;
 
-    private ChassisSpeeds lastSpeeds = new ChassisSpeeds();
+    private ChassisVelocities lastSpeeds = new ChassisVelocities();
     private double lastTimestamp = 0;
     private Pose2d pathInitStartPose = new Pose2d();
     private double previousRotationElementTargetRad = 0;   
@@ -409,8 +409,8 @@ public class FollowPath extends Command {
     public static class Builder {
         private final Subsystem driveSubsystem;
         private final Supplier<Pose2d> poseSupplier;
-        private final Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier;
-        private final Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer;
+        private final Supplier<ChassisVelocities> robotRelativeSpeedsSupplier;
+        private final Consumer<ChassisVelocities> robotRelativeSpeedsConsumer;
         private final PIDController translationController;
         private final PIDController rotationController;
         private final PIDController crossTrackController;
@@ -434,8 +434,8 @@ public class FollowPath extends Command {
         public Builder(
             Subsystem driveSubsystem, 
             Supplier<Pose2d> poseSupplier,
-            Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier,
-            Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer,
+            Supplier<ChassisVelocities> robotRelativeSpeedsSupplier,
+            Consumer<ChassisVelocities> robotRelativeSpeedsConsumer,
             PIDController translationController,
             PIDController rotationController,
             PIDController crossTrackController
@@ -469,7 +469,7 @@ public class FollowPath extends Command {
          * Configures the builder to use the default alliance-based path flipping.
          * 
          * <p>When enabled, paths will automatically be flipped when the robot is on the
-         * red alliance, based on {@link edu.wpi.first.wpilibj.DriverStation#getAlliance()}.
+         * red alliance, based on {@link org.wpilib.wpilibj.DriverStation#getAlliance()}.
          *
          * <p>This setting persists for future {@link #build(Path)} calls until changed.
          * 
@@ -567,9 +567,9 @@ public class FollowPath extends Command {
      * @return true if on the red alliance and the path should be flipped, false otherwise
      */
     private static boolean shouldFlipPath() {
-        var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
+        var alliance = org.wpilib.driverstation.MatchState.getAlliance();
         if (alliance.isPresent()) {
-            return alliance.get() == edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
+            return alliance.get() == org.wpilib.driverstation.Alliance.RED;
         }
         return false;
     }
@@ -578,8 +578,8 @@ public class FollowPath extends Command {
         Path path, 
         Subsystem driveSubsystem, 
         Supplier<Pose2d> poseSupplier, 
-        Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier,
-        Consumer<ChassisSpeeds> robotRelativeSpeedsConsumer,
+        Supplier<ChassisVelocities> robotRelativeSpeedsSupplier,
+        Consumer<ChassisVelocities> robotRelativeSpeedsConsumer,
         Supplier<Boolean> shouldFlipPathSupplier,
         Supplier<Boolean> shouldMirrorPathSupplier,
         Consumer<Pose2d> poseResetConsumer,
@@ -645,7 +645,7 @@ public class FollowPath extends Command {
         firedEventTriggerCount = 0;
         lastTimestamp = timestampSupplier.get();
         pathInitStartPose = poseSupplier.get();
-        lastSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeedsSupplier.get(), pathInitStartPose.getRotation());
+        lastSpeeds = robotRelativeSpeedsSupplier.get().toFieldRelative( pathInitStartPose.getRotation());
         previousRotationElementTargetRad = pathInitStartPose.getRotation().getRadians();
         previousRotationElementIndex = -1;
         currentRotationTargetInitRad = pathInitStartPose.getRotation().getRadians();
@@ -755,7 +755,7 @@ public class FollowPath extends Command {
 
         // Clamp translation controller output as to not overpower the crossTrackController output during the velo accel limiting phase
         double rawTranslationControllerOutput = -translationController.calculate(remainingDistance, 0);
-        double clampedTranslationControllerOutput = MathUtil.clamp(
+        double clampedTranslationControllerOutput = Math.clamp(
             rawTranslationControllerOutput,
             -translationConstraint.maxVelocityMetersPerSec(),
             translationConstraint.maxVelocityMetersPerSec()
@@ -860,7 +860,7 @@ public class FollowPath extends Command {
         double rawOmega = rotationPidOutput;
         double maxOmegaRadPerSec = Math.toRadians(rotationConstraint.maxVelocityDegPerSec());
         double minOmegaRadPerSec = Math.toRadians(rotationConstraint.minVelocityDegPerSec());
-        double clampedOmega = MathUtil.clamp(rawOmega, -maxOmegaRadPerSec, maxOmegaRadPerSec);
+        double clampedOmega = Math.clamp(rawOmega, -maxOmegaRadPerSec, maxOmegaRadPerSec);
         boolean shouldApplyRotationMinimum =
             Math.abs(rotationErrorRad) > Math.toRadians(path.getEndRotationToleranceDeg());
         double omega = applyMinimumMagnitude(
@@ -887,7 +887,7 @@ public class FollowPath extends Command {
         }
 
         // Phase 6: apply acceleration/velocity limiting and output final command.
-        ChassisSpeeds targetSpeeds = new ChassisSpeeds(vx, vy, omega);
+        ChassisVelocities targetSpeeds = new ChassisVelocities(vx, vy, omega);
         targetSpeeds = ChassisRateLimiter.limit(
             targetSpeeds, 
             lastSpeeds, 
@@ -898,14 +898,14 @@ public class FollowPath extends Command {
             Math.toRadians(rotationConstraint.maxVelocityDegPerSec())
         );
         if (rotationOverrideBypassesConstraints) {
-            targetSpeeds = new ChassisSpeeds(
-                targetSpeeds.vxMetersPerSecond,
-                targetSpeeds.vyMetersPerSecond,
+            targetSpeeds = new ChassisVelocities(
+                targetSpeeds.vx,
+                targetSpeeds.vy,
                 rotationOverrideOmegaRadPerSec
             );
         }
 
-        robotRelativeSpeedsConsumer.accept(ChassisSpeeds.fromFieldRelativeSpeeds(targetSpeeds, currentPose.getRotation()));
+        robotRelativeSpeedsConsumer.accept(targetSpeeds.toRobotRelative(currentPose.getRotation()));
 
         lastSpeeds = targetSpeeds;
 
@@ -932,7 +932,7 @@ public class FollowPath extends Command {
         logBoolean("FollowPath/rotationOverrideActive", rotationOverrideActive);
         logBoolean("FollowPath/rotationOverrideBypassesConstraints", rotationOverrideBypassesConstraints);
         logDouble("FollowPath/rotationOverrideOmegaRadPerSec", rotationOverrideOmegaRadPerSec);
-        logDouble("FollowPath/outputOmegaRadPerSec", targetSpeeds.omegaRadiansPerSecond);
+        logDouble("FollowPath/outputOmegaRadPerSec", targetSpeeds.omega);
         logDouble("FollowPath/minRotationVelocityDegPerSec", rotationConstraint.minVelocityDegPerSec());
         logDouble("FollowPath/maxRotationVelocityDegPerSec", rotationConstraint.maxVelocityDegPerSec());
         logBoolean("FollowPath/rotationMinimumApplied", rotationMinimumApplied);
@@ -976,7 +976,7 @@ public class FollowPath extends Command {
      * <p>Used on defensive early exits to avoid leaving stale nonzero velocity commands latched.
      */
     private void stopCommandedMotion() {
-        ChassisSpeeds zeroSpeeds = new ChassisSpeeds();
+        ChassisVelocities zeroSpeeds = new ChassisVelocities();
         robotRelativeSpeedsConsumer.accept(zeroSpeeds);
         lastSpeeds = zeroSpeeds;
     }

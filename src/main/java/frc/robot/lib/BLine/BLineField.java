@@ -8,10 +8,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.smartdashboard.Field2d;
 
 /**
  * Helpers for visualizing BLine paths on a WPILib {@link Field2d} widget.

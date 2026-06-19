@@ -1,7 +1,6 @@
 package frc.robot.lib.BLine;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import org.wpilib.math.kinematics.ChassisVelocities;
 
 /**
  * A utility class that limits the rate of change of chassis speeds for smooth motion control.
@@ -18,7 +17,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
  * 
  * <p>Example usage:
  * <pre>{@code
- * ChassisSpeeds limited = ChassisRateLimiter.limit(
+ * ChassisVelocities limited = ChassisRateLimiter.limit(
  *     desiredSpeeds,
  *     lastSpeeds,
  *     0.02,  // 20ms loop time
@@ -29,7 +28,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
  * );
  * }</pre>
  * 
- * @see edu.wpi.first.math.kinematics.ChassisSpeeds
+ * @see org.wpilib.math.kinematics.ChassisVelocities
  */
 public class ChassisRateLimiter {
     
@@ -55,13 +54,13 @@ public class ChassisRateLimiter {
      *                                              per second. Set to 0 or negative to disable velocity limiting.
      * @param maxAngularVelocityRadiansPerSec The maximum allowed angular velocity in radians per second.
      *                                         Set to 0 or negative to disable velocity limiting.
-     * @return A new {@link ChassisSpeeds} object with velocities constrained to the specified limits.
+     * @return A new {@link ChassisVelocities} object with velocities constrained to the specified limits.
      *         The returned speeds will not exceed the maximum velocities and the change from
      *         {@code lastSpeeds} will not exceed the maximum accelerations.
      */
-    public static ChassisSpeeds limit(
-        ChassisSpeeds desiredSpeeds, 
-        ChassisSpeeds lastSpeeds,
+    public static ChassisVelocities limit(
+        ChassisVelocities desiredSpeeds, 
+        ChassisVelocities lastSpeeds,
         double dt,
         double maxTranslationalAccelerationMetersPerSec2,
         double maxAngularAccelerationRadiansPerSec2,
@@ -70,19 +69,19 @@ public class ChassisRateLimiter {
     ) {
         if (maxTranslationalVelocityMetersPerSec > 0 && maxAngularVelocityRadiansPerSec > 0) {
             double desiredVelocity = Math.hypot(
-                desiredSpeeds.vxMetersPerSecond,
-                desiredSpeeds.vyMetersPerSecond
+                desiredSpeeds.vx,
+                desiredSpeeds.vy
             );
             if (desiredVelocity > maxTranslationalVelocityMetersPerSec) {
                 double scaleFactor = maxTranslationalVelocityMetersPerSec / desiredVelocity;
-                desiredSpeeds = new ChassisSpeeds(
-                    desiredSpeeds.vxMetersPerSecond * scaleFactor,
-                    desiredSpeeds.vyMetersPerSecond * scaleFactor,
-                    desiredSpeeds.omegaRadiansPerSecond
+                desiredSpeeds = new ChassisVelocities(
+                    desiredSpeeds.vx * scaleFactor,
+                    desiredSpeeds.vy * scaleFactor,
+                    desiredSpeeds.omega
                 );
             }
-            desiredSpeeds.omegaRadiansPerSecond = MathUtil.clamp(
-                desiredSpeeds.omegaRadiansPerSecond,
+            desiredSpeeds.omega = Math.clamp(
+                desiredSpeeds.omega,
                 -maxAngularVelocityRadiansPerSec,
                 maxAngularVelocityRadiansPerSec
             );
@@ -93,33 +92,33 @@ public class ChassisRateLimiter {
         }
         
         double desiredAcceleration = Math.hypot(
-            desiredSpeeds.vxMetersPerSecond - lastSpeeds.vxMetersPerSecond,
-            desiredSpeeds.vyMetersPerSecond - lastSpeeds.vyMetersPerSecond
+            desiredSpeeds.vx - lastSpeeds.vx,
+            desiredSpeeds.vy - lastSpeeds.vy
         ) / dt;
 
-        double obtainableAcceleration = MathUtil.clamp(
+        double obtainableAcceleration = Math.clamp(
             desiredAcceleration,
             0,
             maxTranslationalAccelerationMetersPerSec2
         );
 
         double theta = Math.atan2(
-            desiredSpeeds.vyMetersPerSecond - lastSpeeds.vyMetersPerSecond,
-            desiredSpeeds.vxMetersPerSecond - lastSpeeds.vxMetersPerSecond
+            desiredSpeeds.vy - lastSpeeds.vy,
+            desiredSpeeds.vx - lastSpeeds.vx
         );
 
-        double desiredOmegaAcceleration = (desiredSpeeds.omegaRadiansPerSecond - lastSpeeds.omegaRadiansPerSecond) / dt;
+        double desiredOmegaAcceleration = (desiredSpeeds.omega - lastSpeeds.omega) / dt;
 
-        double obtainableOmegaAcceleration = MathUtil.clamp(
+        double obtainableOmegaAcceleration = Math.clamp(
             desiredOmegaAcceleration,
             -maxAngularAccelerationRadiansPerSec2,
             maxAngularAccelerationRadiansPerSec2
         );
 
-        return new ChassisSpeeds(
-            lastSpeeds.vxMetersPerSecond + Math.cos(theta) * obtainableAcceleration * dt,
-            lastSpeeds.vyMetersPerSecond + Math.sin(theta) * obtainableAcceleration * dt,
-            lastSpeeds.omegaRadiansPerSecond + obtainableOmegaAcceleration * dt
+        return new ChassisVelocities(
+            lastSpeeds.vx + Math.cos(theta) * obtainableAcceleration * dt,
+            lastSpeeds.vy + Math.sin(theta) * obtainableAcceleration * dt,
+            lastSpeeds.omega + obtainableOmegaAcceleration * dt
         );
     }
 }

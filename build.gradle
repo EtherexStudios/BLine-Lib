@@ -26,29 +26,29 @@ repositories {
 }
 
 ext {
-    wpiVersion = "2026.1.1"
+    wpiVersion = "2027.0.0-alpha-6"
 }
 
 dependencies {
     // WPILib dependencies
-    implementation "edu.wpi.first.wpilibj:wpilibj-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpilibNewCommands:wpilibNewCommands-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpimath:wpimath-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpiutil:wpiutil-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpiunits:wpiunits-java:${wpiVersion}"
+    implementation "org.wpilib.wpilibj:wpilibj-java:${wpiVersion}"
+    implementation "org.wpilib.commandsv2:commandsv2-java:${wpiVersion}"
+    implementation "org.wpilib.wpimath:wpimath-java:${wpiVersion}"
+    implementation "org.wpilib.wpiutil:wpiutil-java:${wpiVersion}"
+    implementation "org.wpilib.wpiunits:wpiunits-java:${wpiVersion}"
     // Required by Field2d/SmartDashboard (NTSendable); wpilibj does not pull it transitively here.
-    compileOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
+    compileOnly "org.wpilib.ntcore:ntcore-java:${wpiVersion}"
     compileOnly "com.fasterxml.jackson.core:jackson-annotations:2.18.3"
-    testCompileOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
+    testCompileOnly "org.wpilib.ntcore:ntcore-java:${wpiVersion}"
     testCompileOnly "com.fasterxml.jackson.core:jackson-annotations:2.18.3"
     
     // JSON Simple for path loading
     implementation "com.googlecode.json-simple:json-simple:1.1.1"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
-    testRuntimeOnly "edu.wpi.first.hal:hal-java:${wpiVersion}"
-    testRuntimeOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
-    testRuntimeOnly "edu.wpi.first.wpinet:wpinet-java:${wpiVersion}"
+    testRuntimeOnly "org.wpilib.hal:hal-java:${wpiVersion}"
+    testRuntimeOnly "org.wpilib.ntcore:ntcore-java:${wpiVersion}"
+    testRuntimeOnly "org.wpilib.wpinet:wpinet-java:${wpiVersion}"
     testRuntimeOnly "com.fasterxml.jackson.core:jackson-databind:2.19.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
     testRuntimeOnly "us.hebi.quickbuf:quickbuf-runtime:1.4"
