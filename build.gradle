@@ -50,7 +50,7 @@ dependencies {
     implementation "com.googlecode.json-simple:json-simple:1.1.1"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
-    testRuntimeOnly "org.wpilib.hal:hal-java:${wpiVersion}"
+    testImplementation "org.wpilib.hal:hal-java:${wpiVersion}"
     testRuntimeOnly "org.wpilib.ntcore:ntcore-java:${wpiVersion}"
     testRuntimeOnly "org.wpilib.wpinet:wpinet-java:${wpiVersion}"
     testRuntimeOnly "com.fasterxml.jackson.core:jackson-databind:2.19.2"
