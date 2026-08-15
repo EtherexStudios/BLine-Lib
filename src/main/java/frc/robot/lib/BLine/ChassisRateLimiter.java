@@ -59,7 +59,7 @@ public class ChassisRateLimiter {
      *         {@code lastSpeeds} will not exceed the maximum accelerations.
      */
     public static ChassisVelocities limit(
-        ChassisVelocities desiredSpeeds, 
+        ChassisVelocities desiredSpeeds,
         ChassisVelocities lastSpeeds,
         double dt,
         double maxTranslationalAccelerationMetersPerSec2,
