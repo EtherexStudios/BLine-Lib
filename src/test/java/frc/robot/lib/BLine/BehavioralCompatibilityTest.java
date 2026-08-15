@@ -38,27 +38,31 @@ class BehavioralCompatibilityTest {
     );
 
     private final CommandScheduler scheduler = CommandScheduler.getInstance();
+    private double originalFieldSizeX;
+    private double originalFieldSizeY;
+    private FlippingUtil.FieldSymmetry originalSymmetryType;
 
     @BeforeEach
     void setUp() {
-        resetFieldConfiguration();
-        DriverStationSim.resetData();
-        DriverStationSim.notifyNewData();
+        originalFieldSizeX = FlippingUtil.fieldSizeX;
+        originalFieldSizeY = FlippingUtil.fieldSizeY;
+        originalSymmetryType = FlippingUtil.symmetryType;
+        resetDriverStation();
     }
 
     @AfterEach
     void tearDown() {
         resetScheduler();
         scheduler.enable();
-        DriverStationSim.resetData();
-        DriverStationSim.notifyNewData();
-        resetFieldConfiguration();
+        resetDriverStation();
+        FlippingUtil.fieldSizeX = originalFieldSizeX;
+        FlippingUtil.fieldSizeY = originalFieldSizeY;
+        FlippingUtil.symmetryType = originalSymmetryType;
     }
 
-    private static void resetFieldConfiguration() {
-        FlippingUtil.fieldSizeX = 16.54;
-        FlippingUtil.fieldSizeY = 8.07;
-        FlippingUtil.symmetryType = FlippingUtil.FieldSymmetry.kRotational;
+    private static void resetDriverStation() {
+        DriverStationSim.resetData();
+        DriverStationSim.notifyNewData();
     }
 
     @Test
