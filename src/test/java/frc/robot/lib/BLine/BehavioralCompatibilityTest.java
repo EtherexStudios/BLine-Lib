@@ -38,8 +38,7 @@ class BehavioralCompatibilityTest {
 
     @AfterEach
     void tearDown() {
-        scheduler.cancelAll();
-        scheduler.clearComposedCommands();
+        resetScheduler();
         scheduler.enable();
         FlippingUtil.fieldSizeX = 16.54;
         FlippingUtil.fieldSizeY = 8.07;
@@ -90,10 +89,9 @@ class BehavioralCompatibilityTest {
             .ignoringDisable(true);
 
         scheduleAndRunOnce(flippedCommand);
-        assertPose(flippedRobot.pose, 16.75, 6.50, -150.0);
+        assertPose(flippedRobot.pose, new Pose2d(16.75, 6.50, Rotation2d.fromDegrees(-150.0)));
 
-        scheduler.cancelAll();
-        scheduler.clearComposedCommands();
+        resetScheduler();
 
         MutableRobot mirroredRobot = new MutableRobot();
         Command mirroredCommand = builder(mirroredRobot)
@@ -103,7 +101,7 @@ class BehavioralCompatibilityTest {
             .ignoringDisable(true);
 
         scheduleAndRunOnce(mirroredCommand);
-        assertPose(mirroredRobot.pose, 1.25, 6.50, -30.0);
+        assertPose(mirroredRobot.pose, new Pose2d(1.25, 6.50, Rotation2d.fromDegrees(-30.0)));
     }
 
     @Test
@@ -123,7 +121,7 @@ class BehavioralCompatibilityTest {
         scheduler.run();
 
         assertTrue(scheduler.isScheduled(scheduledFollower));
-        assertPose(robot.pose, 1.25, 2.50, 30.0);
+        assertPose(robot.pose, new Pose2d(1.25, 2.50, Rotation2d.fromDegrees(30.0)));
         assertTrue(
             Math.hypot(robot.commandedSpeeds.vx, robot.commandedSpeeds.vy) > 0.0,
             "Follower should command translation while the mutable pose is at the path start"
@@ -164,6 +162,11 @@ class BehavioralCompatibilityTest {
         assertTrue(scheduler.isScheduled(command));
     }
 
+    private void resetScheduler() {
+        scheduler.cancelAll();
+        scheduler.clearComposedCommands();
+    }
+
     private static Path loadRepresentativePath() throws URISyntaxException {
         return new Path(resourceAutosDirectory(), "behavior-parity");
     }
@@ -174,10 +177,10 @@ class BehavioralCompatibilityTest {
         return new File(resource.toURI());
     }
 
-    private static void assertPose(Pose2d pose, double x, double y, double degrees) {
-        assertEquals(x, pose.getX(), EPSILON);
-        assertEquals(y, pose.getY(), EPSILON);
-        assertEquals(degrees, pose.getRotation().getDegrees(), EPSILON);
+    private static void assertPose(Pose2d actual, Pose2d expected) {
+        assertEquals(expected.getX(), actual.getX(), EPSILON);
+        assertEquals(expected.getY(), actual.getY(), EPSILON);
+        assertEquals(expected.getRotation().getDegrees(), actual.getRotation().getDegrees(), EPSILON);
     }
 
     private static final class TestDriveSubsystem implements Subsystem {}
