@@ -21,7 +21,7 @@ repositories {
     
     // WPILib Maven repository
     maven {
-        url = "https://frcmaven.wpi.edu/artifactory/release/"
+        url = "https://frcmaven.wpi.edu/artifactory/release-2027/"
     }
 }
 
