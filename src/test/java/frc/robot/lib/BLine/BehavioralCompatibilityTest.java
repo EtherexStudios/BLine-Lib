@@ -5,16 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.Subsystem;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.util.Pair;
 import frc.robot.lib.BLine.Path.PathElement;
 import frc.robot.lib.BLine.Path.PathElementConstraint;
 import frc.robot.lib.BLine.Path.TranslationTargetConstraint;
@@ -125,7 +125,7 @@ class BehavioralCompatibilityTest {
         assertTrue(scheduler.isScheduled(scheduledFollower));
         assertPose(robot.pose, 1.25, 2.50, 30.0);
         assertTrue(
-            Math.hypot(robot.commandedSpeeds.vxMetersPerSecond, robot.commandedSpeeds.vyMetersPerSecond) > 0.0,
+            Math.hypot(robot.commandedSpeeds.vx, robot.commandedSpeeds.vy) > 0.0,
             "Follower should command translation while the mutable pose is at the path start"
         );
 
@@ -141,9 +141,9 @@ class BehavioralCompatibilityTest {
         }
 
         assertFalse(scheduler.isScheduled(scheduledFollower), "Follower should finish at the loaded path endpoint");
-        assertEquals(0.0, robot.commandedSpeeds.vxMetersPerSecond, EPSILON);
-        assertEquals(0.0, robot.commandedSpeeds.vyMetersPerSecond, EPSILON);
-        assertEquals(0.0, robot.commandedSpeeds.omegaRadiansPerSecond, EPSILON);
+        assertEquals(0.0, robot.commandedSpeeds.vx, EPSILON);
+        assertEquals(0.0, robot.commandedSpeeds.vy, EPSILON);
+        assertEquals(0.0, robot.commandedSpeeds.omega, EPSILON);
     }
 
     private static FollowPath.Builder builder(MutableRobot robot) {
@@ -184,7 +184,7 @@ class BehavioralCompatibilityTest {
 
     private static final class MutableRobot {
         private Pose2d pose = new Pose2d();
-        private ChassisSpeeds commandedSpeeds = new ChassisSpeeds();
+        private ChassisVelocities commandedSpeeds = new ChassisVelocities();
 
         private Pose2d getPose() {
             return pose;
@@ -194,11 +194,11 @@ class BehavioralCompatibilityTest {
             this.pose = pose;
         }
 
-        private ChassisSpeeds getSpeeds() {
+        private ChassisVelocities getSpeeds() {
             return commandedSpeeds;
         }
 
-        private void acceptSpeeds(ChassisSpeeds speeds) {
+        private void acceptSpeeds(ChassisVelocities speeds) {
             commandedSpeeds = speeds;
         }
     }
