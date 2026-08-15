@@ -128,8 +128,7 @@ task copyJavadocToDocs(type: Copy) {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-// Run copyJavadocToDocs after javadoc generation
-javadoc.finalizedBy copyJavadocToDocs
+// GitHub Pages remains stable-only; compatibility artifacts still include the Javadoc jar.
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
