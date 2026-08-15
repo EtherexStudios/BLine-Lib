@@ -25,7 +25,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run tests and publish to Maven local
-        run: ./gradlew test publishToMavenLocal --no-daemon
+      - name: Build, test, and publish to Maven local
+        run: ./gradlew build publishToMavenLocal --no-daemon
         env:
           GRADLE_OPTS: -Dmaven.repo.local=${{ runner.temp }}/m2
