@@ -7,15 +7,15 @@ group = 'com.github.edanliahovetsky'
 version = '0.9.1'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
     withSourcesJar()
     withJavadocJar()
 }
 
 repositories {
     maven {
-        url = "${System.getProperty('user.home')}/wpilib/2026/maven"
+        url = "${System.getProperty('user.home')}/wpilib/2027_alpha5/maven"
     }
     mavenCentral()
     
@@ -26,35 +26,35 @@ repositories {
 }
 
 ext {
-    wpiVersion = "2026.1.1"
+    wpiVersion = "2027.0.0-alpha-6"
 }
 
 dependencies {
     // WPILib dependencies
-    implementation "edu.wpi.first.wpilibj:wpilibj-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpilibNewCommands:wpilibNewCommands-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpimath:wpimath-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpiutil:wpiutil-java:${wpiVersion}"
-    implementation "edu.wpi.first.wpiunits:wpiunits-java:${wpiVersion}"
+    implementation "org.wpilib.wpilibj:wpilibj-java:${wpiVersion}"
+    implementation "org.wpilib.commandsv2:commandsv2-java:${wpiVersion}"
+    implementation "org.wpilib.wpimath:wpimath-java:${wpiVersion}"
+    implementation "org.wpilib.wpiutil:wpiutil-java:${wpiVersion}"
+    implementation "org.wpilib.wpiunits:wpiunits-java:${wpiVersion}"
     // Required by Field2d/SmartDashboard (NTSendable); wpilibj does not pull it transitively here.
-    compileOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
+    compileOnly "org.wpilib.ntcore:ntcore-java:${wpiVersion}"
     compileOnly "com.fasterxml.jackson.core:jackson-annotations:2.18.3"
-    testCompileOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
+    testCompileOnly "org.wpilib.ntcore:ntcore-java:${wpiVersion}"
     testCompileOnly "com.fasterxml.jackson.core:jackson-annotations:2.18.3"
     
     // JSON Simple for path loading
     implementation "com.googlecode.json-simple:json-simple:1.1.1"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
-    testRuntimeOnly "edu.wpi.first.hal:hal-java:${wpiVersion}"
-    testRuntimeOnly "edu.wpi.first.ntcore:ntcore-java:${wpiVersion}"
-    testRuntimeOnly "edu.wpi.first.wpinet:wpinet-java:${wpiVersion}"
+    testRuntimeOnly "org.wpilib.hal:hal-java:${wpiVersion}"
+    testRuntimeOnly "org.wpilib.ntcore:ntcore-java:${wpiVersion}"
+    testRuntimeOnly "org.wpilib.wpinet:wpinet-java:${wpiVersion}"
     testRuntimeOnly "com.fasterxml.jackson.core:jackson-databind:2.19.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
     testRuntimeOnly "us.hebi.quickbuf:quickbuf-runtime:1.4"
 }
 
-def wpilibLocalMaven = file("${System.getProperty('user.home')}/wpilib/2026/maven")
+def wpilibLocalMaven = file("${System.getProperty('user.home')}/wpilib/2027_alpha5/maven")
 def currentOperatingSystem = org.gradle.internal.os.OperatingSystem.current()
 def wpilibNativeClassifier = currentOperatingSystem.isMacOsX()
     ? "osxuniversal"
@@ -66,10 +66,10 @@ def wpilibNativeSharedPath = currentOperatingSystem.isMacOsX()
     : currentOperatingSystem.isWindows()
         ? "windows/x86-64/shared"
         : "linux/x86-64/shared"
-def wpilibHalNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/hal/hal-cpp/${wpiVersion}/hal-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
-def wpilibUtilNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/wpiutil/wpiutil-cpp/${wpiVersion}/wpiutil-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
-def wpilibNtcoreNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/ntcore/ntcore-cpp/${wpiVersion}/ntcore-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
-def wpilibNetNativeZip = file("${wpilibLocalMaven}/edu/wpi/first/wpinet/wpinet-cpp/${wpiVersion}/wpinet-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibHalNativeZip = file("${wpilibLocalMaven}/org/wpilib/hal/hal-cpp/${wpiVersion}/hal-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibUtilNativeZip = file("${wpilibLocalMaven}/org/wpilib/wpiutil/wpiutil-cpp/${wpiVersion}/wpiutil-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibNtcoreNativeZip = file("${wpilibLocalMaven}/org/wpilib/ntcore/ntcore-cpp/${wpiVersion}/ntcore-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
+def wpilibNetNativeZip = file("${wpilibLocalMaven}/org/wpilib/wpinet/wpinet-cpp/${wpiVersion}/wpinet-cpp-${wpiVersion}-${wpilibNativeClassifier}.zip")
 def wpilibTestNativeDir = layout.buildDirectory.dir("wpilib-test-natives")
 
 tasks.register('extractWpilibTestNatives', Copy) {

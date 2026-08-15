@@ -78,7 +78,7 @@ For a complete walkthrough, see the **[getting started guide](https://bline-docs
 
 ```java
 import frc.robot.lib.BLine.*;
-import edu.wpi.first.math.controller.PIDController;
+import org.wpilib.math.controller.PIDController;
 
 // 1. Set global constraints
 Path.setDefaultGlobalConstraints(new Path.DefaultGlobalConstraints(
@@ -142,7 +142,7 @@ When a BLine path contains event triggers that schedule WPILib commands, prefer
 
 ```java
 import static frc.robot.lib.BLine.BLineCommands.sequence;
-import edu.wpi.first.wpilibj2.command.Command;
+import org.wpilib.command2.Command;
 
 Command auto = sequence(
     shooter.shoot().withTimeout(2.0),
@@ -168,8 +168,8 @@ drawing a BLine path directly as a connected field object:
 
 ```java
 import frc.robot.lib.BLine.BLineField;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.wpilib.smartdashboard.Field2d;
+import org.wpilib.smartdashboard.SmartDashboard;
 
 Field2d field = new Field2d();
 SmartDashboard.putData("Field", field);

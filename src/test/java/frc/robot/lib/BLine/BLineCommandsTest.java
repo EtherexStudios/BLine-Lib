@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.Subsystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -281,8 +281,8 @@ class BLineCommandsTest {
     private static boolean isWpilibHalRuntimeAvailable() {
         try {
             ClassLoader classLoader = BLineCommandsTest.class.getClassLoader();
-            Class.forName("edu.wpi.first.hal.NotifierJNI", false, classLoader);
-            Class.forName("edu.wpi.first.networktables.NetworkTableInstance", false, classLoader);
+            Class.forName("org.wpilib.hal.NotifierJNI", false, classLoader);
+            Class.forName("org.wpilib.networktables.NetworkTableInstance", false, classLoader);
             Class.forName("com.fasterxml.jackson.databind.ObjectMapper", false, classLoader);
             return isLibraryOnPath("wpiHaljni") &&
                 isLibraryOnPath("ntcorejni") &&

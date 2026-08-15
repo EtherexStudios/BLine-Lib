@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import org.wpilib.math.util.Pair;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.command2.Subsystem;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -614,7 +614,7 @@ class FollowPathTest {
     void invalidPathFinishesImmediatelyAndCommandsZeroSpeeds() {
         MutableRobot robot = new MutableRobot(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
         FollowPath.setTimestampSupplier(robot::getTimestampSeconds);
-        robot.setRobotRelativeSpeeds(new ChassisSpeeds(1.5, -0.3, 0.7));
+        robot.setRobotRelativeSpeeds(new ChassisVelocities(1.5, -0.3, 0.7));
         Path invalidPath = new Path(
             new Path.RotationTarget(Rotation2d.fromDegrees(30.0), 0.5)
         );
@@ -667,7 +667,7 @@ class FollowPathTest {
         runExecute(command, robot);
 
         double expectedOmega = 5.0 * Math.toRadians(1.0);
-        assertEquals(expectedOmega, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(expectedOmega, robot.getRobotRelativeSpeeds().omega, 1e-9);
         assertEquals(expectedOmega, doubleLogs.get("FollowPath/rotationPidOutputRadPerSec"), 1e-9);
         assertEquals(expectedOmega, doubleLogs.get("FollowPath/rotationControllerOutput"), 1e-9);
         assertEquals(expectedOmega, doubleLogs.get("FollowPath/outputOmegaRadPerSec"), 1e-9);
@@ -692,7 +692,7 @@ class FollowPathTest {
         runExecute(command, robot);
 
         assertEquals(2, supplierCalls.get(), "Override supplier should be sampled every execute cycle");
-        assertEquals(0.25, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(0.25, robot.getRobotRelativeSpeeds().omega, 1e-9);
     }
 
     @Test
@@ -713,7 +713,7 @@ class FollowPathTest {
         runExecute(command, robot);
 
         double expectedLimitedOmega = Math.toRadians(TEST_GLOBAL_CONSTRAINTS.getMaxAccelerationDegPerSec2()) * 0.02;
-        assertEquals(expectedLimitedOmega, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(expectedLimitedOmega, robot.getRobotRelativeSpeeds().omega, 1e-9);
         assertEquals(10.0, doubleLogs.get("FollowPath/rotationOverrideOmegaRadPerSec"), 1e-9);
         assertEquals(expectedLimitedOmega, doubleLogs.get("FollowPath/outputOmegaRadPerSec"), 1e-9);
         assertTrue(booleanLogs.get("FollowPath/rotationOverrideActive"));
@@ -734,9 +734,9 @@ class FollowPathTest {
         command.initialize();
         runExecute(command, robot);
 
-        assertEquals(0.0, robot.getRobotRelativeSpeeds().vxMetersPerSecond, 1e-9);
-        assertEquals(0.0, robot.getRobotRelativeSpeeds().vyMetersPerSecond, 1e-9);
-        assertEquals(10.0, robot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(0.0, robot.getRobotRelativeSpeeds().vx, 1e-9);
+        assertEquals(0.0, robot.getRobotRelativeSpeeds().vy, 1e-9);
+        assertEquals(10.0, robot.getRobotRelativeSpeeds().omega, 1e-9);
         assertEquals(10.0, doubleLogs.get("FollowPath/rotationOverrideOmegaRadPerSec"), 1e-9);
         assertEquals(10.0, doubleLogs.get("FollowPath/rotationControllerOutput"), 1e-9);
         assertEquals(10.0, doubleLogs.get("FollowPath/outputOmegaRadPerSec"), 1e-9);
@@ -752,7 +752,7 @@ class FollowPathTest {
         FollowPath overrideCommand = createCommand(createDegenerateRotationPath(1.0), overrideRobot);
         overrideCommand.initialize();
         runExecute(overrideCommand, overrideRobot);
-        assertEquals(10.0, overrideRobot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(10.0, overrideRobot.getRobotRelativeSpeeds().omega, 1e-9);
 
         FollowPath.clearRotationOverride();
 
@@ -763,7 +763,7 @@ class FollowPathTest {
         runExecute(normalCommand, normalRobot);
 
         double expectedOmega = 5.0 * Math.toRadians(1.0);
-        assertEquals(expectedOmega, normalRobot.getRobotRelativeSpeeds().omegaRadiansPerSecond, 1e-9);
+        assertEquals(expectedOmega, normalRobot.getRobotRelativeSpeeds().omega, 1e-9);
     }
 
     @Test
@@ -921,10 +921,10 @@ class FollowPathTest {
         return prefix + "-" + EVENT_KEY_COUNTER.incrementAndGet();
     }
 
-    private static boolean areSpeedsNearZero(ChassisSpeeds speeds, double epsilon) {
-        return Math.abs(speeds.vxMetersPerSecond) <= epsilon &&
-            Math.abs(speeds.vyMetersPerSecond) <= epsilon &&
-            Math.abs(speeds.omegaRadiansPerSecond) <= epsilon;
+    private static boolean areSpeedsNearZero(ChassisVelocities speeds, double epsilon) {
+        return Math.abs(speeds.vx) <= epsilon &&
+            Math.abs(speeds.vy) <= epsilon &&
+            Math.abs(speeds.omega) <= epsilon;
     }
 
     private static void runExecute(FollowPath command, MutableRobot robot) {
@@ -934,7 +934,7 @@ class FollowPathTest {
 
     private static final class MutableRobot {
         private Pose2d pose;
-        private ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
+        private ChassisVelocities robotRelativeSpeeds = new ChassisVelocities();
         private double timestampSeconds = 0.0;
 
         private MutableRobot(Pose2d pose) {
@@ -949,11 +949,11 @@ class FollowPathTest {
             this.pose = pose;
         }
 
-        private ChassisSpeeds getRobotRelativeSpeeds() {
+        private ChassisVelocities getRobotRelativeSpeeds() {
             return robotRelativeSpeeds;
         }
 
-        private void setRobotRelativeSpeeds(ChassisSpeeds robotRelativeSpeeds) {
+        private void setRobotRelativeSpeeds(ChassisVelocities robotRelativeSpeeds) {
             this.robotRelativeSpeeds = robotRelativeSpeeds;
         }
 

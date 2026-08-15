@@ -1,8 +1,8 @@
 package frc.robot.lib.BLine;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.Subsystem;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  *
      * <pre>{@code
      * import static frc.robot.lib.BLine.BLineCommands.sequence;
-     * import edu.wpi.first.wpilibj2.command.Command;
+     * import org.wpilib.command2.Command;
      *
      * Command auto = sequence(
  *     shooter.shoot().withTimeout(2.0),
@@ -34,7 +34,7 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * <p>Real requirement conflicts still exist. If two scheduled commands require
- * the same subsystem at the same time, WPILib's {@link edu.wpi.first.wpilibj2.command.CommandScheduler}
+ * the same subsystem at the same time, WPILib's {@link org.wpilib.command2.CommandScheduler}
  * resolves that conflict normally.
  *
  * @see Commands

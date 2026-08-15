@@ -1,9 +1,9 @@
 package frc.robot.lib.BLine;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 
 /*
 * Utility class for flipping positions/rotations to the other side of the field 
@@ -109,16 +109,16 @@ public class FlippingUtil {
    * @param fieldSpeeds Field relative chassis speeds
    * @return Flipped speeds
    */
-  public static ChassisSpeeds flipFieldSpeeds(ChassisSpeeds fieldSpeeds) {
+  public static ChassisVelocities flipFieldSpeeds(ChassisVelocities fieldSpeeds) {
     return switch (symmetryType) {
-      case kMirrored -> new ChassisSpeeds(
-          -fieldSpeeds.vxMetersPerSecond,
-          fieldSpeeds.vyMetersPerSecond,
-          -fieldSpeeds.omegaRadiansPerSecond);
-      case kRotational -> new ChassisSpeeds(
-          -fieldSpeeds.vxMetersPerSecond,
-          -fieldSpeeds.vyMetersPerSecond,
-          fieldSpeeds.omegaRadiansPerSecond);
+      case kMirrored -> new ChassisVelocities(
+          -fieldSpeeds.vx,
+          fieldSpeeds.vy,
+          -fieldSpeeds.omega);
+      case kRotational -> new ChassisVelocities(
+          -fieldSpeeds.vx,
+          -fieldSpeeds.vy,
+          fieldSpeeds.omega);
     };
   }
 
