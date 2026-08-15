@@ -30,11 +30,16 @@ class Vendordep2027Test {
         );
 
         JSONArray dependencies = (JSONArray) compatibility.get("javaDependencies");
-        assertEquals(1, dependencies.size());
+        assertEquals(2, dependencies.size());
         JSONObject bline = (JSONObject) dependencies.getFirst();
         assertEquals("com.github.edanliahovetsky", bline.get("groupId"));
         assertEquals("BLine-Lib", bline.get("artifactId"));
         assertEquals(SOURCE_COMMIT, bline.get("version"));
+
+        JSONObject commandsV2 = (JSONObject) dependencies.get(1);
+        assertEquals("org.wpilib.commandsv2", commandsV2.get("groupId"));
+        assertEquals("commandsv2-java", commandsV2.get("artifactId"));
+        assertEquals("wpilib", commandsV2.get("version"));
     }
 
     private static JSONObject parse(String fileName) throws Exception {

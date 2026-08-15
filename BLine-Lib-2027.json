@@ -8,11 +8,23 @@
         "https://jitpack.io"
     ],
     "jsonUrl": "https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/wpilib-2027/BLine-Lib-2027.json",
+    "conflictsWith": [
+        {
+            "uuid": "4decdc05-a056-46cf-9561-39449bbb01306",
+            "errorMessage": "BLine-Lib for WPILib 2027 uses Commands v2 and cannot be installed with Commands v3.",
+            "offlineFileName": "CommandsV3.json"
+        }
+    ],
     "javaDependencies": [
         {
             "groupId": "com.github.edanliahovetsky",
             "artifactId": "BLine-Lib",
             "version": "4dd378b77a0ec73d4c89efb752756728d138801a"
+        },
+        {
+            "groupId": "org.wpilib.commandsv2",
+            "artifactId": "commandsv2-java",
+            "version": "wpilib"
         }
     ],
     "jniDependencies": [],
