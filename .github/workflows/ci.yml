@@ -1,0 +1,31 @@
+name: Test and Package
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run tests and publish to Maven local
+        run: ./gradlew test publishToMavenLocal --no-daemon
+        env:
+          GRADLE_OPTS: -Dmaven.repo.local=${{ runner.temp }}/m2
