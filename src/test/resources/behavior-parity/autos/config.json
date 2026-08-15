@@ -1,0 +1,17 @@
+{
+  "gui": {
+    "robot": {
+      "length_meters": 0.82,
+      "width_meters": 0.74
+    }
+  },
+  "kinematic_constraints": {
+    "default_max_velocity_meters_per_sec": 4.8,
+    "default_max_acceleration_meters_per_sec2": 6.4,
+    "default_max_velocity_deg_per_sec": 690.0,
+    "default_max_acceleration_deg_per_sec2": 1320.0,
+    "default_end_translation_tolerance_meters": 0.06,
+    "default_end_rotation_tolerance_deg": 2.25,
+    "default_intermediate_handoff_radius_meters": 0.28
+  }
+}
