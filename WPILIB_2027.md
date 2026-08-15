@@ -8,11 +8,11 @@ for WPILib 2026.
 
 This line uses **Commands v2 only**. Commands v3 is not supported.
 
-## Install the current pre-publication build
+## Install the Tagged candidate
 
-There is not yet an immutable compatibility tag or GitHub Formal Release. The
-current vendordep is a commit-addressed validation build so teams can inspect
-and exercise the exact source that passed the pre-publication checks.
+The current vendordep resolves the immutable Tagged candidate
+`v0.9.1-wpilib2027.alpha06.01`. This candidate is available for exact public
+installation and Human acceptance, but it is not yet a GitHub Formal Release.
 
 1. Remove the stable BLine vendordep and any Commands v3 vendordep from the
    robot project.
@@ -34,11 +34,10 @@ does not mean BLine targets WPILib Alpha 5. The 2026 and 2027 manifests retain
 the same BLine UUID, so WPILib treats them as the same library and they cannot
 coexist in one robot project.
 
-The current manifest resolves BLine-Lib from exact source commit
-`4dd378b77a0ec73d4c89efb752756728d138801a`. This is intentionally different
-from the later release installation flow: after the Publication gate, the
-vendordep will point to the exact immutable compatibility tag, and a separate
-Human acceptance pass will install that tagged vendordep in a pristine project.
+The current manifest resolves BLine-Lib from exact immutable tag
+`v0.9.1-wpilib2027.alpha06.01`. A separate Human acceptance pass installs this
+same tagged vendordep in a pristine project before any GitHub Formal Release is
+authorized.
 
 ## Migrate from the stable line
 
@@ -86,13 +85,16 @@ geometry and flipping, constraints, and defaults. GitHub Actions also runs
 2026 on `main`, and Java 25 with WPILib Alpha 6 on `wpilib-2027`. These
 informational workflows are not required protection checks.
 
-The current compatibility dependency was also compiled in a clean consumer
-with no Maven Local, composite build, or project dependency. A local-only real
-WPILib 2027 RobotCode project then loaded a deployed BLine path and scheduled
-`FollowPath` with Commands v2. Its final deterministic run passed all five
-numeric assertions: DriverStation autonomous-enabled, finite output, overall
-verdict, endpoint error `0.038710 m` within the `0.08 m` limit, and stopped
-output exactly `0`. It recorded 82 samples over 1.592 seconds.
+The pre-publication compatibility dependency was compiled from exact source
+commit `4dd378b77a0ec73d4c89efb752756728d138801a` in a clean consumer with no Maven
+Local, composite build, or project dependency. A local-only real WPILib 2027
+RobotCode project then loaded a deployed BLine path and scheduled `FollowPath`
+with Commands v2. Its final deterministic run passed all five numeric
+assertions: DriverStation autonomous-enabled, finite output, overall verdict,
+endpoint error `0.038710 m` within the `0.08 m` limit, and stopped output
+exactly `0`. It recorded 82 samples over 1.592 seconds. The Tagged candidate is
+verified separately through its exact public coordinate before Human
+acceptance.
 
 ## Validation limits
 

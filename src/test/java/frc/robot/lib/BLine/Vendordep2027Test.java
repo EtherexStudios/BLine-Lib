@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test;
 
 class Vendordep2027Test {
     private static final String BLINE_UUID = "4b7270e9-4e8d-4e7b-8cf0-5805f12c3c7d";
-    private static final String SOURCE_COMMIT = "4dd378b77a0ec73d4c89efb752756728d138801a";
+    private static final String CANDIDATE_TAG = "v0.9.1-wpilib2027.alpha06.01";
 
     @Test
-    void compatibilityVendordepIdentifiesThe2027LineAndExactSourceCommit() throws Exception {
+    void compatibilityVendordepIdentifiesThe2027LineAndExactCandidateTag() throws Exception {
         JSONObject stable = parse("BLine-Lib.json");
         JSONObject compatibility = parse("BLine-Lib-2027.json");
 
@@ -34,7 +34,7 @@ class Vendordep2027Test {
         JSONObject bline = (JSONObject) dependencies.getFirst();
         assertEquals("com.github.edanliahovetsky", bline.get("groupId"));
         assertEquals("BLine-Lib", bline.get("artifactId"));
-        assertEquals(SOURCE_COMMIT, bline.get("version"));
+        assertEquals(CANDIDATE_TAG, bline.get("version"));
 
         JSONObject commandsV2 = (JSONObject) dependencies.get(1);
         assertEquals("org.wpilib.commandsv2", commandsV2.get("groupId"));

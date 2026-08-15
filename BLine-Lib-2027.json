@@ -19,7 +19,7 @@
         {
             "groupId": "com.github.edanliahovetsky",
             "artifactId": "BLine-Lib",
-            "version": "4dd378b77a0ec73d4c89efb752756728d138801a"
+            "version": "v0.9.1-wpilib2027.alpha06.01"
         },
         {
             "groupId": "org.wpilib.commandsv2",

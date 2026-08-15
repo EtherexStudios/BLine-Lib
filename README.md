@@ -36,9 +36,10 @@ time-constrained build-season environments.
 ## Installation
 
 Use the year-specific `BLine-Lib-2027.json`, not the stable `BLine-Lib.json`.
-The [WPILib 2027 guide](WPILIB_2027.md) gives the current pre-publication URL,
-dependency provenance, Commands v2 requirement, and migration steps. No
-immutable compatibility tag or Formal Release exists yet.
+The [WPILib 2027 guide](WPILIB_2027.md) gives the Tagged candidate URL,
+dependency provenance, Commands v2 requirement, and migration steps. The
+immutable compatibility tag exists for Human acceptance, but no GitHub Formal
+Release exists yet.
 
 ## Quick Start
 
