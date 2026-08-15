@@ -281,7 +281,7 @@ class BLineCommandsTest {
     private static boolean isWpilibHalRuntimeAvailable() {
         try {
             ClassLoader classLoader = BLineCommandsTest.class.getClassLoader();
-            Class.forName("org.wpilib.hal.NotifierJNI", false, classLoader);
+            Class.forName("org.wpilib.hardware.hal.NotifierJNI", false, classLoader);
             Class.forName("org.wpilib.networktables.NetworkTableInstance", false, classLoader);
             Class.forName("com.fasterxml.jackson.databind.ObjectMapper", false, classLoader);
             return isLibraryOnPath("wpiHaljni") &&
