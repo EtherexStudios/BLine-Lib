@@ -42,7 +42,10 @@ immutable compatibility tag or Formal Release exists yet.
 
 ## Quick Start
 
-For a complete walkthrough, see the **[getting started guide](https://bline-docs.pages.dev/getting-started/)**.
+For BLine API setup after the compatibility vendordep is installed, see the
+**[getting started guide](https://bline-docs.pages.dev/getting-started/)**. Its
+installation steps and WPILib imports target stable WPILib 2026; use the
+[WPILib 2027 guide](WPILIB_2027.md) for those year-specific steps.
 
 ### Basic Setup
 
