@@ -1,8 +1,8 @@
 <h1 align="center">BLine-Lib</h1>
 
 <p align="center">
-  <a href="BLine-Lib.json"><img src="https://img.shields.io/badge/version-v0.9.1-2563eb" alt="Version v0.9.1"></a>
-  <a href="BLine-Lib.json"><img src="https://img.shields.io/badge/FRC-2026-c1121f" alt="FRC 2026"></a>
+  <a href="BLine-Lib-2027.json"><img src="https://img.shields.io/badge/version-0.9.1--wpilib2027.alpha06.01-2563eb" alt="Compatibility version 0.9.1-wpilib2027.alpha06.01"></a>
+  <a href="BLine-Lib-2027.json"><img src="https://img.shields.io/badge/WPILib-2027.0.0--alpha--6-c1121f" alt="WPILib 2027.0.0 Alpha 6"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-0f766e" alt="BSD 3-Clause License"></a>
 </p>
 
@@ -10,6 +10,12 @@
 library for FIRST Robotics Competition. It is made by students for students and
 built around practical tuning, quick iteration, and rapid empirical testing in
 time-constrained build-season environments.
+
+> [!IMPORTANT]
+> This is the `wpilib-2027` compatibility line for WPILib 2027.0.0-alpha-6 and
+> Commands v2. Read the [WPILib 2027 installation, migration, and validation
+> guide](WPILIB_2027.md) before using it. The `main` branch remains the stable
+> WPILib 2026 release line.
 
 **Quick links**
 
@@ -19,7 +25,7 @@ time-constrained build-season environments.
 
 💬 **[Chief Delphi Thread](https://www.chiefdelphi.com/t/introducing-bline-a-new-rapid-polyline-autonomous-path-planning-suite/509778)** — discussion, feedback, and announcements.
 
-📚 **[Documentation](https://bline-docs.pages.dev/)** — full guides, tutorials, and reference.
+📚 **[Documentation](https://bline-docs.pages.dev/)** — stable WPILib 2026 guides, tutorials, and reference.
 
 <p align="center">
   <img src="docs/readme/bline-web-demo.gif" alt="BLine Web editor GUI demo" width="900">
@@ -29,46 +35,10 @@ time-constrained build-season environments.
 
 ## Installation
 
-### Vendor JSON (Recommended)
-
-BLine-Lib's recommended WPILib vendor URL is the BLine Metrics Worker endpoint.
-It serves the same vendor JSON as this repository while keeping aggregate fetch
-counts for release health.
-
-1. Open VS Code with your FRC project
-2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
-3. Type **"WPILib: Manage Vendor Libraries"**
-4. Select **"Install new libraries (online)"**
-5. Paste the recommended vendor URL:
-
-```text
-https://bline-metrics.edan-liahovetsky.workers.dev/vendor/BLine-Lib.json
-```
-
-If the Worker URL is temporarily unavailable, use the direct GitHub vendor JSON
-as the fallback:
-
-```text
-https://raw.githubusercontent.com/edanliahovetsky/BLine-Lib/main/BLine-Lib.json
-```
-
-### Gradle Dependency (Alternative)
-
-Add the JitPack repository to your `build.gradle`:
-
-```gradle
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-```
-
-Then add the BLine-Lib dependency:
-
-```gradle
-dependencies {
-    implementation 'com.github.edanliahovetsky:BLine-Lib:v0.9.1'
-}
-```
+Use the year-specific `BLine-Lib-2027.json`, not the stable `BLine-Lib.json`.
+The [WPILib 2027 guide](WPILIB_2027.md) gives the current pre-publication URL,
+dependency provenance, Commands v2 requirement, and migration steps. No
+immutable compatibility tag or Formal Release exists yet.
 
 ## Quick Start
 
@@ -217,7 +187,9 @@ Generate Javadoc locally:
 # Open build/docs/javadoc/index.html
 ```
 
-Published API reference: **[Javadoc](https://edanliahovetsky.github.io/BLine-Lib/)**.
+Published API reference: **[Javadoc](https://edanliahovetsky.github.io/BLine-Lib/)**
+(stable WPILib 2026 only). Compatibility artifacts retain their own Java 25
+Javadoc and sources jars; see the [WPILib 2027 guide](WPILIB_2027.md).
 
 ## Troubleshooting
 
