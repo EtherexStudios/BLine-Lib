@@ -36,7 +36,7 @@ configurations {
 dependencies {
     // WPILib dependencies
     implementation "org.wpilib.wpilibj:wpilibj-java:${wpiVersion}"
-    implementation "org.wpilib.commandsv2:commandsv2-java:${wpiVersion}"
+    api "org.wpilib.commandsv2:commandsv2-java:${wpiVersion}"
     implementation "org.wpilib.wpimath:wpimath-java:${wpiVersion}"
     implementation "org.wpilib.wpiutil:wpiutil-java:${wpiVersion}"
     implementation "org.wpilib.wpiunits:wpiunits-java:${wpiVersion}"
@@ -137,6 +137,7 @@ tasks.withType(JavaCompile).configureEach {
 test {
     useJUnitPlatform()
     dependsOn tasks.named('extractWpilibTestNatives')
+    dependsOn tasks.named('generatePomFileForMavenPublication')
     jvmArgs '--enable-native-access=ALL-UNNAMED'
     systemProperty 'java.library.path', "${layout.buildDirectory.get().asFile}/wpilib-test-natives/${wpilibNativeSharedPath}"
 }
