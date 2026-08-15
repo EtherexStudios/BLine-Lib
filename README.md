@@ -21,6 +21,13 @@ time-constrained build-season environments.
 
 📚 **[Documentation](https://bline-docs.pages.dev/)** — full guides, tutorials, and reference.
 
+## Supported release lines
+
+`main` remains the stable, default BLine-Lib line for WPILib 2026, and the
+installation guidance below is for that line. Teams evaluating WPILib 2027
+Alpha 6 can use the behavior-compatible [`wpilib-2027` line and its separate
+installation guide](https://github.com/edanliahovetsky/BLine-Lib/blob/wpilib-2027/WPILIB_2027.md).
+
 <p align="center">
   <img src="docs/readme/bline-web-demo.gif" alt="BLine Web editor GUI demo" width="900">
   <br><br>
