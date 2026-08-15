@@ -11,6 +11,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -24,6 +26,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class BehavioralCompatibilityTest {
@@ -36,10 +39,23 @@ class BehavioralCompatibilityTest {
 
     private final CommandScheduler scheduler = CommandScheduler.getInstance();
 
+    @BeforeEach
+    void setUp() {
+        resetFieldConfiguration();
+        DriverStationSim.resetData();
+        DriverStationSim.notifyNewData();
+    }
+
     @AfterEach
     void tearDown() {
         resetScheduler();
         scheduler.enable();
+        DriverStationSim.resetData();
+        DriverStationSim.notifyNewData();
+        resetFieldConfiguration();
+    }
+
+    private static void resetFieldConfiguration() {
         FlippingUtil.fieldSizeX = 16.54;
         FlippingUtil.fieldSizeY = 8.07;
         FlippingUtil.symmetryType = FlippingUtil.FieldSymmetry.kRotational;
@@ -51,6 +67,7 @@ class BehavioralCompatibilityTest {
 
         assertTrue(path.isValid());
         assertEquals(EXPECTED_TRANSLATIONS, path.getTranslations());
+        assertRepresentativeElements(path.getPathElements());
         assertEquals(0.04, path.getEndTranslationToleranceMeters(), EPSILON);
         assertEquals(1.75, path.getEndRotationToleranceDeg(), EPSILON);
 
@@ -62,6 +79,15 @@ class BehavioralCompatibilityTest {
         assertEquals(0.06, defaults.getEndTranslationToleranceMeters(), EPSILON);
         assertEquals(2.25, defaults.getEndRotationToleranceDeg(), EPSILON);
         assertEquals(0.28, defaults.getIntermediateHandoffRadiusMeters(), EPSILON);
+
+        Path.PathConstraints constraints = path.getPathConstraints();
+        assertRangedConstraint(constraints.getMaxVelocityMetersPerSec().orElseThrow().get(0), 2.40, 0, 0);
+        assertRangedConstraint(constraints.getMaxVelocityMetersPerSec().orElseThrow().get(1), 3.10, 1, 2);
+        assertRangedConstraint(constraints.getMaxAccelerationMetersPerSec2().orElseThrow().get(0), 3.60, 0, 2);
+        assertRangedConstraint(constraints.getMaxVelocityDegPerSec().orElseThrow().get(0), 420.0, 0, 2);
+        assertRangedConstraint(constraints.getMaxAccelerationDegPerSec2().orElseThrow().get(0), 880.0, 0, 2);
+        assertRangedConstraint(constraints.getMinVelocityMetersPerSec().orElseThrow().get(0), 0.55, 0, 0);
+        assertRangedConstraint(constraints.getMinVelocityDegPerSec().orElseThrow().get(0), 35.0, 0, 2);
 
         List<Pair<PathElement, PathElementConstraint>> resolved = path.getPathElementsWithConstraintsNoWaypoints();
         List<TranslationTargetConstraint> translationConstraints = resolved.stream()
@@ -77,9 +103,40 @@ class BehavioralCompatibilityTest {
     }
 
     @Test
-    void publicBuilderUsesConfiguredFieldDimensionsForFlipAndMirror() throws URISyntaxException {
+    void existingFieldDefaultsRemainStable() {
+        assertEquals(16.54, FlippingUtil.fieldSizeX, EPSILON);
+        assertEquals(8.07, FlippingUtil.fieldSizeY, EPSILON);
+        assertEquals(FlippingUtil.FieldSymmetry.kRotational, FlippingUtil.symmetryType);
+    }
+
+    @Test
+    void publicPathAndBuilderUseConfiguredFieldDimensionsForFlipAndMirror() throws URISyntaxException {
         FlippingUtil.fieldSizeX = 18.0;
         FlippingUtil.fieldSizeY = 9.0;
+
+        Path flippedPath = loadRepresentativePath();
+        flippedPath.flip();
+        assertEquals(
+            List.of(
+                new Translation2d(16.75, 6.50),
+                new Translation2d(13.25, 5.75),
+                new Translation2d(11.00, 7.50)
+            ),
+            flippedPath.getTranslations()
+        );
+        assertRepresentativeRotations(flippedPath, -150.0, -90.0, 135.0);
+
+        Path mirroredPath = loadRepresentativePath();
+        mirroredPath.mirror();
+        assertEquals(
+            List.of(
+                new Translation2d(1.25, 6.50),
+                new Translation2d(4.75, 5.75),
+                new Translation2d(7.00, 7.50)
+            ),
+            mirroredPath.getTranslations()
+        );
+        assertRepresentativeRotations(mirroredPath, -30.0, -90.0, 45.0);
 
         MutableRobot flippedRobot = new MutableRobot();
         Command flippedCommand = builder(flippedRobot)
@@ -102,6 +159,22 @@ class BehavioralCompatibilityTest {
 
         scheduleAndRunOnce(mirroredCommand);
         assertPose(mirroredRobot.pose, new Pose2d(1.25, 6.50, Rotation2d.fromDegrees(-30.0)));
+    }
+
+    @Test
+    void defaultAllianceSupplierFlipsFollowerForRedAlliance() throws URISyntaxException {
+        DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
+        DriverStationSim.notifyNewData();
+        MutableRobot robot = new MutableRobot();
+        Command command = builder(robot)
+            .withDefaultShouldFlip()
+            .withPoseReset(robot::setPose)
+            .build(loadRepresentativePath())
+            .ignoringDisable(true);
+
+        scheduleAndRunOnce(command);
+
+        assertPose(robot.pose, new Pose2d(15.29, 5.57, Rotation2d.fromDegrees(-150.0)));
     }
 
     @Test
@@ -169,6 +242,56 @@ class BehavioralCompatibilityTest {
 
     private static Path loadRepresentativePath() throws URISyntaxException {
         return new Path(resourceAutosDirectory(), "behavior-parity");
+    }
+
+    private static void assertRepresentativeElements(List<PathElement> elements) {
+        assertEquals(5, elements.size());
+        Path.Waypoint start = (Path.Waypoint) elements.get(0);
+        assertEquals(0.30, start.translationTarget().intermediateHandoffRadiusMeters().orElseThrow(), EPSILON);
+        assertEquals(30.0, start.rotationTarget().rotation().getDegrees(), EPSILON);
+        assertEquals(0.0, start.rotationTarget().t_ratio(), EPSILON);
+        assertFalse(start.rotationTarget().profiledRotation());
+
+        Path.EventTrigger event = (Path.EventTrigger) elements.get(1);
+        assertEquals(0.45, event.t_ratio(), EPSILON);
+        assertEquals("behavior-parity-marker", event.libKey());
+
+        Path.RotationTarget rotation = (Path.RotationTarget) elements.get(2);
+        assertEquals(90.0, rotation.rotation().getDegrees(), EPSILON);
+        assertEquals(0.55, rotation.t_ratio(), EPSILON);
+        assertTrue(rotation.profiledRotation());
+
+        Path.TranslationTarget translation = (Path.TranslationTarget) elements.get(3);
+        assertEquals(0.22, translation.intermediateHandoffRadiusMeters().orElseThrow(), EPSILON);
+
+        Path.Waypoint end = (Path.Waypoint) elements.get(4);
+        assertTrue(end.translationTarget().intermediateHandoffRadiusMeters().isEmpty());
+        assertEquals(-45.0, end.rotationTarget().rotation().getDegrees(), EPSILON);
+        assertEquals(1.0, end.rotationTarget().t_ratio(), EPSILON);
+        assertFalse(end.rotationTarget().profiledRotation());
+    }
+
+    private static void assertRepresentativeRotations(
+        Path path,
+        double startDegrees,
+        double intermediateDegrees,
+        double endDegrees
+    ) {
+        List<PathElement> elements = path.getPathElements();
+        assertEquals(startDegrees, ((Path.Waypoint) elements.get(0)).rotationTarget().rotation().getDegrees(), EPSILON);
+        assertEquals(intermediateDegrees, ((Path.RotationTarget) elements.get(2)).rotation().getDegrees(), EPSILON);
+        assertEquals(endDegrees, ((Path.Waypoint) elements.get(4)).rotationTarget().rotation().getDegrees(), EPSILON);
+    }
+
+    private static void assertRangedConstraint(
+        Path.RangedConstraint constraint,
+        double value,
+        int startOrdinal,
+        int endOrdinal
+    ) {
+        assertEquals(value, constraint.value(), EPSILON);
+        assertEquals(startOrdinal, constraint.startOrdinal());
+        assertEquals(endOrdinal, constraint.endOrdinal());
     }
 
     private static File resourceAutosDirectory() throws URISyntaxException {
