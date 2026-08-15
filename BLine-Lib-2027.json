@@ -12,7 +12,7 @@
         {
             "groupId": "com.github.edanliahovetsky",
             "artifactId": "BLine-Lib",
-            "version": "1dd8c487d6db067a4d1ceebdf76640c3724eaee2"
+            "version": "4dd378b77a0ec73d4c89efb752756728d138801a"
         }
     ],
     "jniDependencies": [],

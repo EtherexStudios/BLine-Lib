@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class Vendordep2027Test {
     private static final String BLINE_UUID = "4b7270e9-4e8d-4e7b-8cf0-5805f12c3c7d";
-    private static final String SOURCE_COMMIT = "1dd8c487d6db067a4d1ceebdf76640c3724eaee2";
+    private static final String SOURCE_COMMIT = "4dd378b77a0ec73d4c89efb752756728d138801a";
 
     @Test
     void compatibilityVendordepIdentifiesThe2027LineAndExactSourceCommit() throws Exception {
